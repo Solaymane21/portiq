@@ -5,6 +5,8 @@ import { PortfolioComponent } from './pages/portfolio/portfolio.component';
 import { FavoritesComponent } from './pages/favorites/favorites.component';
 import { InvestorProfileComponent } from './pages/investor-profile/investor-profile.component';
 import { RankingComponent } from './pages/ranking/ranking.component';
+import { AlertsComponent } from './pages/alerts/alerts.component';
+import { NotFoundComponent } from './pages/not-found/not-found.component';
 
 export const routes: Routes = [
     {
@@ -30,6 +32,14 @@ export const routes: Routes = [
             {
                 path: 'ranking',
                 component: RankingComponent
+            },
+            {
+                path: 'alerts',
+                component: AlertsComponent
+            },
+            {
+                path: 'not-found',
+                component: NotFoundComponent
             }
         ]
     },
@@ -37,5 +47,9 @@ export const routes: Routes = [
         path: '',
         redirectTo: 'app/dashboard',
         pathMatch: 'full'
+    },
+    {
+        path: '**',
+        redirectTo: 'app/not-found'
     }
 ];

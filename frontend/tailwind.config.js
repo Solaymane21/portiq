@@ -6,13 +6,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        muted: '#7A7A7A',
-        negrofondo: '#080808',
-        gris25: '#252525',
-        card: '#171717',
-        // #d6d8d5 para modo claro de card
-        ganancia: '#00C853',
-        perdida: '#FF1744'
+        'base': '#0C0C0C',
+        'card': '#171717',
+        'interactivo': '#1C1C1C',
+        'naranja-principal': '#FA7315',
+        'naranja-secundario': '#2E1F15',
+        'muted': '#AAAAAA',
+        'borde': '#555555',
+        'ganancia': '#22C55E',
+        'perdida': '#EF4444',
       },
       fontFamily: {
         ibm: ['IBM Plex Mono', 'monospace'],

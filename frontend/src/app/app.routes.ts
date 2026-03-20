@@ -7,6 +7,9 @@ import { InvestorProfileComponent } from './pages/investor-profile/investor-prof
 import { RankingComponent } from './pages/ranking/ranking.component';
 import { AlertsComponent } from './pages/alerts/alerts.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
+import { AuthLayoutComponent } from './layout/auth-layout/auth-layout.component';
+import { LoginComponent } from './pages/auth/login/login.component';
+import { RegisterComponent } from './pages/auth/register/register.component';
 
 export const routes: Routes = [
     {
@@ -40,6 +43,20 @@ export const routes: Routes = [
             {
                 path: 'not-found',
                 component: NotFoundComponent
+            }
+        ]
+    },
+    {
+        path: 'auth',
+        component: AuthLayoutComponent,
+        children: [
+            {
+                path: 'login',
+                component: LoginComponent
+            },
+            {
+                path: 'register',
+                component: RegisterComponent
             }
         ]
     },

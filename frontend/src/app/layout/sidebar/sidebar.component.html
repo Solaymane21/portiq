@@ -1,8 +1,31 @@
 <aside
-  class="h-full w-60 flex flex-col text-white bg-base px-5 py-7 border-r border-borde"
+  class="relative h-full w-60 flex flex-col text-white bg-base px-5 py-7 border-r border-borde"
+  [class.w-60]="!collapsed()"
+  [class.w-24]="collapsed()"
 >
+    <button
+          (click)="toggle()"
+          class="absolute -right-8 top-24 -translate-y
+                w-8 h-10 z-20
+                bg-base border border-borde
+                rounded-r-full
+                flex items-center justify-center
+                text-muted"
+        >
+        @if(collapsed()) {
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+            <path fill-rule="evenodd" d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z" clip-rule="evenodd" />
+          </svg>
+        }
+        @else {
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+            <path fill-rule="evenodd" d="M7.72 12.53a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 1 1 1.06 1.06L9.31 12l6.97 6.97a.75.75 0 1 1-1.06 1.06l-7.5-7.5Z" clip-rule="evenodd" />
+          </svg>
+        }
+    </button>
+
   <div class="mb-10 px-3">
-    <p class="font-ibm text-2xl">PortIQ</p>
+    <p class="font-ibm text-2xl" [class.invisible]="collapsed()">PortIQ</p>
   </div>
 
   <div class="flex flex-col justify-between flex-1">
@@ -10,6 +33,7 @@
       <div
         routerLinkActive="active-link"
         routerLink="/app/dashboard"
+        [class.justify-center]="collapsed()"
         class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-bold [&.active-link]:bg-naranja-secundario"
       >
         <svg
@@ -26,11 +50,15 @@
             d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"
           />
         </svg>
-        <a class="ms-5">Dashboard</a>
+        
+        @if(!collapsed()) {
+          <a class="ms-5">Dashboard</a>
+        }
       </div>
       <div
         routerLinkActive="active-link"
         routerLink="/app/portfolios"
+        [class.justify-center]="collapsed()"
         class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-bold [&.active-link]:bg-naranja-secundario"
       >
         <svg
@@ -48,11 +76,14 @@
           />
         </svg>
 
-        <a class="ms-5">Carteras</a>
+        @if(!collapsed()) {
+          <a class="ms-5">Carteras</a>
+        }
       </div>
       <div
         routerLinkActive="active-link"
         routerLink="/app/favorites"
+        [class.justify-center]="collapsed()"
         class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-bold [&.active-link]:bg-naranja-secundario"
       >
         <svg
@@ -70,11 +101,14 @@
           />
         </svg>
 
-        <a class="ms-5">Favoritos</a>
+        @if(!collapsed()) {
+          <a class="ms-5">Favoritos</a>
+        }
       </div>
       <div
         routerLinkActive="active-link"
         routerLink="/app/investor-profile"
+        [class.justify-center]="collapsed()"
         class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-bold [&.active-link]:bg-naranja-secundario"
       >
         <svg
@@ -92,11 +126,14 @@
           />
         </svg>
 
-        <a class="ms-5">Perfil Inversor</a>
+        @if(!collapsed()) {
+          <a class="ms-5">Perfil Inversor</a>
+        }
       </div>
       <div
         routerLinkActive="active-link"
         routerLink="/app/ranking"
+        [class.justify-center]="collapsed()"
         class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-bold [&.active-link]:bg-naranja-secundario"
       >
         <svg
@@ -114,11 +151,14 @@
           />
         </svg>
 
-        <a class="ms-5">Clasificación</a>
+        @if(!collapsed()) {
+          <a class="ms-5">Clasificación</a>
+        }
       </div>
       <div
         routerLinkActive="active-link"
         routerLink="/app/alerts"
+        [class.justify-center]="collapsed()"
         class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-bold [&.active-link]:bg-naranja-secundario"
       >
         <svg
@@ -136,13 +176,16 @@
           />
         </svg>
 
-        <a class="ms-5">Alertas</a>
+        @if(!collapsed()) {
+          <a class="ms-5">Alertas</a>
+        }
       </div>
     </div>
     <div class="flex flex-col gap-5">
       <div
         routerLinkActive="active-link"
         routerLink="/app/settings"
+        [class.justify-center]="collapsed()"
         class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-bold [&.active-link]:bg-naranja-secundario"
       >
         <svg
@@ -165,11 +208,14 @@
           />
         </svg>
 
-        <a class="ms-5">Configuración</a>
+        @if(!collapsed()) {
+          <a class="ms-5">Configuración</a>
+        }
       </div>
       <div
         routerLinkActive="active-link"
         routerLink="/app/settings"
+        [class.justify-center]="collapsed()"
         class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-bold [&.active-link]:bg-naranja-secundario"
       >
         <svg
@@ -187,7 +233,9 @@
           />
         </svg>
 
-        <a class="ms-5">Cerrar sesión</a>
+        @if(!collapsed()) {
+          <a class="ms-5">Cerrar sesión</a>
+        }
       </div>
     </div>
   </div>

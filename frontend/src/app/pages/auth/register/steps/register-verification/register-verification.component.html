@@ -1,0 +1,23 @@
+
+<div class="w-full max-w-xl mx-auto">
+    <form
+        action=""
+        [formGroup]="registerForm"
+    >
+        <legend class="text-center text-3xl font-ibm">Verifica tú email</legend>
+        <div class="flex flex-col gap-5 pt-5">
+            <div class="text-center flex flex-col gap-3">
+                <p>Introduce el código de verificación enviado al correo electrónico <b>abc***&#64;gmail.com</b></p>
+                <p>¿No has recibido el código? <button class="text-orange-500 hover:underline hover:cursor-pointer">Reenviar código</button></p>
+            </div>
+            <div class="flex flex-col">
+                <label class="ps-2">Código</label>
+                <input type="text" class="border border-black rounded-md h-10 ps-2 focus:outline-none focus:border-orange-500" formControlName="code">
+            </div>
+            <div class="flex justify-between">
+                <button (click)="authService.back()" class="flex items-center w-fit hover:cursor-pointer"><span class="hover:underline">Volver</span></button>
+                <button (click)="authService.next()" type="button" class="w-1/2 bg-orange-500 hover:bg-orange-500/80 rounded-md py-2 text-white text-center">Siguiente</button>
+            </div>
+        </div>
+    </form>
+</div>

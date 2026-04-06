@@ -1,52 +1,18 @@
-import { Component } from '@angular/core';
-import { FormControl, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject } from '@angular/core';
+import { AuthService } from '../../../services/auth.service';
+import { RegisterDataComponent } from './steps/register-data/register-data.component';
+import { RegisterVerificationComponent } from './steps/register-verification/register-verification.component';
+import { RegisterPasswordComponent } from "./steps/register-password/register-password.component";
+import { RegisterPlanComponent } from './steps/register-plan/register-plan.component';
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [RegisterDataComponent, RegisterVerificationComponent, RegisterPasswordComponent, RegisterPlanComponent],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
 export class RegisterComponent {
-  passwordVisible: boolean = false;
-  confirmPasswordVisible: boolean = false;
+  authService = inject(AuthService)
 
-  registerForm = new FormGroup({
-    username: new FormControl('', [
-      Validators.required,
-      Validators.minLength(3)
-    ]),
-    email: new FormControl('', [
-      Validators.required,
-      Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
-    ]),
-    password: new FormControl('', [
-      Validators.required,
-      Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#._-]).*$/),
-      Validators.minLength(6)
-    ]),
-    confirm_password: new FormControl('', [
-      Validators.required,
-      Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#._-]).*$/),
-      Validators.minLength(6)
-    ])
-  });
-
-  onSubmit() {
-    console.log('enviado')
-    alert('siuuuuu')
-  }
-
-  showHidePassword(id: string) {
-    const password = document.getElementById(id) as HTMLInputElement;
-
-    password.type = (password.type === 'password') ? 'text' : 'password'
-
-     if (id === 'password') {
-      this.passwordVisible = !this.passwordVisible;
-    } else {
-      this.confirmPasswordVisible = !this.confirmPasswordVisible;
-    }
-  }
+  progressPercent = computed(() => (this.authService.currentStep() / 4) * 100);
 }

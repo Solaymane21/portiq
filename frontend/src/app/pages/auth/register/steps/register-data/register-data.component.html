@@ -9,14 +9,32 @@
             <div class="flex flex-col">
                 <label class="ps-2">Nombre de usuario</label>
                 <input type="text" class="border border-black rounded-md h-10 ps-2 focus:outline-none focus:border-orange-500" formControlName="username">
+                @if (registerForm.get('username')?.errors?.['required'] && submitted()) {
+                  <p class="text-orange-500">El nombre de usuario es obligatorio.</p>
+                }
+                @if ((registerForm.get('username')?.errors?.['minlength'] || registerForm.get('username')?.errors?.['maxlength']) && registerForm.get('username')?.touched) {
+                  <p class="text-orange-500">El nombre debe tener entre 3 y 20 caracteres.</p>
+                }
             </div>
             <div class="flex flex-col">
                 <label class="ps-2">Email</label>
                 <input type="email" class="border border-black rounded-md h-10 ps-2 focus:outline-none focus:border-orange-500" formControlName="email">
+                @if (registerForm.get('email')?.errors?.['required'] && submitted()) {
+                  <p class="text-orange-500">El email es obligatorio.</p>
+                }
+                @if (registerForm.get('email')?.errors?.['pattern'] && registerForm.get('email')?.touched) {
+                  <p class="text-orange-500">El email debe ser válido.</p>
+                }
             </div>
-            <button (click)="authService.next()" type="submit" class="bg-orange-500 hover:bg-orange-500/80 rounded-md py-2 text-white">Siguiente</button>
+            <button (click)="next()" [disabled]="this.authService.isLoading()" type="submit" class="bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white disabled:bg-orange-500/80 disabled:cursor-not-allowed">
+              @if (authService.isLoading()) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                Siguiente
+              }
+            </button>
             <div class="border-t border-black w-full"></div>
-            <div class="flex flex-col">                    
+            <div class="flex flex-col">
                 <button type="button" class="w-full flex items-center justify-center gap-2 py-2 border border-black bg-white hover:bg-neutral-200/80 rounded-md">
                 <svg class="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24">
                     <path

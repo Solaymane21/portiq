@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { AuthService } from '../../../services/auth.service';
 import { RegisterDataComponent } from './steps/register-data/register-data.component';
 import { RegisterVerificationComponent } from './steps/register-verification/register-verification.component';

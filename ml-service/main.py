@@ -58,7 +58,7 @@ def getPrices(symbols: str):
 
         for symbol in symbol_list:
             if not re.match(r'^[A-Za-z0-9.\-]{1,10}$', symbol):
-                results.append({"symbol": symbol, "found": False, "error": "Símbolo inválido"})
+                results.append({"symbol": symbol, "error": "Símbolo inválido"})
                 continue
             
             try:
@@ -72,13 +72,11 @@ def getPrices(symbols: str):
                     "price":    price,
                     "currency": info.get("currency", "USD"),
                     "change":   info.get("regularMarketChangePercent"),
-                    "found":    price is not None
                 })
 
             except Exception:
                 results.append({
                     "symbol": symbol.upper(),
-                    "found":  False,
                     "error":  "No se pudo obtener el precio"
             })
 

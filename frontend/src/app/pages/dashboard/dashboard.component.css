@@ -3,10 +3,17 @@
         transform: translateX(0);
     }
     to {
-        transform: translateX(-100%);
+        transform: translateX(-50%);
     }
 }
 
-#slider {
-    animation: scroll 45s linear infinite;
+.ticker-track {
+    display: flex;
+    gap: 20px;
+    width: max-content;
+    animation: scroll 40s linear infinite;
+}
+
+.ticker-wrapper {
+    overflow: hidden;
 }

@@ -18,15 +18,15 @@ export class RegisterPasswordComponent {
     password: new FormControl('', [
       Validators.required,
       Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#._-]).*$/),
-      Validators.minLength(6)
+      Validators.minLength(8)
     ]),
     confirm_password: new FormControl('', [
       Validators.required,
       Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#._-]).*$/),
-      Validators.minLength(6)
+      Validators.minLength(8)
     ])
   })
-  
+
   showHidePassword(id: string) {
     const password = document.getElementById(id) as HTMLInputElement;
 
@@ -37,5 +37,16 @@ export class RegisterPasswordComponent {
     } else {
       this.confirmPasswordVisible = !this.confirmPasswordVisible;
     }
+  }
+
+  isSamePassword() {
+    if(this.registerForm.invalid) return false
+    return this.registerForm.value.password === this.registerForm.value.confirm_password
+  }
+
+  next() {
+    if (this.registerForm.invalid) return;
+    this.authService.password.set(this.registerForm.value.password!)
+    this.authService.onStep3()
   }
 }

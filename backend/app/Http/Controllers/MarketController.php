@@ -12,7 +12,7 @@ class MarketController extends Controller{
         return response()-> json($this->ml->search($symbol));
     }
 
-    public function prices(Response $request){
+    public function prices(Request $request){
         $symbols = explode(',', $request->query('symbols'));
         return response()->json($this->ml->getPrices($symbols));
     }

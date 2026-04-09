@@ -42,7 +42,7 @@
                                 <p>Crear 2 carteras</p>
                             </div>
                         </div>
-                        <button class="w-full text-white bg-orange-500 hover:bg-orange-500/80 rounded-md py-2 mt-4">Elegir</button>
+                        <button (click)="onPremiumPlan()" class="w-full text-white bg-orange-500 hover:bg-orange-500/80 rounded-md py-2 mt-4">Elegir</button>
                     </div>
                 </div>
                 <div class="flex flex-1 flex-col items-center justify-evenly gap-5 p-4 border border-black rounded-2xl mt-4">
@@ -84,10 +84,15 @@
                                 <p>Crear 2 carteras</p>
                             </div>
                         </div>
-                        <button class="w-full text-white bg-black hover:bg-black/80 rounded-md py-2 mt-4">Elegir</button>
+                        <button (click)="onFreePlan()" [disabled]="this.authService.isLoading()" class="w-full text-white bg-black hover:bg-black/80 flex justify-center rounded-md py-2 mt-4 disabled:cursor-not-allowed">
+                            @if (this.authService.isLoading()) {
+                              <mat-spinner diameter="20"></mat-spinner>
+                            } @else {
+                              Siguiente
+                            }
+                        </button>
                     </div>
-                </div>                
+                </div>
             </div>
-            <button (click)="authService.back()" class="flex items-center hover:cursor-pointer mt-4"><span class="hover:underline">Volver</span></button>
         </div>
     </div>

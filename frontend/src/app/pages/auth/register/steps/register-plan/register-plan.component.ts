@@ -1,17 +1,24 @@
 import { Component, inject } from '@angular/core';
-import { FormControl, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { AuthService } from '../../../../../services/auth.service';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-register-plan',
-  imports: [ReactiveFormsModule],
+  imports: [MatProgressSpinnerModule],
   templateUrl: './register-plan.component.html',
   styleUrl: './register-plan.component.css'
 })
 export class RegisterPlanComponent {
   authService = inject(AuthService)
 
-  passwordVisible: boolean = false;
-  confirmPasswordVisible: boolean = false;
-  
+  onFreePlan() {
+    this.authService.subscription_type.set('free')
+    this.authService.onStep4()
+  }
+
+  onPremiumPlan() {
+    this.authService.subscription_type.set('premium')
+    this.authService.onStep4()
+  }
+
 }

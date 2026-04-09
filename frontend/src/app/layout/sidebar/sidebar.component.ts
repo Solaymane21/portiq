@@ -21,7 +21,7 @@ export class SidebarComponent {
   }
 
   onLogOut() {
-    this.authService.logout()
+    this.authService.onLogout()
     this.router.navigate(['/auth/login'])
   }
 }

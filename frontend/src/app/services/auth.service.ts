@@ -108,13 +108,17 @@ export class AuthService {
       next: (res: any) => {
         localStorage.setItem('token', res.token);
         this.isLoading.set(false);
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/app/dashboard']);
       },
       error: (err) => {
         this.msgError.set('Email o contraseña incorrectos.');
         this.isLoading.set(false);
       }
     });
+  }
+
+  onLogout() {
+    console.log("Logout");
   }
 
 }

@@ -148,3 +148,102 @@ def portfolio_value(positions: str):
             "positions":   len(results),
             "results":     results
     }
+"""
+Historial de precios para gráfica
+"""
+@app.get("/history/{symbol}")
+def get_history(symbol: str, period: str = "1D"):
+
+    if not re.match(r'^[A-Za-z0-9.\-]{1,10}$', symbol):
+        raise HTTPException(status_code=422, detail="Símbolo inválido")
+
+    period_map = {
+        "1D": ("2d",  "5m"),
+        "1M": ("1mo", "1d"),
+        "1A": ("1y",  "1wk"),
+    }
+
+    yf_period, yf_interval = period_map.get(period, ("2d", "5m"))
+
+    print(f"→ symbol={symbol} period={period} yf_period={yf_period} yf_interval={yf_interval}")
+
+    try:
+        df = yf.download(
+            symbol.upper(),
+            period=yf_period,
+            interval=yf_interval,
+            progress=False
+        )
+
+        print(f"→ df.shape={df.shape}")
+        print(f"→ df.columns={df.columns.tolist()}")
+
+        if df.empty:
+            raise HTTPException(status_code=404, detail="Sin datos históricos")
+
+        df.columns = df.columns.get_level_values(0)
+
+        data = [
+            {
+                "x": int(ts.timestamp() * 1000),
+                "y": round(float(row["Close"]), 2)
+            }
+            for ts, row in df.iterrows()
+        ]
+
+        print(f"→ data points={len(data)}")
+
+        return {
+            "symbol":   symbol.upper(),
+            "period":   period,
+            "interval": yf_interval,
+            "data":     data
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"→ ERROR: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+    if not re.match(r'^[A-Za-z0-9.\-]{1,10}$', symbol):
+        raise HTTPException(status_code=422, detail="Símbolo inválido")
+
+    period_map = {
+        "1D": ("2d",  "5m"),
+        "1M": ("1mo", "1d"),
+        "1A": ("1y",  "1wk"),
+    }
+
+    yf_period, yf_interval = period_map.get(period, ("1d", "5m"))
+
+    try:
+        df = yf.download(
+            symbol.upper(),
+            period=yf_period,
+            interval=yf_interval,
+            progress=False
+        )
+
+        if df.empty:
+            raise HTTPException(status_code=404, detail="Sin datos históricos")
+
+        df.columns = df.columns.get_level_values(0)
+
+        data = [
+            {
+                "x": int(ts.timestamp() * 1000),
+                "y": round(float(row["Close"]), 2)
+            }
+            for ts, row in df.iterrows()
+        ]
+
+        return {
+            "symbol":   symbol.upper(),
+            "period":   period,
+            "interval": yf_interval,
+            "data":     data
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

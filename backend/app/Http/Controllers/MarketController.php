@@ -30,4 +30,11 @@ class MarketController extends Controller
 
         return response()->json($this->ml->getPortfolioValue($positions));
     }
+
+    public function history(string $symbol, Request $request){
+        $period = $request->query('perido', '1D');
+        return response()->json($this->ml->getHistory($symbol, $period));
+    }
+
+    
 }

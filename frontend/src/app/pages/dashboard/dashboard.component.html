@@ -5,59 +5,88 @@
     </select>
 </div>
 
+
 <div class="grid grid-cols-3 gap-4 mt-5">
-        <div class="bg-neutral-900 border border-neutral-700 text-muted text-xl rounded-2xl p-5">
-            <p>Valor total</p>
+        <!-- DONUT -->
+<div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-5">
+    <p class="text-sm text-neutral-400 mb-3">Valor total</p>
+
+
+    <apx-chart
+        [series]="donutOptions.series"
+        [chart]="donutOptions.chart"
+        [labels]="donutOptions.labels"
+        [colors]="donutOptions.colors"
+        [plotOptions]="donutOptions.plotOptions"
+        [legend]="donutOptions.legend"
+        [dataLabels]="donutOptions.dataLabels">
+    </apx-chart>
+
+
+    <!-- Leyenda manual debajo del donut -->
+    <div class="flex flex-col gap-2 mt-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-sm inline-block bg-orange-500"></span>
+                <span class="text-xs text-neutral-400">Acciones</span>
+                <span class="text-xs font-semibold text-[#EA580C]">70%</span>
+            </div>
+            <span class="text-xs text-neutral-200 font-medium">70.000€</span>
         </div>
-        <div class="col-span-2 bg-neutral-900 border border-neutral-700 text-muted text-xl rounded-2xl p-5">
-            <p>Gráfica</p>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-sm inline-block bg-orange-800"></span>
+                <span class="text-xs text-neutral-400">Criptomonedas</span>
+                <span class="text-xs font-semibold text-neutral-400">30%</span>
+            </div>
+            <span class="text-xs text-neutral-200 font-medium">30.000€</span>
         </div>
-        
+    </div>
+</div>
+
+
+<!-- ÁREA -->
+<div class="col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5 flex flex-col">
+
+    <div class="flex justify-end gap-1 mb-2">
+        @for (p of periods; track p) {
+            <button
+                (click)="setPeriod(p)"
+                class="px-2.5 py-0.5 rounded-md text-xs font-semibold transition-colors"
+                [class.bg-orange-600]="p === selectedPeriod"
+                [class.text-white]="p === selectedPeriod"
+                [class.text-neutral-400]="p !== selectedPeriod">
+                {{ p }}
+            </button>
+        }
+    </div>
+
+    <!-- Loader mientras carga -->
+    @if (isLoading) {
+        <div class="flex-1 flex items-center justify-center">
+            <div class="w-6 h-6 border-2 border-orange-600 border-t-transparent
+                        rounded-full animate-spin"></div>
+        </div>
+    } @else {
+        <apx-chart
+            [series]="areaOptions.series"
+            [chart]="areaOptions.chart"
+            [colors]="areaOptions.colors"
+            [stroke]="areaOptions.stroke"
+            [fill]="areaOptions.fill"
+            [grid]="areaOptions.grid"
+            [xaxis]="areaOptions.xaxis"
+            [yaxis]="areaOptions.yaxis"
+            [tooltip]="areaOptions.tooltip">
+        </apx-chart>
+    }
+</div>
+       
         <!-- Slider -->
         <div class="col-span-3 bg-neutral-900 border border-neutral-700 rounded-2xl p-2 overflow-hidden">
             <div class="ticker-wrapper">
                 <div class="ticker-track">
 
-                    <div class="flex items-center bg-black w-fit rounded-full px-3 py-1 gap-2 shrink-0">
-                        <div class="w-7 h-7">
-                            <img src="https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg" alt="NVDA" class="w-full h-full object-contain">
-                        </div>
-                        <p class="font-medium text-sm">NVDA</p>
-                        <p class="font-mono text-sm">245,23€</p>
-                        <p class="font-mono text-sm text-ganancia">+2,23%</p>
-                    </div>
-                    <div class="flex items-center bg-black w-fit rounded-full px-3 py-1 gap-2 shrink-0">
-                        <div class="w-7 h-7">
-                            <img src="https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg" alt="NVDA" class="w-full h-full object-contain">
-                        </div>
-                        <p class="font-medium text-sm">NVDA</p>
-                        <p class="font-mono text-sm">281,39€</p>
-                        <p class="font-mono text-sm text-perdida">-1,60%</p>
-                    </div>
-                    <div class="flex items-center bg-black w-fit rounded-full px-3 py-1 gap-2 shrink-0">
-                        <div class="w-7 h-7">
-                            <img src="https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg" alt="NVDA" class="w-full h-full object-contain">
-                        </div>
-                        <p class="font-medium text-sm">NVDA</p>
-                        <p class="font-mono text-sm">245,23€</p>
-                        <p class="font-mono text-sm text-ganancia">+2,23%</p>
-                    </div>
-                    <div class="flex items-center bg-black w-fit rounded-full px-3 py-1 gap-2 shrink-0">
-                        <div class="w-7 h-7">
-                            <img src="https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg" alt="NVDA" class="w-full h-full object-contain">
-                        </div>
-                        <p class="font-medium text-sm">NVDA</p>
-                        <p class="font-mono text-sm">178,54€</p>
-                        <p class="font-mono text-sm text-perdida">-0,54%</p>
-                    </div>
-                    <div class="flex items-center bg-black w-fit rounded-full px-3 py-1 gap-2 shrink-0">
-                        <div class="w-7 h-7">
-                            <img src="https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg" alt="NVDA" class="w-full h-full object-contain">
-                        </div>
-                        <p class="font-medium text-sm">NVDA</p>
-                        <p class="font-mono text-sm">248,99€</p>
-                        <p class="font-mono text-sm text-ganancia">+1,12%</p>
-                    </div>
 
                     <div class="flex items-center bg-black w-fit rounded-full px-3 py-1 gap-2 shrink-0">
                         <div class="w-7 h-7">
@@ -100,6 +129,7 @@
                         <p class="font-mono text-sm text-ganancia">+1,12%</p>
                     </div>
 
+
                     <div class="flex items-center bg-black w-fit rounded-full px-3 py-1 gap-2 shrink-0">
                         <div class="w-7 h-7">
                             <img src="https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg" alt="NVDA" class="w-full h-full object-contain">
@@ -140,6 +170,49 @@
                         <p class="font-mono text-sm">248,99€</p>
                         <p class="font-mono text-sm text-ganancia">+1,12%</p>
                     </div>
+
+
+                    <div class="flex items-center bg-black w-fit rounded-full px-3 py-1 gap-2 shrink-0">
+                        <div class="w-7 h-7">
+                            <img src="https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg" alt="NVDA" class="w-full h-full object-contain">
+                        </div>
+                        <p class="font-medium text-sm">NVDA</p>
+                        <p class="font-mono text-sm">245,23€</p>
+                        <p class="font-mono text-sm text-ganancia">+2,23%</p>
+                    </div>
+                    <div class="flex items-center bg-black w-fit rounded-full px-3 py-1 gap-2 shrink-0">
+                        <div class="w-7 h-7">
+                            <img src="https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg" alt="NVDA" class="w-full h-full object-contain">
+                        </div>
+                        <p class="font-medium text-sm">NVDA</p>
+                        <p class="font-mono text-sm">281,39€</p>
+                        <p class="font-mono text-sm text-perdida">-1,60%</p>
+                    </div>
+                    <div class="flex items-center bg-black w-fit rounded-full px-3 py-1 gap-2 shrink-0">
+                        <div class="w-7 h-7">
+                            <img src="https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg" alt="NVDA" class="w-full h-full object-contain">
+                        </div>
+                        <p class="font-medium text-sm">NVDA</p>
+                        <p class="font-mono text-sm">245,23€</p>
+                        <p class="font-mono text-sm text-ganancia">+2,23%</p>
+                    </div>
+                    <div class="flex items-center bg-black w-fit rounded-full px-3 py-1 gap-2 shrink-0">
+                        <div class="w-7 h-7">
+                            <img src="https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg" alt="NVDA" class="w-full h-full object-contain">
+                        </div>
+                        <p class="font-medium text-sm">NVDA</p>
+                        <p class="font-mono text-sm">178,54€</p>
+                        <p class="font-mono text-sm text-perdida">-0,54%</p>
+                    </div>
+                    <div class="flex items-center bg-black w-fit rounded-full px-3 py-1 gap-2 shrink-0">
+                        <div class="w-7 h-7">
+                            <img src="https://upload.wikimedia.org/wikipedia/sco/2/21/Nvidia_logo.svg" alt="NVDA" class="w-full h-full object-contain">
+                        </div>
+                        <p class="font-medium text-sm">NVDA</p>
+                        <p class="font-mono text-sm">248,99€</p>
+                        <p class="font-mono text-sm text-ganancia">+1,12%</p>
+                    </div>
+
 
                     <div class="flex items-center bg-black w-fit rounded-full px-3 py-1 gap-2 shrink-0">
                         <div class="w-7 h-7">

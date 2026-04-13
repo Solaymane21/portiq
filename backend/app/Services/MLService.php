@@ -10,7 +10,7 @@ class MLService
 
     public function __construct()
     {
-        $this->baseUrl = env('ML_SERVICE_URL', 'http://localhost:8001');
+        $this->baseUrl = config('services.ml.url', 'http://localhost:8001');
     }
 
     // Buscar un símbolo
@@ -46,6 +46,17 @@ class MLService
             'positions' => $positionsStr
         ]);
 
+        return $response->json();
+    }
+
+    //Historial para los precios de la grafica
+    public function getHistory(string $symbol, string $period = '1D'): array{
+        
+        $response = Http::get("{$this->baseUrl}/history/{$symbol}", ['period' => $period]);
+
+        if($response->failed()){
+            return ['error' =>'No se puede obtener el historial'];
+        }
         return $response->json();
     }
 }

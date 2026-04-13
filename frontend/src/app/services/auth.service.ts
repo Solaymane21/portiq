@@ -121,4 +121,17 @@ export class AuthService {
     console.log("Logout");
   }
 
+  onLoginWithGoogle() {
+    console.log('arbol')
+    this.http.get(`${this.apiUrl}/auth/google/redirect`).subscribe({
+      next: (res: any) => {
+        console.log(res)
+        window.location.href = res.redirect_url
+      },
+      error: (err: any) => {
+        console.error(err)
+      }
+    })
+  }
+
 }

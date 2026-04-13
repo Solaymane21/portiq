@@ -10,13 +10,12 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('suscription_type');
+            $table->string('suscription_type')->default('free');
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password')->nullable();
             $table->string('google_id')->nullable();
-            $table->string('avatar')->nullable();
-            $table->string('verify_code')->nullable();
+            $table->text('avatar')->nullable();
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
         });
@@ -26,4 +25,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('users');
     }
-};  
+};

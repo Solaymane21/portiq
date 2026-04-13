@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailController;
+use App\Http\Controllers\GoogleController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\MarketController;
 use Illuminate\Support\Facades\Route;
@@ -11,6 +12,8 @@ Route::post('/auth/verify-code', [EmailController::class, 'verifyCode']);
 Route::post('/auth/resend-code', [EmailController::class, 'resendCode']);
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::get('/auth/google/redirect', [GoogleController::class, 'redirect']);
+Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
 
 Route::get('/search/{symbol}', [MarketController::class, 'search']);
 Route::get('/prices', [MarketController::class, 'prices']);

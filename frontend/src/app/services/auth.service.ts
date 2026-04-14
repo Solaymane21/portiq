@@ -9,7 +9,9 @@ import { Router } from '@angular/router';
 export class AuthService {
   currentStep = signal<number>(1);
   isLoading = signal<boolean>(false)
+  isForgotPassword = signal<boolean>(false)
   msgError = signal<string>('')
+  resetToken = signal<string>('');
 
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8000/api';
@@ -34,7 +36,9 @@ export class AuthService {
     this.isLoading.set(true)
     this.msgError.set('');
 
-    this.http.post(`${this.apiUrl}/auth/send-code`, {email: this.email()})
+    const type = this.isForgotPassword() ? 'reset' : 'register'
+
+    this.http.post(`${this.apiUrl}/auth/${type}-code`, {email: this.email()})
     .subscribe({
       next: () => {
         this.next()
@@ -50,15 +54,23 @@ export class AuthService {
 
   onStep2() {
     this.isLoading.set(true)
-    this.msgError.set('');
+    this.msgError.set('')
 
-    this.http.post(`${this.apiUrl}/auth/verify-code`, {email: this.email(), code: this.code()})
+    const type = this.isForgotPassword() ? 'reset' : 'register';
+
+    this.http.post(`${this.apiUrl}/auth/verify-code`, {email: this.email(), code: this.code(), type: type})
     .subscribe({
-      next: () => {
-        this.next()
+      next: (res: any) => {
         this.isLoading.set(false)
+
+        if (this.isForgotPassword()) {
+          this.resetToken.set(res.reset_token)
+          this.router.navigate(['/auth/reset-password'])
+        } else {
+          this.next()
+        }
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error(err.error.message)
         this.msgError.set(err.error.message)
         this.isLoading.set(false)
@@ -67,7 +79,9 @@ export class AuthService {
   }
 
   onResendCode() {
-    return this.http.post(`${this.apiUrl}/auth/resend-code`, {email: this.email()})
+    const type = this.isForgotPassword() ? 'reset' : 'register';
+
+    return this.http.post(`${this.apiUrl}/auth/resend-code`, {email: this.email(), type: type})
   }
 
   onStep3() {
@@ -130,6 +144,32 @@ export class AuthService {
         console.error(err)
       }
     })
+  }
+
+  onResetPassword(newPassword: string) {
+    this.isLoading.set(true);
+    this.msgError.set('');
+
+    this.http.post(`${this.apiUrl}/auth/reset-password`, {
+      email:                 this.email(),
+      reset_token:           this.resetToken(),
+      password:              newPassword,
+      password_confirmation: newPassword
+    }).subscribe({
+      next: () => {
+        this.resetToken.set('');
+        this.isLoading.set(false);
+        this.router.navigate(['/auth/login']);
+      },
+      error: (err) => {
+        this.msgError.set(err.error.message);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  hasResetToken(): boolean {
+    return !!this.resetToken();
   }
 
 }

@@ -1,6 +1,5 @@
 import { Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ForgotPasswordService } from '../../../services/forgot-password.service';
 
 @Component({
   selector: 'app-reset-password',
@@ -10,7 +9,6 @@ import { ForgotPasswordService } from '../../../services/forgot-password.service
 })
 export class ResetPasswordComponent {
 
-  fogotPasswordService = inject(ForgotPasswordService)
 
   passwordVisible: boolean = false;
   confirmPasswordVisible: boolean = false;

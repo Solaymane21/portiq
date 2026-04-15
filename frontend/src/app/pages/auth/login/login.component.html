@@ -22,7 +22,10 @@
                         }
                     </div>
                     <div class="flex flex-col gap-1">
-                    <label class="ps-2">Contraseña</label>
+                    <div class="flex justify-between">
+                      <label class="ps-2">Contraseña</label>
+                      <a (click)="this.authService.currentStep.set(1)" routerLink="/auth/forgot-password" class="hidden sm:block hover:cursor-pointer hover:underline">¿Has olvidado tú contraseña?</a>
+                    </div>
                     <div class="relative">
                         <input type="password"
                             class="w-full border border-black rounded-md h-10 ps-2 pe-10 focus:outline-none focus:border-orange-500"

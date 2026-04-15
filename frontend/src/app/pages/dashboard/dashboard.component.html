@@ -23,7 +23,7 @@
   </div>
 
   <div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-5">
-    <div class="relative">
+    <div class="relative donut-chart">
       <apx-chart
         [series]="donutOptions.series"
         [chart]="donutOptions.chart"
@@ -84,20 +84,20 @@
         ></div>
       </div>
     } @else if (areaOptions) {
-      <apx-chart
-        [series]="areaOptions.series"
-        [chart]="areaOptions.chart"
-        [colors]="areaOptions.colors"
-        [stroke]="areaOptions.stroke"
-        [fill]="areaOptions.fill"
-        [grid]="areaOptions.grid"
-        [xaxis]="areaOptions.xaxis"
-        [yaxis]="areaOptions.yaxis"
-        [tooltip]="areaOptions.tooltip"
-        [dataLabels]="areaOptions.dataLabels"
-        [markers]="areaOptions.markers"
-      >
-      </apx-chart>
+        <apx-chart
+          [series]="areaOptions.series"
+          [chart]="areaOptions.chart"
+          [colors]="areaOptions.colors"
+          [stroke]="areaOptions.stroke"
+          [fill]="areaOptions.fill"
+          [grid]="areaOptions.grid"
+          [xaxis]="areaOptions.xaxis"
+          [yaxis]="areaOptions.yaxis"
+          [tooltip]="areaOptions.tooltip"
+          [dataLabels]="areaOptions.dataLabels"
+          [markers]="areaOptions.markers"
+        >
+        </apx-chart>
     }
   </div>
 

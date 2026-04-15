@@ -44,18 +44,19 @@ export class DashboardComponent implements OnInit {
       series: this.portfolioAllocation.map(i => i.percent),
       chart: {
         type: 'donut',
-        height: 160,
+        height: 180,
         background: 'transparent',
         toolbar: { show: false }
       },
       labels: this.portfolioAllocation.map(i => i.label),
       colors: this.portfolioAllocation.map(i => i.color),
+      stroke: {width:0} ,
       legend: { show: false },
       dataLabels: { enabled: false },
       plotOptions: {
         pie: {
           donut: {
-            size: '70%',
+            size: '55%',
             labels: {
               show: true,
               name: {
@@ -150,7 +151,7 @@ export class DashboardComponent implements OnInit {
       grid: {
         borderColor: '#374151',
         strokeDashArray: 3,
-        xaxis: { lines: { show: false } }
+        xaxis: { lines: { show: true } }
       },
       xaxis: {
         type: 'datetime',

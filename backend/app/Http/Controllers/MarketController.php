@@ -32,7 +32,7 @@ class MarketController extends Controller
     }
 
     public function history(string $symbol, Request $request){
-        $period = $request->query('perido', '1D');
+        $period = $request->query('period', '1D');
         return response()->json($this->ml->getHistory($symbol, $period));
     }
 

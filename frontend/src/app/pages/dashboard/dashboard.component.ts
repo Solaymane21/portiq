@@ -39,6 +39,7 @@ export class DashboardComponent implements OnInit {
 
 
   ngOnInit(): void {
+    //Donut
     this.donutOptions = {
       series: this.portfolioAllocation.map(i => i.percent),
       chart: {
@@ -113,8 +114,9 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  //Grafico Lineal
   private buildAreaChart(data: { x: number; y: number }[], period: string): void {
-    const tooltipFormat = period === '1D' ? 'HH:mm' : 'dd MMM yyyy'; // ← variable declarada
+    const tooltipFormat = period === '1D' ? 'HH:mm' : 'dd MMM yyyy';
 
     this.areaOptions = {
       series: [{ name: this.selectedSymbol, data }],

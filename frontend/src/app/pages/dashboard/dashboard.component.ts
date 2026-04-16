@@ -1,7 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgApexchartsModule } from 'ng-apexcharts';
-import { MarketService } from './market.service';
+import { MarketService } from '../../services/market.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -11,6 +11,8 @@ import { MarketService } from './market.service';
   styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent implements OnInit {
+
+  profitLosses = signal(-10)
 
   selectedPeriod = '1D';
   periods = ['1D', '1M', '1A'];

@@ -100,7 +100,7 @@ class AuthController extends Controller
         ]));
 
         $frontend = env('FRONTEND_URL');
-        return redirect("{$frontend}/auth/callback#token={$token}&user={$userData}");
+        return redirect("{$frontend}/app/dashboard");
     }
 
     public function resetPassword(Request $request)

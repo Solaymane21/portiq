@@ -124,7 +124,6 @@ export class AuthService {
       next: (res: any) => {
         localStorage.setItem('token', res.token);
         this.isLoading.set(false);
-        this.router.navigate(['/app/dashboard']);
       },
       error: (err) => {
         this.msgError.set('Credenciales incorrectas o no existe cuenta en PortIQ.');

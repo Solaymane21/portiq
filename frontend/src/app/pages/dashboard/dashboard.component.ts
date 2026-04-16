@@ -1,100 +1,152 @@
-// ─── 1. IMPORTS ───────────────────────────────────────────
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { DecimalPipe } from '@angular/common';
 import { NgApexchartsModule } from 'ng-apexcharts';
-import { MarketService } from './market.service';
+import { MarketService } from '../../services/market.service';
+import { Portfolio } from '../../models/portfolio.model';
+import { PORTFOLIOS_MOCK } from './dashboard.mock';
 
-// ─── 2. DECORADOR ─────────────────────────────────────────
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [NgApexchartsModule],
+  imports: [NgApexchartsModule, FormsModule, DecimalPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
-
-// ─── 3. CLASE ─────────────────────────────────────────────
 export class DashboardComponent implements OnInit {
 
-  // ─── 4. PROPIEDADES (variables del componente) ──────────
+  // Carteras 
+  portfolios: Portfolio[] = PORTFOLIOS_MOCK;
+  selectedPortfolioId: number = 1;
+
+  get currentPortfolio(): Portfolio {
+    return this.portfolios.find(p => p.id === this.selectedPortfolioId) ?? this.portfolios[0];
+  }
+
+  get profitLoss(): number {
+    return this.currentPortfolio.profitLoss;
+  }
+
+  // Chart 
   selectedPeriod = '1D';
   periods = ['1D', '1M', '1A'];
-  selectedSymbol = 'NVDA';
   donutOptions: any = {};
-  areaOptions: any = {};
+  areaOptions: any = null;
   isLoading = false;
 
-  // ─── 5. CONSTRUCTOR (inyección de servicios) ────────────
-  constructor(private marketService: MarketService) {}
+  marketService = inject(MarketService);
 
-  // ─── 6. LIFECYCLE HOOKS (ngOnInit, ngOnDestroy...) ──────
   ngOnInit(): void {
-    this.donutOptions = {
-      series: [70, 30],
-      chart: {
-        type: 'donut',
-        height: 220,
-        background: 'transparent',
-        toolbar: { show: false }
-      },
-      labels: ['Acciones', 'Criptomonedas'],
-      colors: ['#EA580C', '#6b4f2a'],
-      legend: { show: false },
-      dataLabels: { enabled: false },
-      plotOptions: {
-        pie: {
-          donut: {
-            size: '68%',
-            labels: {
-              show: true,
-              total: {
+    this.buildDonutChart();
+    this.loadChart(this.selectedPeriod);
+  }
+
+  onPortfolioChange(portfolioId: number): void {
+    this.selectedPortfolioId = +portfolioId;
+    this.areaOptions = null;      
+    this.buildDonutChart();  
+    this.loadChart(this.selectedPeriod); 
+  }
+
+  // Donut
+  private buildDonutChart(): void {
+
+    this.donutOptions = null;
+
+     setTimeout(() => {
+      const alloc = this.currentPortfolio.allocation;
+      const total = this.currentPortfolio.totalValue;
+
+      this.donutOptions = {
+        series: alloc.map(i => i.percent),
+        chart: {
+          type: 'donut',
+          height: 180,
+          background: 'transparent',
+          toolbar: { show: false }
+        },
+        labels: alloc.map(i => i.label),
+        colors: alloc.map(i => i.color),
+        stroke: { width: 0 },
+        legend: { show: false },
+        dataLabels: { enabled: false },
+        plotOptions: {
+          pie: {
+            donut: {
+              size: '55%',
+              labels: {
                 show: true,
-                label: '99.900€',
-                fontSize: '16px',
-                fontWeight: 700,
-                color: '#e2e8f0',
-                formatter: () => '+2,6%'
+                name: {
+                  show: true,
+                  fontSize: '11px',
+                  color: '#9ca3af',
+                  formatter: (seriesName: string) => {
+                    const item = alloc.find(i => i.label === seriesName);
+                    if (!item) return seriesName;
+                    const amount = total * item.percent / 100;
+                    return amount.toLocaleString('es-ES') + '€';
+                  }
+                },
+                value: {
+                  show: true,
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  color: '#e2e8f0',
+                  offsetY: 4,
+                  formatter: (val: string) => val + '%'
+                },
+                total: {
+                  show: true,
+                  label: total.toLocaleString('es-ES') + '€',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  color: '#e2e8f0',
+                  formatter: () => ''
+                  }
               }
             }
           }
         }
-      }
-    };
-
-    this.loadChart('1D');
+      };
+    }, 0);
   }
 
-  // ─── 7. MÉTODOS PÚBLICOS (llamados desde el HTML) ────────
   setPeriod(period: string): void {
     this.selectedPeriod = period;
     this.loadChart(period);
   }
 
-  // ─── 8. MÉTODOS PRIVADOS (lógica interna) ────────────────
   private loadChart(period: string): void {
     this.isLoading = true;
+    const symbol = this.currentPortfolio.symbol;
 
-    this.marketService.getHistory(this.selectedSymbol, period).subscribe({
+    this.marketService.getHistory(symbol, period).subscribe({
       next: (response) => {
-        this.buildAreaChart(response.data);
+        this.buildAreaChart(response.data, period);
         this.isLoading = false;
       },
       error: () => {
         this.isLoading = false;
-        this.buildAreaChart([]);
+        this.buildAreaChart([], period);
       }
     });
   }
 
-  private buildAreaChart(data: { x: number; y: number }[]): void {
+  private buildAreaChart(data: { x: number; y: number }[], period: string): void {
+    const tooltipFormat = period === '1D' ? 'HH:mm' : 'dd MMM yyyy';
+
     this.areaOptions = {
-      series: [{ name: this.selectedSymbol, data }],
+      series: [{ name: this.currentPortfolio.name, data }],
       chart: {
         type: 'area',
-        height: 220,
+        height: 300,
         background: 'transparent',
         toolbar: { show: false },
-        animations: { enabled: true, speed: 400 }
+        animations: { enabled: true, speed: 640 },
+        zoom: { enabled: false }
       },
+      markers: { size: 0, hover: { size: 5 } },
+      dataLabels: { enabled: false },
       colors: ['#EA580C'],
       stroke: { curve: 'smooth', width: 2 },
       fill: {
@@ -110,12 +162,12 @@ export class DashboardComponent implements OnInit {
       grid: {
         borderColor: '#374151',
         strokeDashArray: 3,
-        xaxis: { lines: { show: false } }
+        xaxis: { lines: { show: true } }
       },
       xaxis: {
         type: 'datetime',
-        labels: { show: false },
-        axisBorder: { show: false },
+        labels: { show: true },
+        axisBorder: { show: true },
         axisTicks: { show: false }
       },
       yaxis: {
@@ -123,7 +175,9 @@ export class DashboardComponent implements OnInit {
       },
       tooltip: {
         theme: 'dark',
-        x: { format: 'dd MMM HH:mm' }
+        shared: true,
+        intersect: false,
+        x: { format: tooltipFormat }
       }
     };
   }

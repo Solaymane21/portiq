@@ -2,34 +2,47 @@
   <h1 class="text-3xl font-ibm">Dashboard</h1>
   <select
     class="bg-neutral-900 border border-neutral-700 rounded px-3 py-1"
-    name="cartera"
-    id="cartera"
+    [(ngModel)]="selectedPortfolioId"
+    (ngModelChange)="onPortfolioChange($event)"
   >
-    <option value="1">Cartera 123</option>
+    @for (p of portfolios; track p.id) {
+      <option [ngValue]="p.id">{{ p.name }}</option>
+    }
   </select>
 </div>
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5 mb-5">
   <div class="bg-neutral-900 border w-full border-neutral-700 rounded-2xl p-5">
     <p class="text-sm text-neutral-400 mb-3">Valor total €</p>
-    <p class="text-3xl font-ibm font-bold text-neutral-100 text-center ">99.900€</p>
+    <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
+      {{ currentPortfolio.totalValue | number: "1.0-0" }}€
+    </p>
   </div>
   <div class="bg-neutral-900 border w-full border-neutral-700 rounded-2xl p-5">
     <p class="text-sm text-neutral-400 mb-3">Valor total $</p>
-    <p class="text-3xl font-ibm font-bold text-neutral-100 text-center ">99.900€</p>
+    <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
+      ${{ currentPortfolio.totalValueUSD | number: "1.0-0" }}
+    </p>
   </div>
   <div class="bg-neutral-900 border w-full border-neutral-700 rounded-2xl p-5">
     <p class="text-sm text-neutral-400 mb-3">Ganancias/Perdidas</p>
-    <p class="text-3xl font-ibm font-bold text-center" [class.text-green-500]="profitLosses() > 0" [class.text-red-500]="profitLosses() < 0">{{ profitLosses() }}</p>
+    <p
+      class="text-3xl font-ibm font-bold text-center"
+      [class.text-green-500]="currentPortfolio.profitLoss > 0"
+      [class.text-red-500]="currentPortfolio.profitLoss < 0"
+    >
+      {{ currentPortfolio.profitLoss | number: "1.0-0" }}€
+    </p>
   </div>
   <div class="bg-neutral-900 border w-full border-neutral-700 rounded-2xl p-5">
     <p class="text-sm text-neutral-400 mb-3">Total de Posiciones</p>
-    <p class="text-3xl font-ibm font-bold text-neutral-100 text-center ">99</p>
+    <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
+      {{ currentPortfolio.totalPositions }}
+    </p>
   </div>
 </div>
 
-
-<div class="grid grid-cols-3 gap-4">
+<div class="grid grid-cols-3 gap-4 mt-5 mb-5">
   <div
     class="col-span-3 lg:col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5 flex flex-col"
   >
@@ -54,24 +67,26 @@
         ></div>
       </div>
     } @else if (areaOptions) {
-        <apx-chart
-          [series]="areaOptions.series"
-          [chart]="areaOptions.chart"
-          [colors]="areaOptions.colors"
-          [stroke]="areaOptions.stroke"
-          [fill]="areaOptions.fill"
-          [grid]="areaOptions.grid"
-          [xaxis]="areaOptions.xaxis"
-          [yaxis]="areaOptions.yaxis"
-          [tooltip]="areaOptions.tooltip"
-          [dataLabels]="areaOptions.dataLabels"
-          [markers]="areaOptions.markers"
-        >
-        </apx-chart>
+      <apx-chart
+        [series]="areaOptions.series"
+        [chart]="areaOptions.chart"
+        [colors]="areaOptions.colors"
+        [stroke]="areaOptions.stroke"
+        [fill]="areaOptions.fill"
+        [grid]="areaOptions.grid"
+        [xaxis]="areaOptions.xaxis"
+        [yaxis]="areaOptions.yaxis"
+        [tooltip]="areaOptions.tooltip"
+        [dataLabels]="areaOptions.dataLabels"
+        [markers]="areaOptions.markers"
+      >
+      </apx-chart>
     }
   </div>
 
-  <div class="col-span-3 lg:col-span-1 bg-neutral-900 border border-neutral-700 rounded-2xl p-5">
+  <div
+    class="col-span-3 lg:col-span-1 bg-neutral-900 border border-neutral-700 rounded-2xl p-5"
+  >
     <div class="relative donut-chart">
       <apx-chart
         [series]="donutOptions.series"
@@ -83,41 +98,58 @@
         [dataLabels]="donutOptions.dataLabels"
       >
       </apx-chart>
-
     </div>
 
     <div class="flex flex-col gap-2 mt-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-sm inline-block bg-orange-500"></span>
-          <span class="text-xs text-neutral-400">Acciones</span>
-          <span class="text-xs font-semibold text-[#EA580C]">70%</span>
+      @for (item of currentPortfolio.allocation; track item.label) {
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span
+              class="w-2.5 h-2.5 rounded-sm inline-block"
+              [class]="item.colorClass"
+            ></span>
+            <span class="text-xl text-neutral-400">{{ item.label }}</span>
+            <span class="text-l font-semibold" [class]="item.textClass"
+              >{{ item.percent }}%</span
+            >
+          </div>
         </div>
-        
-      </div>
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-sm inline-block bg-orange-800"></span>
-          <span class="text-xs text-neutral-400">Cryptos</span>
-          <span class="text-xs font-semibold text-neutral-400">30%</span>
-        </div>
-      </div>
+      }
     </div>
   </div>
 </div>
 
-<div class = "col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5">
+<div
+  class="col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5"
+>
+  <p class="text-sm text-neutral-400 mb-3">Mis posiciones</p>
+  <div
+    class="col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5"
+  >
     <p class="text-sm text-neutral-400 mb-3">Mis posiciones</p>
     <div class="flex flex-col divide-y divide-neutral-800">
-      <div class="flex items-center justify-between py-2.5">
-        <div class="flex items-center gap-3">
-          <span class="text-sm font-semibold text-neutral-100">AAPL</span>
-          <span class="text-xs text-neutral-500">Apple Inc.</span>
+      @for (pos of currentPortfolio.positions; track pos.ticker) {
+        <div class="flex items-center justify-between py-2.5">
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-semibold text-neutral-100">{{
+              pos.ticker
+            }}</span>
+            <span class="text-xs text-neutral-500">{{ pos.name }}</span>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-semibold text-neutral-100">
+              {{ pos.price }}
+            </p>
+            <p
+              class="text-xs"
+              [class.text-emerald-500]="pos.positive"
+              [class.text-red-500]="!pos.positive"
+            >
+              {{ pos.change }}
+            </p>
+          </div>
         </div>
-        <div class="text-right">
-          <p class="text-sm font-semibold text-neutral-100">$182.50</p>
-          <p class="text-xs text-emerald-500">+1.24%</p>
-        </div>
-      </div>
+      }
     </div>
   </div>
+</div>

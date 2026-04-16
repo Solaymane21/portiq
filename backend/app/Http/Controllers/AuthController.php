@@ -72,13 +72,23 @@ class AuthController extends Controller
         $user = User::where('google_id', $googleUser->getId())->first();
 
         if (!$user) {
-            $user = User::create([
-                'name'              => $googleUser->getName(),
-                'email'             => $googleUser->getEmail(),
-                'google_id'         => $googleUser->getId(),
-                'avatar'            => $googleUser->getAvatar(),
-                'password'          => Hash::make(rand(0, 99999))
-            ]);
+            $user = User::where('email', $googleUser->getEmail())->first();
+
+            if ($user) {
+                $user->update([
+                    'google_id' => $googleUser->getId(),
+                    'avatar' => $googleUser->getAvatar(),
+                    'updated_at' =>
+                ]);
+            } else {
+                $user = User::create([
+                    'name' => $googleUser->getName(),
+                    'email' => $googleUser->getEmail(),
+                    'google_id' => $googleUser->getId(),
+                    'avatar' => $googleUser->getAvatar(),
+                    'password' => Hash::make(rand(0, 99999)),
+                ]);
+            }
         }
 
         $token = $user->createToken('google-oauth')->plainTextToken;

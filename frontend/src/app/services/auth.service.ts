@@ -104,7 +104,7 @@ export class AuthService {
       next: (res: any) => {
         localStorage.setItem('token', res.token);
         this.isLoading.set(false);
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/app/dashboard']);
       },
       error: (err) => {
         console.error(err.error.message);

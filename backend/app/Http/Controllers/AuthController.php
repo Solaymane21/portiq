@@ -77,8 +77,7 @@ class AuthController extends Controller
             if ($user) {
                 $user->update([
                     'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar(),
-                    'updated_at' =>
+                    'avatar' => $googleUser->getAvatar()
                 ]);
             } else {
                 $user = User::create([

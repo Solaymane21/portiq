@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
-use Pest\Support\Str;
+use Illuminate\Support\Str;
 
 class EmailController extends Controller
 {

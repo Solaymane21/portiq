@@ -2,6 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { User } from '../models/user.model';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { RedirectMsg } from '../models/redirectMsg.model';
 
 @Injectable({
   providedIn: 'root'
@@ -11,6 +12,7 @@ export class AuthService {
   isLoading = signal<boolean>(false)
   isForgotPassword = signal<boolean>(false)
   msgError = signal<string>('')
+  redirectMsg = signal<RedirectMsg>({msg: '',type: 'info'})
   resetToken = signal<string>('');
 
   private http = inject(HttpClient);
@@ -125,7 +127,7 @@ export class AuthService {
         this.router.navigate(['/app/dashboard']);
       },
       error: (err) => {
-        this.msgError.set('Email o contraseña incorrectos.');
+        this.msgError.set('Credenciales incorrectas o no existe cuenta en PortIQ.');
         this.isLoading.set(false);
       }
     });
@@ -149,6 +151,7 @@ export class AuthService {
   onResetPassword(newPassword: string) {
     this.isLoading.set(true);
     this.msgError.set('');
+    this.redirectMsg.set({msg: '', type: 'info'})
 
     this.http.post(`${this.apiUrl}/auth/reset-password`, {
       email:                 this.email(),
@@ -156,9 +159,10 @@ export class AuthService {
       password:              newPassword,
       password_confirmation: newPassword
     }).subscribe({
-      next: () => {
+      next: (res: any) => {
         this.resetToken.set('');
         this.isLoading.set(false);
+        this.redirectMsg.set({ msg: res.message, type: 'success' })
         this.router.navigate(['/auth/login']);
       },
       error: (err) => {

@@ -12,7 +12,7 @@ import { LoginComponent } from './pages/auth/login/login.component';
 import { RegisterComponent } from './pages/auth/register/register.component';
 import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './pages/auth/reset-password/reset-password.component';
-import { resetPasswordGuard } from './guards/guards/reset-password.guard';
+import { resetPasswordGuard } from './guards/reset-password.guard';
 
 export const routes: Routes = [
     {

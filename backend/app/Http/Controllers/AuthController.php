@@ -46,7 +46,7 @@ class AuthController extends Controller
         $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
-            'password' => bcrypt($request->password),
+            'password' => Hash::make($request->password),
             'suscription_type'     => $request->suscription_type,
         ]);
 
@@ -92,6 +92,28 @@ class AuthController extends Controller
 
         $frontend = env('FRONTEND_URL');
         return redirect("{$frontend}/auth/callback#token={$token}&user={$userData}");
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email'                 => 'required|email',
+            'reset_token'           => 'required|string',
+            'password'              => 'required|min:8|confirmed',
+            'password_confirmation' => 'required',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password)
+        ]);
+
+        return response()->json(['message' => 'Contraseña actualizada correctamente']);
     }
 
 }

@@ -10,11 +10,14 @@
                 <p>Introduce el código de verificación enviado al correo electrónico <b>{{ email }}</b></p>
                 <p>¿No has recibido el código? <button (click)="onResendCode()" [disabled]="isResentCode()" class="text-orange-500 hover:underline hover:cursor-pointer disabled:cursor-not-allowed disabled:no-underline">
                   @if (isResentCode()) {
-                    ¡Código reenviado!
+                    <span class="text-orange-300 cursor-not-allowed">Reenviar código </span>
                   } @else {
                     Reenviar código
                   }
                 </button></p>
+                @if (isResentCode()) {
+                  <p class="text-orange-500">Reenviar código disponible en {{ countdown() }}s</p>
+                }
             </div>
             <div class="flex flex-col">
                 <label class="ps-2">Código</label>

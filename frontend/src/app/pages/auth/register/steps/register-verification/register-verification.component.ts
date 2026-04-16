@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { AuthService } from '../../../../../services/auth.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -13,6 +13,7 @@ export class RegisterVerificationComponent implements OnInit {
   authService = inject(AuthService)
   isResentCode = signal<boolean>(false)
   email: string = ''
+  countdown = signal<number>(30);
 
   passwordVisible: boolean = false;
   confirmPasswordVisible: boolean = false;
@@ -30,8 +31,28 @@ export class RegisterVerificationComponent implements OnInit {
 
   onResendCode() {
     this.isResentCode.set(true)
+    this.startCountDown()
 
-    this.authService.onResendCode()
+    this.authService.onResendCode().subscribe({
+      next: () => {},
+      error: (err) => {
+        console.error(err);
+        this.isResentCode.set(false);
+      }
+    });
+  }
+
+  startCountDown() {
+    this.countdown.set(30)
+
+    const interval = setInterval(() => {
+      this.countdown.update(time => Math.max(time - 1, 0))
+
+      if (this.countdown() <= 0) {
+        clearInterval(interval)
+        this.isResentCode.set(false)
+      }
+    }, 1000);
   }
 
   next() {

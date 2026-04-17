@@ -1,4 +1,4 @@
-<form [formGroup]="forgotPasswordForm">
+<form [formGroup]="forgotPasswordForm" (ngSubmit)="next()">
   <legend class="text-center text-3xl font-ibm">¿Has olvidado tú contraseña?</legend>
   <div class="flex flex-col gap-5 pt-5">
       <div class="text-center flex flex-col gap-3">
@@ -9,8 +9,8 @@
           <input type="text" class="border border-black rounded-md h-10 ps-2 focus:outline-none focus:border-orange-500" formControlName="email">
       </div>
       <div class="flex justify-between">
-          <button routerLink="/auth/login" class="flex items-center w-fit hover:cursor-pointer"><span class="hover:underline">Volver</span></button>
-          <button (click)="next()" [disabled]="this.authService.isLoading()" type="button" class="w-1/2 bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white text-center">
+          <button routerLink="/auth/login" type="button" class="flex items-center w-fit hover:cursor-pointer"><span class="hover:underline">Volver</span></button>
+          <button [disabled]="this.authService.isLoading()" type="submit" class="w-1/2 bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white text-center">
             @if (authService.isLoading()) {
                 <mat-spinner diameter="20"></mat-spinner>
               } @else {

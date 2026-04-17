@@ -57,7 +57,7 @@
                           <p class="text-orange-500">La contraseña es obligatoria.</p>
                         }
                     </div>
-                    <button type="submit" (click)="onSubmit()" [disabled]="this.authService.isLoading()" class="bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white disabled:bg-orange-500/80 disabled:cursor-not-allowed">
+                    <button type="submit" [disabled]="this.authService.isLoading()" class="bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white disabled:bg-orange-500/80 disabled:cursor-not-allowed">
                       @if (authService.isLoading()) {
                         <mat-spinner diameter="20"></mat-spinner>
                       } @else {

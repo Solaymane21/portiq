@@ -16,6 +16,8 @@ import { resetPasswordGuard } from './guards/reset-password.guard';
 import { CallbackComponent } from './pages/auth/callback/callback.component';
 import { authGuard } from './guards/auth.guard';
 import { guestGuard } from './guards/guest.guard';
+import { AdminLayoutComponent } from './layout/admin-layout/admin-layout.component';
+import { AdminComponent } from './pages/admin/admin.component';
 
 export const routes: Routes = [
     {
@@ -78,6 +80,16 @@ export const routes: Routes = [
             {
               path: 'callback',
               component: CallbackComponent
+            }
+        ]
+    },
+    {
+        path: 'admin',
+        component: AdminLayoutComponent,
+        children: [
+            {
+                path: 'index',
+                component: AdminComponent
             }
         ]
     },

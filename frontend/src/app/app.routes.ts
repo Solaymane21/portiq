@@ -13,6 +13,7 @@ import { RegisterComponent } from './pages/auth/register/register.component';
 import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './pages/auth/reset-password/reset-password.component';
 import { resetPasswordGuard } from './guards/reset-password.guard';
+import { CallbackComponent } from './pages/auth/callback/callback.component';
 
 export const routes: Routes = [
     {
@@ -69,6 +70,10 @@ export const routes: Routes = [
                 path: 'reset-password',
                 component: ResetPasswordComponent,
                 canActivate: [resetPasswordGuard]
+            },
+            {
+              path: 'callback',
+              component: CallbackComponent
             }
         ]
     },

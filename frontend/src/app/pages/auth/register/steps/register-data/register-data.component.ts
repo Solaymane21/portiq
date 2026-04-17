@@ -16,7 +16,7 @@ export class RegisterDataComponent {
 
   registerForm = new FormGroup({
     username: new FormControl(
-      this.authService.username(),
+      '',
       [
         Validators.required,
         Validators.minLength(3),
@@ -24,7 +24,7 @@ export class RegisterDataComponent {
       ]
     ),
     email: new FormControl(
-      this.authService.email(),
+      '',
       [
         Validators.required,
         Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)

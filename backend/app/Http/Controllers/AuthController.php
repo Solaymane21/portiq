@@ -29,8 +29,15 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Login correcte',
-            'access_token' => $token,
+            'token' => $token,
             'token_type' => 'Bearer',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'avatar' => $user->avatar,
+                'subscription_type' => $user->suscription_type,
+            ]
         ]);
     }
 
@@ -100,7 +107,7 @@ class AuthController extends Controller
         ]));
 
         $frontend = env('FRONTEND_URL');
-        return redirect("{$frontend}/app/dashboard");
+        return redirect("{$frontend}/auth/callback#token={$token}&user={$userData}");
     }
 
     public function resetPassword(Request $request)
@@ -123,6 +130,13 @@ class AuthController extends Controller
         ]);
 
         return response()->json(['message' => 'Contraseña actualizada correctamente']);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json(['message' => 'Sesión cerrada correctamente']);
     }
 
 }

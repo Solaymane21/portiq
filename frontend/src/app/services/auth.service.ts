@@ -102,7 +102,7 @@ export class AuthService {
       suscription_type: this.subscription_type()
     }).subscribe({
       next: (res: any) => {
-        localStorage.setItem('token', res.token);
+        this.saveUserData(res)
         this.isLoading.set(false);
         this.router.navigate(['/app/dashboard']);
       },
@@ -122,7 +122,7 @@ export class AuthService {
       password: this.password()
     }).subscribe({
       next: (res: any) => {
-        localStorage.setItem('token', res.token);
+        this.saveUserData(res)
         this.isLoading.set(false);
         this.router.navigate(['/app/dashboard'])
       },
@@ -134,7 +134,18 @@ export class AuthService {
   }
 
   onLogout() {
-    console.log("Logout");
+    const token = localStorage.getItem('token');
+
+    this.http.post(`${this.apiUrl}/auth/logout`, {}).subscribe({
+      next: () => {
+        this.removeUserData()
+        this.router.navigate(['/auth/login'])
+      },
+      error: () => {
+        this.removeUserData()
+        this.router.navigate(['/auth/login'])
+      }
+    });
   }
 
   onLoginWithGoogle() {
@@ -174,6 +185,16 @@ export class AuthService {
 
   hasResetToken(): boolean {
     return !!this.resetToken();
+  }
+
+  saveUserData(res: any) {
+    localStorage.setItem('token', res.token)
+    localStorage.setItem('portiqUser', JSON.stringify(res.user))
+  }
+
+  removeUserData() {
+    localStorage.removeItem('token')
+    localStorage.removeItem('portiqUser')
   }
 
 }

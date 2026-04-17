@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { AuthService } from '../../../../../services/auth.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -26,7 +26,7 @@ export class RegisterVerificationComponent implements OnInit {
   })
 
   ngOnInit(): void {
-    this.email = this.authService.email();
+    this.email = this.authService.email()
   }
 
   onResendCode() {

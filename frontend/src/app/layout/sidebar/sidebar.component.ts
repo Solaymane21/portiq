@@ -13,6 +13,7 @@ export class SidebarComponent {
 
   authService = inject(AuthService)
   router = inject(Router)
+  showLogoutModal = signal<boolean>(false);
 
   collapsed = signal(false)
 
@@ -20,8 +21,8 @@ export class SidebarComponent {
     this.collapsed.update(v => !v)
   }
 
-  onLogOut() {
-    this.authService.onLogout()
-    this.router.navigate(['/auth/login'])
+  onConfirmLogout() {
+    this.showLogoutModal.set(false);
+    this.authService.onLogout();
   }
 }

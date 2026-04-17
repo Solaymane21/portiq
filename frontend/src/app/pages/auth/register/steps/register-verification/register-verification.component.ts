@@ -13,6 +13,7 @@ export class RegisterVerificationComponent implements OnInit {
   authService = inject(AuthService)
   isResentCode = signal<boolean>(false)
   email: string = ''
+  countdown = signal<number>(30);
 
   passwordVisible: boolean = false;
   confirmPasswordVisible: boolean = false;
@@ -25,13 +26,33 @@ export class RegisterVerificationComponent implements OnInit {
   })
 
   ngOnInit(): void {
-    this.email = this.authService.email();
+    this.email = this.authService.email()
   }
 
   onResendCode() {
     this.isResentCode.set(true)
+    this.startCountDown()
 
-    this.authService.onResendCode()
+    this.authService.onResendCode().subscribe({
+      next: () => {},
+      error: (err) => {
+        console.error(err);
+        this.isResentCode.set(false);
+      }
+    });
+  }
+
+  startCountDown() {
+    this.countdown.set(30)
+
+    const interval = setInterval(() => {
+      this.countdown.update(time => Math.max(time - 1, 0))
+
+      if (this.countdown() <= 0) {
+        clearInterval(interval)
+        this.isResentCode.set(false)
+      }
+    }, 1000);
   }
 
   next() {

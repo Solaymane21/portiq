@@ -1,22 +1,15 @@
 import { Component, inject } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { ForgotPasswordService } from '../../../services/forgot-password.service';
+import { AuthService } from '../../../services/auth.service';
+import { EmailValidationComponent } from './steps/email-validation/email-validation.component';
+import { RegisterVerificationComponent } from '../register/steps/register-verification/register-verification.component';
 
 @Component({
   selector: 'app-forgot-password',
-  imports: [ReactiveFormsModule],
+  imports: [EmailValidationComponent, RegisterVerificationComponent],
   templateUrl: './forgot-password.component.html',
   styleUrl: './forgot-password.component.css'
 })
 export class ForgotPasswordComponent {
-  
-  fogotPasswordService = inject(ForgotPasswordService)
 
-  registerForm = new FormGroup({
-    email: new FormControl('', [
-      Validators.required,
-      Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
-    ])
-  })
+  authService = inject(AuthService)
 }

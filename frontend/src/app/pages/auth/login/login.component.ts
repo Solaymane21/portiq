@@ -1,16 +1,19 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { RedirectMsg } from '../../../models/redirectMsg.model';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, MatProgressSpinnerModule],
+  imports: [ReactiveFormsModule, RouterLink, MatProgressSpinnerModule, NgClass],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit{
+
   router = inject(Router)
   authService = inject(AuthService)
 
@@ -18,7 +21,7 @@ export class LoginComponent {
   confirmPasswordVisible: boolean = false;
 
   submitted = signal<boolean>(false)
-
+  redirectMessage = signal<RedirectMsg>({msg: '', type: 'info'});
 
   loginForm = new FormGroup({
     email: new FormControl('', [
@@ -29,6 +32,10 @@ export class LoginComponent {
       Validators.required
     ])
   });
+
+  ngOnInit(): void {
+    this.redirectMessage.set(this.authService.redirectMsg())
+  }
 
   onSubmit() {
     this.submitted.set(true)

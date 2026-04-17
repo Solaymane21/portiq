@@ -2,6 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { User } from '../models/user.model';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { RedirectMsg } from '../models/redirectMsg.model';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +10,10 @@ import { Router } from '@angular/router';
 export class AuthService {
   currentStep = signal<number>(1);
   isLoading = signal<boolean>(false)
+  isForgotPassword = signal<boolean>(false)
   msgError = signal<string>('')
+  redirectMsg = signal<RedirectMsg>({msg: '',type: 'info'})
+  resetToken = signal<string>('');
 
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8000/api';
@@ -34,7 +38,9 @@ export class AuthService {
     this.isLoading.set(true)
     this.msgError.set('');
 
-    this.http.post(`${this.apiUrl}/auth/send-code`, {email: this.email()})
+    const type = this.isForgotPassword() ? 'reset' : 'register'
+
+    this.http.post(`${this.apiUrl}/auth/${type}-code`, {email: this.email()})
     .subscribe({
       next: () => {
         this.next()
@@ -50,15 +56,23 @@ export class AuthService {
 
   onStep2() {
     this.isLoading.set(true)
-    this.msgError.set('');
+    this.msgError.set('')
 
-    this.http.post(`${this.apiUrl}/auth/verify-code`, {email: this.email(), code: this.code()})
+    const type = this.isForgotPassword() ? 'reset' : 'register';
+
+    this.http.post(`${this.apiUrl}/auth/verify-code`, {email: this.email(), code: this.code(), type: type})
     .subscribe({
-      next: () => {
-        this.next()
+      next: (res: any) => {
         this.isLoading.set(false)
+
+        if (this.isForgotPassword()) {
+          this.resetToken.set(res.reset_token)
+          this.router.navigate(['/auth/reset-password'])
+        } else {
+          this.next()
+        }
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error(err.error.message)
         this.msgError.set(err.error.message)
         this.isLoading.set(false)
@@ -67,7 +81,9 @@ export class AuthService {
   }
 
   onResendCode() {
-    return this.http.post(`${this.apiUrl}/auth/resend-code`, {email: this.email()})
+    const type = this.isForgotPassword() ? 'reset' : 'register';
+
+    return this.http.post(`${this.apiUrl}/auth/resend-code`, {email: this.email(), type: type})
   }
 
   onStep3() {
@@ -86,9 +102,9 @@ export class AuthService {
       suscription_type: this.subscription_type()
     }).subscribe({
       next: (res: any) => {
-        localStorage.setItem('token', res.token);
+        this.saveUserData(res)
         this.isLoading.set(false);
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/app/dashboard']);
       },
       error: (err) => {
         console.error(err.error.message);
@@ -106,32 +122,79 @@ export class AuthService {
       password: this.password()
     }).subscribe({
       next: (res: any) => {
-        localStorage.setItem('token', res.token);
+        this.saveUserData(res)
         this.isLoading.set(false);
-        this.router.navigate(['/app/dashboard']);
+        this.router.navigate(['/app/dashboard'])
       },
       error: (err) => {
-        this.msgError.set('Email o contraseña incorrectos.');
+        this.msgError.set('Credenciales incorrectas o no existe cuenta en PortIQ.');
         this.isLoading.set(false);
       }
     });
   }
 
   onLogout() {
-    console.log("Logout");
+    const token = localStorage.getItem('token');
+
+    this.http.post(`${this.apiUrl}/auth/logout`, {}).subscribe({
+      next: () => {
+        this.removeUserData()
+        this.router.navigate(['/auth/login'])
+      },
+      error: () => {
+        this.removeUserData()
+        this.router.navigate(['/auth/login'])
+      }
+    });
   }
 
   onLoginWithGoogle() {
-    console.log('arbol')
     this.http.get(`${this.apiUrl}/auth/google/redirect`).subscribe({
       next: (res: any) => {
-        console.log(res)
         window.location.href = res.redirect_url
       },
       error: (err: any) => {
         console.error(err)
       }
     })
+  }
+
+  onResetPassword(newPassword: string) {
+    this.isLoading.set(true);
+    this.msgError.set('');
+    this.redirectMsg.set({msg: '', type: 'info'})
+
+    this.http.post(`${this.apiUrl}/auth/reset-password`, {
+      email:                 this.email(),
+      reset_token:           this.resetToken(),
+      password:              newPassword,
+      password_confirmation: newPassword
+    }).subscribe({
+      next: (res: any) => {
+        this.resetToken.set('');
+        this.isLoading.set(false);
+        this.redirectMsg.set({ msg: res.message, type: 'success' })
+        this.router.navigate(['/auth/login']);
+      },
+      error: (err) => {
+        this.msgError.set(err.error.message);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  hasResetToken(): boolean {
+    return !!this.resetToken();
+  }
+
+  saveUserData(res: any) {
+    localStorage.setItem('token', res.token)
+    localStorage.setItem('portiqUser', JSON.stringify(res.user))
+  }
+
+  removeUserData() {
+    localStorage.removeItem('token')
+    localStorage.removeItem('portiqUser')
   }
 
 }

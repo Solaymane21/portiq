@@ -206,9 +206,8 @@
         }
       </div>
       <div
-        (click)="this.onLogOut()"
+        (click)="showLogoutModal.set(true)"
         routerLinkActive="active-link"
-        routerLink="/app/settings"
         [class.justify-center]="collapsed()"
         class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-bold [&.active-link]:bg-naranja-secundario"
       >
@@ -234,3 +233,32 @@
     </div>
   </div>
 </aside>
+@if (showLogoutModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center rounded">
+    <!-- overlay oscuro -->
+    <div
+      class="absolute inset-0 bg-black/40"
+      (click)="showLogoutModal.set(false)">
+    </div>
+
+    <div class="relative bg-neutral-900 border border-neutral-700 rounded p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+      <div class="flex flex-col items-center gap-2 text-center">
+        <h2 class="text-xl">¿Quieres cerrar sesión?</h2>
+        <p class="text-sm text-neutral-400">Tu sesión se cerrará y tendrás que volver a iniciarla.</p>
+      </div>
+
+      <div class="flex gap-3">
+        <button
+          (click)="showLogoutModal.set(false)"
+          class="w-1/2 bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black">
+          Cancelar
+        </button>
+        <button
+          (click)="onConfirmLogout()"
+          class="w-1/2 bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white">
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </div>
+}

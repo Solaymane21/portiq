@@ -14,11 +14,14 @@ import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-pas
 import { ResetPasswordComponent } from './pages/auth/reset-password/reset-password.component';
 import { resetPasswordGuard } from './guards/reset-password.guard';
 import { CallbackComponent } from './pages/auth/callback/callback.component';
+import { authGuard } from './guards/auth.guard';
+import { guestGuard } from './guards/guest.guard';
 
 export const routes: Routes = [
     {
         path: 'app',
         component: MainLayoutComponent,
+        canActivate: [authGuard],
         children: [
             {
                 path: 'dashboard',
@@ -53,6 +56,7 @@ export const routes: Routes = [
     {
         path: 'auth',
         component: AuthLayoutComponent,
+        canActivate: [guestGuard],
         children: [
             {
                 path: 'login',

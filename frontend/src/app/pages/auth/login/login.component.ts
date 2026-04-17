@@ -4,10 +4,11 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RedirectMsg } from '../../../models/redirectMsg.model';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, MatProgressSpinnerModule],
+  imports: [ReactiveFormsModule, RouterLink, MatProgressSpinnerModule, NgClass],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })

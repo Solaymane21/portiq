@@ -4,6 +4,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\MarketController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PortfolioController;
+use App\Http\Controllers\InvestmentController;
 
 Route::prefix('auth')->group(function() {
     Route::post('/reset-code', [EmailController::class, 'sendForgotPasswordCode']);
@@ -21,3 +23,6 @@ Route::get('/search/{symbol}', [MarketController::class, 'search']);
 Route::get('/prices', [MarketController::class, 'prices']);
 Route::get('/portfolio/value', [MarketController::class, 'portfolioValue']);
 Route::get('/history/{symbol}', [MarketController::class, 'history']);
+
+Route::apiResource('portfolios', PortfolioController::class);
+Route::apiResource('portfolios.investments', InvestmentController::class);

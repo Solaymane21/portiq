@@ -103,17 +103,17 @@
 
     <div class="flex flex-col gap-2 mt-3">
       @for (item of currentPortfolio.allocation; track item.label) {
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span
-              class="w-2.5 h-2.5 rounded-sm inline-block"
-              [class]="item.colorClass"
-            ></span>
-            <span class="text-xl text-neutral-400">{{ item.label }}</span>
+        <div class="flex items-center justify-between px-2">
+            <div class="flex items-center gap-2">
+              <span
+                class="w-2.5 h-2.5 rounded-sm inline-block"
+                [class]="item.colorClass"
+              ></span>
+              <span class="text-xl text-neutral-400">{{ item.label }}</span>
+            </div>
             <span class="text-l font-semibold" [class]="item.textClass"
-              >{{ item.percent }}%</span
-            >
-          </div>
+                >{{ item.percent }}%</span
+              >
         </div>
       }
     </div>

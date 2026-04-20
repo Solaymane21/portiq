@@ -15,7 +15,7 @@ import { PORTFOLIOS_MOCK } from './dashboard.mock';
 })
 export class DashboardComponent implements OnInit {
 
-  // Carteras 
+  // Carteras
   portfolios: Portfolio[] = PORTFOLIOS_MOCK;
   selectedPortfolioId: number = 1;
 
@@ -27,7 +27,7 @@ export class DashboardComponent implements OnInit {
     return this.currentPortfolio.profitLoss;
   }
 
-  // Chart 
+  // Chart
   selectedPeriod = '1D';
   periods = ['1D', '1M', '1A'];
   donutOptions: any = {};
@@ -43,9 +43,9 @@ export class DashboardComponent implements OnInit {
 
   onPortfolioChange(portfolioId: number): void {
     this.selectedPortfolioId = +portfolioId;
-    this.areaOptions = null;      
-    this.buildDonutChart();  
-    this.loadChart(this.selectedPeriod); 
+    this.areaOptions = null;
+    this.buildDonutChart();
+    this.loadChart(this.selectedPeriod);
   }
 
   // Donut
@@ -139,7 +139,7 @@ export class DashboardComponent implements OnInit {
       series: [{ name: this.currentPortfolio.name, data }],
       chart: {
         type: 'area',
-        height: 300,
+        height: 200,
         background: 'transparent',
         toolbar: { show: false },
         animations: { enabled: true, speed: 640 },

@@ -10,8 +10,8 @@ export const PORTFOLIOS_MOCK: Portfolio[] = [
     profitLoss: -4250,
     symbol: 'AAPL',
     allocation: [
-      { label: 'Acciones',      percent: 70, color: '#EA580C', colorClass: 'bg-orange-500', textClass: 'text-[#EA580C]' },
-      { label: 'Criptomonedas', percent: 30, color: '#92400e', colorClass: 'bg-orange-800', textClass: 'text-neutral-400' }
+      { label: 'Acciones',      percent: 70, color: '#F97316', colorClass: 'bg-orange-500', textClass: 'text-[#F97316]' },
+      { label: 'Criptomonedas', percent: 30, color: '#C2410C', colorClass: 'bg-orange-700', textClass: 'text-[#C2410C]' }
     ],
     positions: [
       { ticker: 'AAPL', name: 'Apple Inc.',  price: '$182.50', change: '+1.24%', positive: true },

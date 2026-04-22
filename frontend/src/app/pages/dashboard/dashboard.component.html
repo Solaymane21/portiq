@@ -66,7 +66,7 @@
       @for (p of periods; track p) {
         <button
           (click)="setPeriod(p)"
-          class="px-2.5 py-0.5 rounded-md text-xs font-semibold transition-colors"
+          class="px-2.5 py-0.5 rounded-md  transition-colors"
           [class.bg-orange-600]="p === selectedPeriod"
           [class.text-white]="p === selectedPeriod"
           [class.text-neutral-400]="p !== selectedPeriod"
@@ -125,9 +125,9 @@
                 class="w-2.5 h-2.5 rounded-sm inline-block"
                 [class]="item.colorClass"
               ></span>
-              <span class="text-xl text-neutral-400">{{ item.label }}</span>
+              <span>{{ item.label }}</span>
             </div>
-            <span class="text-l font-semibold" [class]="item.textClass"
+            <span class="text-l" [class]="item.textClass"
                 >{{ item.percent }}%</span
               >
         </div>
@@ -137,51 +137,51 @@
 </div>
 
 <!-- Tabla -->
-<div class="col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5">
-  <p class="text-sm text-neutral-400 mb-3">Mis posiciones</p>
+<div class="col-span-2 bg-neutral-950 border border-neutral-600 rounded-2xl p-5">
+  <p class="mb-3">Mis posiciones</p>
 
       <table mat-table [dataSource]="dataSource" matSort class="w-full bg-transparent">
 
       <ng-container matColumnDef="ticker">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
-            class="text-neutral-500 text-xs uppercase bg-transparent border-b border-neutral-800">
+            class="text-neutral-400  uppercase bg-transparent border-b">
           Ticker
         </th>
         <td mat-cell *matCellDef="let pos"
-            class="text-sm font-semibold text-neutral-100 border-b border-neutral-800 py-3">
+            class="text-sm text-neutral-100 border-b py-3">
           {{ pos.ticker }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
-            class="text-neutral-500 text-xs uppercase bg-transparent border-b border-neutral-800">
+            class="text-neutral-400  uppercase bg-transparent border-b">
           Nombre
         </th>
         <td mat-cell *matCellDef="let pos"
-            class="text-xs text-neutral-500 border-b border-neutral-800 py-3">
+            class="text-neutral-400 border-b py-3">
           {{ pos.name }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="price">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
-            class="text-neutral-500 text-xs uppercase bg-transparent border-b border-neutral-800">
+            class="text-neutral-400  uppercase bg-transparent border-b">
           Precio
         </th>
         <td mat-cell *matCellDef="let pos"
-            class="text-sm font-semibold text-neutral-100 border-b border-neutral-800 py-3">
+            class="text-sm text-neutral-100 border-b py-3">
           {{ pos.price }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="change">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
-            class="text-neutral-500 text-xs uppercase bg-transparent border-b border-neutral-800">
+            class="text-neutral-400 uppercase bg-transparent border-b">
           Variación
         </th>
         <td mat-cell *matCellDef="let pos"
-            class="text-xs font-semibold border-b border-neutral-800 py-3"
+            class=" border-b py-3"
             [class.text-emerald-500]="pos.positive"
             [class.text-red-500]="!pos.positive">
           {{ pos.change }}
@@ -190,7 +190,7 @@
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-transparent"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-          class="hover:bg-neutral-800 transition-colors cursor-pointer"></tr>
+          class="hover:bg-neutral-800 cursor-pointer"></tr>
     </table>
 
     <mat-paginator
@@ -200,4 +200,3 @@
       class="bg-transparent text-white">
     </mat-paginator>
   </div>
-</div>

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, AfterViewInit, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { MarketService } from '../../services/market.service';
@@ -18,7 +18,7 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent implements OnInit, AfterViewInit  {
- 
+
   //Tabla
 
   displayedColumns = ['ticker', 'name', 'price', 'change'];
@@ -29,7 +29,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   @ViewChild(MatSort) sort!: MatSort;
 
   ngAfterViewInit(): void {
-    
+
     setTimeout(()=>{
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
@@ -49,7 +49,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       };
     });
   }
- 
+
   // Carteras
   portfolios: Portfolio[] = PORTFOLIOS_MOCK;
   selectedPortfolioId: number = 1;
@@ -74,10 +74,6 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   marketService = inject(MarketService);
   collapsed = signal(false)
 
-  toggle() {
-    this.collapsed.update(v => !v)
-  }
-
   ngOnInit(): void {
     this.buildDonutChart();
     this.loadChart(this.selectedPeriod);
@@ -86,8 +82,8 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
 
   onPortfolioChange(portfolioId: number): void {
     this.selectedPortfolioId = +portfolioId;
-    this.areaOptions = null;      
-    this.buildDonutChart();  
+    this.areaOptions = null;
+    this.buildDonutChart();
     this.loadChart(this.selectedPeriod);
     this.dataSource.data = this.currentPortfolio.positions;
   }
@@ -143,9 +139,9 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
                 total: {
                   show: true,
                   label: total.toLocaleString('es-ES') + '€',
-                  fontSize: '15px',
-                  fontWeight: 700,
-                  color: '#e2e8f0',
+                  fontSize: '32px',
+                  fontWeight: 500,
+                  color: '#fff',
                   formatter: () => ''
                   }
               }

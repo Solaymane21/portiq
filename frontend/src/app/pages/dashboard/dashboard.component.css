@@ -1,3 +1,55 @@
+ /* Donut */
  ::ng-deep .donut-chart .apexcharts-pie-series path {
   stroke: none !important;
+}
+
+/* Tabla */
+
+::ng-deep .mat-mdc-paginator {
+  background: transparent !important;
+  color: #a3a3a3 !important;
+}
+
+::ng-deep .mat-mdc-paginator .mat-mdc-select-value,
+::ng-deep .mat-mdc-paginator .mat-mdc-select-arrow {
+  color: #a3a3a3 !important;
+}
+
+::ng-deep .mat-mdc-select-panel {
+  background: #171717 !important;
+}
+
+::ng-deep .mat-mdc-option {
+  color: #e5e5e5 !important;
+}
+
+::ng-deep .mat-mdc-option:hover {
+  background: #262626 !important;
+}
+
+::ng-deep .mat-mdc-paginator .mdc-notched-outline__leading,
+::ng-deep .mat-mdc-paginator .mdc-notched-outline__notch,
+::ng-deep .mat-mdc-paginator .mdc-notched-outline__trailing {
+  border-color: #404040 !important;
+}
+
+::ng-deep .mat-mdc-paginator .mat-mdc-icon-button svg {
+  fill: #a3a3a3 !important;
+}
+
+::ng-deep .mat-mdc-paginator .mat-mdc-icon-button:disabled svg {
+  fill: #404040 !important;
+}
+
+::ng-deep .mat-mdc-table {
+  background: transparent !important;
+}
+
+::ng-deep .mat-mdc-row,
+::ng-deep .mat-mdc-header-row {
+  background: transparent !important;
+}
+
+::ng-deep .mat-sort-header-arrow {
+  color: #a3a3a3 !important;
 }

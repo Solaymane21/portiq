@@ -42,6 +42,14 @@ return [
 
     'ml' => [
     'url' => env('ML_SERVICE_URL', 'http://localhost:8001'),
+
+    'stripe' => [
+        'model'   => App\Models\User::class,
+        'key'     => env('STRIPE_KEY'),
+        'secret'  => env('STRIPE_SECRET'),
+        'webhook' => ['secret' => env('STRIPE_WEBHOOK_SECRET')],
+        'price_pro' => env('STRIPE_PRICE_PRO'),
+    ],
 ],
 
 ];

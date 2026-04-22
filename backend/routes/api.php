@@ -6,6 +6,8 @@ use App\Http\Controllers\MarketController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\InvestmentController;
+use App\Http\Controllers\SubscriptionController;
+use Laravel\Cashier\Http\Controllers\WebhookController;
 
 Route::prefix('auth')->group(function() {
     Route::post('/reset-code', [EmailController::class, 'sendForgotPasswordCode']);
@@ -19,10 +21,18 @@ Route::prefix('auth')->group(function() {
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 });
 
+Route::middleware('auth:sanctum')->group(function () {
+    // Stripe
+    Route::post('/subscription/checkout', [SubscriptionController::class, 'checkout']);
+    Route::get('/subscription/status', [SubscriptionController::class, 'status']);
+    Route::post('/subscription/cancel', [SubscriptionController::class, 'cancel']);
+    Route::get('/subscription/portal', [SubscriptionController::class, 'portal']);
+});
+
 Route::get('/search/{symbol}', [MarketController::class, 'search']);
 Route::get('/prices', [MarketController::class, 'prices']);
 Route::get('/portfolio/value', [MarketController::class, 'portfolioValue']);
-Route::get('/history/{symbol}', [MarketController::class, 'history']);
+Route::get('/history/{symbol}', [MarketController::class, 'history']);  
 
 Route::apiResource('portfolios', PortfolioController::class);
 Route::apiResource('portfolios.investments', InvestmentController::class);

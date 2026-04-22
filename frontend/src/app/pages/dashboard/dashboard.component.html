@@ -43,6 +43,7 @@
   </div>
 </div>
 
+<!-- Area -->
 <div class="grid grid-cols-3 gap-4 mt-5 mb-5">
   <div
     class="col-span-3 lg:col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5 flex flex-col"
@@ -85,10 +86,11 @@
     }
   </div>
 
+  <!-- Donut -->
   <div
     class="col-span-3 lg:col-span-1 bg-neutral-900 border border-neutral-700 rounded-2xl p-5"
   >
-    <div class="relative donut-chart">
+    <div class="justify-center donut-chart">
       <apx-chart
         [series]="donutOptions.series"
         [chart]="donutOptions.chart"
@@ -120,38 +122,68 @@
   </div>
 </div>
 
-<div
-  class="col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5"
->
+<!-- Tabla -->
+<div class="col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5">
   <p class="text-sm text-neutral-400 mb-3">Mis posiciones</p>
-  <div
-    class="col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5"
-  >
-    <p class="text-sm text-neutral-400 mb-3">Mis posiciones</p>
-    <div class="flex flex-col divide-y divide-neutral-800">
-      @for (pos of currentPortfolio.positions; track pos.ticker) {
-        <div class="flex items-center justify-between py-2.5">
-          <div class="flex items-center gap-3">
-            <span class="text-sm font-semibold text-neutral-100">{{
-              pos.ticker
-            }}</span>
-            <span class="text-xs text-neutral-500">{{ pos.name }}</span>
-          </div>
-          <div class="text-right">
-            <p class="text-sm font-semibold text-neutral-100">
-              {{ pos.price }}
-            </p>
-            <p
-              class="text-xs"
-              [class.text-emerald-500]="pos.positive"
-              [class.text-red-500]="!pos.positive"
-            >
-              {{ pos.change }}
-            </p>
-          </div>
-        </div>
-      }
-    </div>
+  
+      <table mat-table [dataSource]="dataSource" matSort class="w-full bg-transparent">
+
+      <ng-container matColumnDef="ticker">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header
+            class="text-neutral-500 text-xs uppercase bg-transparent border-b border-neutral-800">
+          Ticker
+        </th>
+        <td mat-cell *matCellDef="let pos"
+            class="text-sm font-semibold text-neutral-100 border-b border-neutral-800 py-3">
+          {{ pos.ticker }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header
+            class="text-neutral-500 text-xs uppercase bg-transparent border-b border-neutral-800">
+          Nombre
+        </th>
+        <td mat-cell *matCellDef="let pos"
+            class="text-xs text-neutral-500 border-b border-neutral-800 py-3">
+          {{ pos.name }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="price">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header
+            class="text-neutral-500 text-xs uppercase bg-transparent border-b border-neutral-800">
+          Precio
+        </th>
+        <td mat-cell *matCellDef="let pos"
+            class="text-sm font-semibold text-neutral-100 border-b border-neutral-800 py-3">
+          {{ pos.price }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="change">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header
+            class="text-neutral-500 text-xs uppercase bg-transparent border-b border-neutral-800">
+          Variación
+        </th>
+        <td mat-cell *matCellDef="let pos"
+            class="text-xs font-semibold border-b border-neutral-800 py-3"
+            [class.text-emerald-500]="pos.positive"
+            [class.text-red-500]="!pos.positive">
+          {{ pos.change }}
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-transparent"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+          class="hover:bg-neutral-800 transition-colors cursor-pointer"></tr>
+    </table>
+
+    <mat-paginator
+      [pageSizeOptions]="[5, 10, 20]"
+      [pageSize]="5"
+      showFirstLastButtons
+      class="bg-transparent text-white">
+    </mat-paginator>
   </div>
-</div>
 </div>

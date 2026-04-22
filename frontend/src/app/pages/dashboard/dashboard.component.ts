@@ -1,20 +1,55 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, OnInit, inject, ViewChild, AfterViewInit } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { MarketService } from '../../services/market.service';
-import { Portfolio } from '../../models/portfolio.model';
+import { Portfolio, PortfolioPosition } from '../../models/portfolio.model';
 import { PORTFOLIOS_MOCK } from './dashboard.mock';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatSortModule, MatSort } from '@angular/material/sort';
+import { FormsModule } from '@angular/forms';
+
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [NgApexchartsModule, FormsModule, DecimalPipe],
+  imports: [NgApexchartsModule, FormsModule, DecimalPipe, MatTableModule, MatPaginatorModule, MatSortModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, AfterViewInit  {
+ 
+  //Tabla
 
+  displayedColumns = ['ticker', 'name', 'price', 'change'];
+  dataSource = new MatTableDataSource<PortfolioPosition>([]);
+
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
+  ngAfterViewInit(): void {
+    
+    setTimeout(()=>{
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+    this.dataSource.sortingDataAccessor = (item: PortfolioPosition, sortHeaderId: string) => {
+      switch (sortHeaderId) {
+        case 'price':
+          return parseFloat(String(item.price).replace(/[^0-9.-]/g, '')) || 0;
+        case 'change':
+          return parseFloat(String(item.change).replace(/[^0-9.-]/g, '')) || 0;
+        case 'ticker':
+          return item.ticker?.toLowerCase() ?? '';
+        case 'name':
+          return item.name?.toLowerCase() ?? '';
+        default:
+          return (item as any)[sortHeaderId];
+        }
+      };
+    });
+  }
+ 
   // Carteras
   portfolios: Portfolio[] = PORTFOLIOS_MOCK;
   selectedPortfolioId: number = 1;
@@ -22,6 +57,7 @@ export class DashboardComponent implements OnInit {
   get currentPortfolio(): Portfolio {
     return this.portfolios.find(p => p.id === this.selectedPortfolioId) ?? this.portfolios[0];
   }
+
 
   get profitLoss(): number {
     return this.currentPortfolio.profitLoss;
@@ -34,19 +70,23 @@ export class DashboardComponent implements OnInit {
   areaOptions: any = null;
   isLoading = false;
 
+
   marketService = inject(MarketService);
 
   ngOnInit(): void {
     this.buildDonutChart();
     this.loadChart(this.selectedPeriod);
+    this.dataSource.data = this.currentPortfolio.positions
   }
 
   onPortfolioChange(portfolioId: number): void {
     this.selectedPortfolioId = +portfolioId;
-    this.areaOptions = null;
-    this.buildDonutChart();
+    this.areaOptions = null;      
+    this.buildDonutChart();  
     this.loadChart(this.selectedPeriod);
+    this.dataSource.data = this.currentPortfolio.positions;
   }
+
 
   // Donut
   private buildDonutChart(): void {
@@ -111,14 +151,17 @@ export class DashboardComponent implements OnInit {
     }, 0);
   }
 
+
   setPeriod(period: string): void {
     this.selectedPeriod = period;
     this.loadChart(period);
   }
 
+
   private loadChart(period: string): void {
     this.isLoading = true;
     const symbol = this.currentPortfolio.symbol;
+
 
     this.marketService.getHistory(symbol, period).subscribe({
       next: (response) => {
@@ -132,14 +175,17 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+
+  //Area chart
   private buildAreaChart(data: { x: number; y: number }[], period: string): void {
     const tooltipFormat = period === '1D' ? 'HH:mm' : 'dd MMM yyyy';
+
 
     this.areaOptions = {
       series: [{ name: this.currentPortfolio.name, data }],
       chart: {
         type: 'area',
-        height: 200,
+        height: 250,
         background: 'transparent',
         toolbar: { show: false },
         animations: { enabled: true, speed: 640 },
@@ -181,4 +227,7 @@ export class DashboardComponent implements OnInit {
       }
     };
   }
+
+
 }
+

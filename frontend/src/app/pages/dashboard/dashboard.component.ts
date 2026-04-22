@@ -35,6 +35,11 @@ export class DashboardComponent implements OnInit {
   isLoading = false;
 
   marketService = inject(MarketService);
+  collapsed = signal(false)
+
+  toggle() {
+    this.collapsed.update(v => !v)
+  }
 
   ngOnInit(): void {
     this.buildDonutChart();

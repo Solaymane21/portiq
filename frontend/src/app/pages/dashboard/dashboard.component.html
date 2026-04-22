@@ -1,32 +1,46 @@
-<div class="mx-12">
-  <div class="flex justify-between">
+<div class="flex justify-between">
   <h1 class="text-3xl font-ibm">Dashboard</h1>
-  <select
-    class="bg-neutral-900 border border-neutral-700 rounded px-3 py-1"
-    [(ngModel)]="selectedPortfolioId"
-    (ngModelChange)="onPortfolioChange($event)"
-  >
-    @for (p of portfolios; track p.id) {
-      <option [ngValue]="p.id">{{ p.name }}</option>
-    }
-  </select>
+  <div class="relative w-fit">
+    <select
+      class="appearance-none bg-neutral-950 border border-neutral-600 rounded-xl px-3 py-2 pr-8 outline-none cursor-pointer"
+      [(ngModel)]="selectedPortfolioId"
+      (ngModelChange)="onPortfolioChange($event)"
+      (focus)="collapsed.set(true)"
+      (blur)="collapsed.set(false)"
+    >
+      @for (p of portfolios; track p.id) {
+        <option [ngValue]="p.id">{{ p.name }}</option>
+      }
+    </select>
+
+    <span class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-orange-500">
+      <svg
+        width="16" height="16" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2"
+        class="transition-transform duration-200"
+        [class.rotate-180]="collapsed()"
+      >
+        <path d="M6 9l6 6 6-6"/>
+      </svg>
+    </span>
+  </div>
 </div>
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5 mb-5">
-  <div class="bg-neutral-900 border w-full border-neutral-700 rounded-2xl p-5">
-    <p class="text-sm text-neutral-400 mb-3">Valor total €</p>
+  <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+    <p class="mb-3">Valor total €</p>
     <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
       {{ currentPortfolio.totalValue | number: "1.0-0" }}€
     </p>
   </div>
-  <div class="bg-neutral-900 border w-full border-neutral-700 rounded-2xl p-5">
-    <p class="text-sm text-neutral-400 mb-3">Valor total $</p>
+  <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+    <p class="mb-3">Valor total $</p>
     <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
       ${{ currentPortfolio.totalValueUSD | number: "1.0-0" }}
     </p>
   </div>
-  <div class="bg-neutral-900 border w-full border-neutral-700 rounded-2xl p-5">
-    <p class="text-sm text-neutral-400 mb-3">Ganancias/Perdidas</p>
+  <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+    <p class="mb-3">Ganancias/Perdidas</p>
     <p
       class="text-3xl font-ibm font-bold text-center"
       [class.text-green-500]="currentPortfolio.profitLoss > 0"
@@ -35,8 +49,8 @@
       {{ currentPortfolio.profitLoss | number: "1.0-0" }}€
     </p>
   </div>
-  <div class="bg-neutral-900 border w-full border-neutral-700 rounded-2xl p-5">
-    <p class="text-sm text-neutral-400 mb-3">Total de Posiciones</p>
+  <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+    <p class="mb-3">Total de Posiciones</p>
     <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
       {{ currentPortfolio.totalPositions }}
     </p>
@@ -45,7 +59,7 @@
 
 <div class="grid grid-cols-3 gap-4 mt-5 mb-5">
   <div
-    class="col-span-3 lg:col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5 flex flex-col"
+    class="col-span-3 lg:col-span-2 bg-neutral-950 border border-neutral-600 rounded-2xl p-5 flex flex-col"
   >
     <div class="flex justify-end gap-1 mb-2">
       @for (p of periods; track p) {
@@ -86,7 +100,7 @@
   </div>
 
   <div
-    class="col-span-3 lg:col-span-1 bg-neutral-900 border border-neutral-700 rounded-2xl p-5"
+    class="col-span-3 lg:col-span-1 bg-neutral-950 border border-neutral-600 rounded-2xl p-5"
   >
     <div class="relative donut-chart">
       <apx-chart
@@ -121,13 +135,13 @@
 </div>
 
 <div
-  class="col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5"
+  class="col-span-2 bg-neutral-950 border border-neutral-600 rounded-2xl p-5"
 >
-  <p class="text-sm text-neutral-400 mb-3">Mis posiciones</p>
+  <p class="mb-3">Mis posiciones</p>
   <div
-    class="col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5"
+    class="col-span-2 bg-neutral-950 border border-neutral-600 rounded-2xl p-5"
   >
-    <p class="text-sm text-neutral-400 mb-3">Mis posiciones</p>
+    <p class="mb-3">Mis posiciones</p>
     <div class="flex flex-col divide-y divide-neutral-800">
       @for (pos of currentPortfolio.positions; track pos.ticker) {
         <div class="flex items-center justify-between py-2.5">
@@ -153,5 +167,4 @@
       }
     </div>
   </div>
-</div>
 </div>

@@ -17,6 +17,8 @@ import { authGuard } from './guards/auth.guard';
 import { guestGuard } from './guards/guest.guard';
 import { PortfolioComponent } from './pages/portfolio/portfolio-list/portfolio-list.component';
 import { PortfolioDetailComponent } from './pages/portfolio/portfolio-detail/portfolio-detail.component';
+import { AdminLayoutComponent } from './layout/admin-layout/admin-layout.component';
+import { AdminComponent } from './pages/admin/admin.component';
 import { WalletsComponent } from './pages/portfolio2/wallets/wallets.component';
 import { InvestmentsComponent } from './pages/portfolio2/investments/investments.component';
 
@@ -34,8 +36,8 @@ export const routes: Routes = [
                 path: 'portfolios',
                 component: PortfolioComponent
             },
-            { 
-                path: 'portfolios/:id', 
+            {
+                path: 'portfolios/:id',
                 component: PortfolioDetailComponent
             },
             {
@@ -93,6 +95,16 @@ export const routes: Routes = [
             {
               path: 'callback',
               component: CallbackComponent
+            }
+        ]
+    },
+    {
+        path: 'admin',
+        component: AdminLayoutComponent,
+        children: [
+            {
+                path: 'index',
+                component: AdminComponent
             }
         ]
     },

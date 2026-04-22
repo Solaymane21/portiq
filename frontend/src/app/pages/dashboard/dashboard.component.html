@@ -1,32 +1,46 @@
-<div class="mx-12">
-  <div class="flex justify-between">
+<div class="flex justify-between">
   <h1 class="text-3xl font-ibm">Dashboard</h1>
-  <select
-    class="bg-neutral-900 border border-neutral-700 rounded px-3 py-1"
-    [(ngModel)]="selectedPortfolioId"
-    (ngModelChange)="onPortfolioChange($event)"
-  >
-    @for (p of portfolios; track p.id) {
-      <option [ngValue]="p.id">{{ p.name }}</option>
-    }
-  </select>
+  <div class="relative w-fit">
+    <select
+      class="appearance-none bg-neutral-950 border border-neutral-600 rounded-xl px-3 py-2 pr-8 outline-none cursor-pointer"
+      [(ngModel)]="selectedPortfolioId"
+      (ngModelChange)="onPortfolioChange($event)"
+      (focus)="collapsed.set(true)"
+      (blur)="collapsed.set(false)"
+    >
+      @for (p of portfolios; track p.id) {
+        <option [ngValue]="p.id">{{ p.name }}</option>
+      }
+    </select>
+
+    <span class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-orange-500">
+      <svg
+        width="16" height="16" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2"
+        class="transition-transform duration-200"
+        [class.rotate-180]="collapsed()"
+      >
+        <path d="M6 9l6 6 6-6"/>
+      </svg>
+    </span>
+  </div>
 </div>
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5 mb-5">
-  <div class="bg-neutral-900 border w-full border-neutral-700 rounded-2xl p-5">
-    <p class="text-sm text-neutral-400 mb-3">Valor total €</p>
+  <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+    <p class="mb-3">Valor total €</p>
     <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
       {{ currentPortfolio.totalValue | number: "1.0-0" }}€
     </p>
   </div>
-  <div class="bg-neutral-900 border w-full border-neutral-700 rounded-2xl p-5">
-    <p class="text-sm text-neutral-400 mb-3">Valor total $</p>
+  <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+    <p class="mb-3">Valor total $</p>
     <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
       ${{ currentPortfolio.totalValueUSD | number: "1.0-0" }}
     </p>
   </div>
-  <div class="bg-neutral-900 border w-full border-neutral-700 rounded-2xl p-5">
-    <p class="text-sm text-neutral-400 mb-3">Ganancias/Perdidas</p>
+  <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+    <p class="mb-3">Ganancias/Perdidas</p>
     <p
       class="text-3xl font-ibm font-bold text-center"
       [class.text-green-500]="currentPortfolio.profitLoss > 0"
@@ -35,23 +49,24 @@
       {{ currentPortfolio.profitLoss | number: "1.0-0" }}€
     </p>
   </div>
-  <div class="bg-neutral-900 border w-full border-neutral-700 rounded-2xl p-5">
-    <p class="text-sm text-neutral-400 mb-3">Total de Posiciones</p>
+  <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+    <p class="mb-3">Total de Posiciones</p>
     <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
       {{ currentPortfolio.totalPositions }}
     </p>
   </div>
 </div>
 
+<!-- Area -->
 <div class="grid grid-cols-3 gap-4 mt-5 mb-5">
   <div
-    class="col-span-3 lg:col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5 flex flex-col"
+    class="col-span-3 lg:col-span-2 bg-neutral-950 border border-neutral-600 rounded-2xl p-5 flex flex-col"
   >
     <div class="flex justify-end gap-1 mb-2">
       @for (p of periods; track p) {
         <button
           (click)="setPeriod(p)"
-          class="px-2.5 py-0.5 rounded-md text-xs font-semibold transition-colors"
+          class="px-2.5 py-0.5 rounded-md  transition-colors"
           [class.bg-orange-600]="p === selectedPeriod"
           [class.text-white]="p === selectedPeriod"
           [class.text-neutral-400]="p !== selectedPeriod"
@@ -85,10 +100,11 @@
     }
   </div>
 
+  <!-- Donut -->
   <div
-    class="col-span-3 lg:col-span-1 bg-neutral-900 border border-neutral-700 rounded-2xl p-5"
+    class="col-span-3 lg:col-span-1 bg-neutral-950 border border-neutral-600 rounded-2xl p-5"
   >
-    <div class="relative donut-chart">
+    <div class="justify-center donut-chart">
       <apx-chart
         [series]="donutOptions.series"
         [chart]="donutOptions.chart"
@@ -103,55 +119,84 @@
 
     <div class="flex flex-col gap-2 mt-3">
       @for (item of currentPortfolio.allocation; track item.label) {
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span
-              class="w-2.5 h-2.5 rounded-sm inline-block"
-              [class]="item.colorClass"
-            ></span>
-            <span class="text-xl text-neutral-400">{{ item.label }}</span>
-            <span class="text-l font-semibold" [class]="item.textClass"
-              >{{ item.percent }}%</span
-            >
-          </div>
+        <div class="flex items-center justify-between px-2">
+            <div class="flex items-center gap-2">
+              <span
+                class="w-2.5 h-2.5 rounded-sm inline-block"
+                [class]="item.colorClass"
+              ></span>
+              <span>{{ item.label }}</span>
+            </div>
+            <span class="text-l" [class]="item.textClass"
+                >{{ item.percent }}%</span
+              >
         </div>
       }
     </div>
   </div>
 </div>
 
-<div
-  class="col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5"
->
-  <p class="text-sm text-neutral-400 mb-3">Mis posiciones</p>
-  <div
-    class="col-span-2 bg-neutral-900 border border-neutral-700 rounded-2xl p-5"
-  >
-    <p class="text-sm text-neutral-400 mb-3">Mis posiciones</p>
-    <div class="flex flex-col divide-y divide-neutral-800">
-      @for (pos of currentPortfolio.positions; track pos.ticker) {
-        <div class="flex items-center justify-between py-2.5">
-          <div class="flex items-center gap-3">
-            <span class="text-sm font-semibold text-neutral-100">{{
-              pos.ticker
-            }}</span>
-            <span class="text-xs text-neutral-500">{{ pos.name }}</span>
-          </div>
-          <div class="text-right">
-            <p class="text-sm font-semibold text-neutral-100">
-              {{ pos.price }}
-            </p>
-            <p
-              class="text-xs"
-              [class.text-emerald-500]="pos.positive"
-              [class.text-red-500]="!pos.positive"
-            >
-              {{ pos.change }}
-            </p>
-          </div>
-        </div>
-      }
-    </div>
+<!-- Tabla -->
+<div class="col-span-2 bg-neutral-950 border border-neutral-600 rounded-2xl p-5">
+  <p class="mb-3">Mis posiciones</p>
+
+      <table mat-table [dataSource]="dataSource" matSort class="w-full bg-transparent">
+
+      <ng-container matColumnDef="ticker">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header
+            class="text-neutral-400  uppercase bg-transparent border-b">
+          Ticker
+        </th>
+        <td mat-cell *matCellDef="let pos"
+            class="text-sm text-neutral-100 border-b py-3">
+          {{ pos.ticker }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header
+            class="text-neutral-400  uppercase bg-transparent border-b">
+          Nombre
+        </th>
+        <td mat-cell *matCellDef="let pos"
+            class="text-neutral-400 border-b py-3">
+          {{ pos.name }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="price">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header
+            class="text-neutral-400  uppercase bg-transparent border-b">
+          Precio
+        </th>
+        <td mat-cell *matCellDef="let pos"
+            class="text-sm text-neutral-100 border-b py-3">
+          {{ pos.price }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="change">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header
+            class="text-neutral-400 uppercase bg-transparent border-b">
+          Variación
+        </th>
+        <td mat-cell *matCellDef="let pos"
+            class=" border-b py-3"
+            [class.text-emerald-500]="pos.positive"
+            [class.text-red-500]="!pos.positive">
+          {{ pos.change }}
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-transparent"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+          class="hover:bg-neutral-800 cursor-pointer"></tr>
+    </table>
+
+    <mat-paginator
+      [pageSizeOptions]="[5, 10, 20]"
+      [pageSize]="5"
+      showFirstLastButtons
+      class="bg-transparent text-white">
+    </mat-paginator>
   </div>
-</div>
-</div>

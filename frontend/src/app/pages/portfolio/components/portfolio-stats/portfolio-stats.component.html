@@ -1,0 +1,49 @@
+<div class="mx-12 grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  <!-- Valor Total -->
+  <div class="bg-base p-4 rounded-xl border border-neutral-800">
+    <p class="text-neutral-400 text-sm mb-1">Valor Total</p>
+    <h3 class="text-2xl font-bold text-white">
+      @if (cargando) {
+        <span class="animate-pulse bg-neutral-800 h-8 w-24 rounded block"></span>
+      } @else {
+        {{ valorTotal | number:'1.0-0' }}€
+      }
+    </h3>
+  </div>
+
+  <!-- Ganancias Totales -->
+  <div class="bg-base p-4 rounded-xl border border-neutral-800">
+    <p class="text-neutral-400 text-sm mb-1">Ganancias Totales</p>
+    <h3 class="text-2xl font-bold" [ngClass]="ganancias >= 0 ? 'text-green-500' : 'text-red-500'">
+      @if (cargando) {
+        <span class="animate-pulse bg-neutral-800 h-8 w-24 rounded block"></span>
+      } @else {
+        {{ ganancias >= 0 ? '+' : '' }}{{ ganancias | number:'1.0-0' }}€
+      }
+    </h3>
+  </div>
+
+  <!-- % Retorno -->
+  <div class="bg-base p-4 rounded-xl border border-neutral-800">
+    <p class="text-neutral-400 text-sm mb-1">% Retorno</p>
+    <h3 class="text-2xl font-bold" [ngClass]="porcentajeGanancias >= 0 ? 'text-green-500' : 'text-red-500'">
+      @if (cargando) {
+        <span class="animate-pulse bg-neutral-800 h-8 w-16 rounded block"></span>
+      } @else {
+        {{ porcentajeGanancias >= 0 ? '+' : '' }}{{ porcentajeGanancias }}%
+      }
+    </h3>
+  </div>
+
+  <!-- Posiciones -->
+  <div class="bg-base p-4 rounded-xl border border-neutral-800">
+    <p class="text-neutral-400 text-sm mb-1">Activos</p>
+    <h3 class="text-2xl font-bold text-white">
+      @if (cargando) {
+        <span class="animate-pulse bg-neutral-800 h-8 w-12 rounded block"></span>
+      } @else {
+        {{ totalPosiciones }}
+      }
+    </h3>
+  </div>
+</div>

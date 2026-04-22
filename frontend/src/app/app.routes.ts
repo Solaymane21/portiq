@@ -15,8 +15,10 @@ import { resetPasswordGuard } from './guards/reset-password.guard';
 import { CallbackComponent } from './pages/auth/callback/callback.component';
 import { authGuard } from './guards/auth.guard';
 import { guestGuard } from './guards/guest.guard';
-import { PortfolioComponent } from './pages/portfolio/portfolio/portfolio.component';
+import { PortfolioComponent } from './pages/portfolio/portfolio-list/portfolio-list.component';
 import { PortfolioDetailComponent } from './pages/portfolio/portfolio-detail/portfolio-detail.component';
+import { WalletsComponent } from './pages/portfolio2/wallets/wallets.component';
+import { InvestmentsComponent } from './pages/portfolio2/investments/investments.component';
 
 export const routes: Routes = [
     {
@@ -35,6 +37,14 @@ export const routes: Routes = [
             { 
                 path: 'portfolios/:id', 
                 component: PortfolioDetailComponent
+            },
+            {
+                path: 'wallets',
+                component: WalletsComponent
+            },
+            { 
+                path: 'wallets/:id', 
+                component: InvestmentsComponent
             },
             {
                 path: 'favorites',

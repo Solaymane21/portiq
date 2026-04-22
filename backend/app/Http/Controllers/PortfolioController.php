@@ -10,7 +10,7 @@ class PortfolioController extends Controller
 {
     public function index()
     {
-        $portfolios = Portfolio::where('user_id', 8)->get();
+        $portfolios = Portfolio::where('user_id', 14)->get();
 
         $portfolios->map(function ($portfolio) {
             $portfolio->activos_count = $portfolio->investments()->count();
@@ -32,11 +32,11 @@ class PortfolioController extends Controller
         ]);
 
         if ($request->boolean('is_default')) {
-            Portfolio::where('user_id', 8)->update(['is_default' => false]);
+            Portfolio::where('user_id', 14)->update(['is_default' => false]);
         }
 
         $portfolio = Portfolio::create([
-            'user_id' => 8,
+            'user_id' => 14,
             'name' => $request->name,
             'is_public' => false,
             'is_default' => $request->boolean('is_default'),
@@ -58,7 +58,7 @@ class PortfolioController extends Controller
         ]);
 
         if ($request->boolean('is_default')) {
-            Portfolio::where('user_id', 8)
+            Portfolio::where('user_id', 14)
                 ->where('id', '!=', $portfolio->id)
                 ->update(['is_default' => false]);
         }

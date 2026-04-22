@@ -1,0 +1,143 @@
+<div class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+  <div class="bg-base rounded-xl shadow-2xl border border-neutral-800 w-full max-w-md p-6 overflow-hidden flex flex-col max-h-[90vh]">
+    
+    <div class="flex justify-between items-center mb-6 shrink-0">
+      <h2 class="text-xl font-bold text-white flex items-center gap-2">
+        @if (wizardStep === 2) {
+          <button (click)="wizardStep = 1" class="text-neutral-400 hover:text-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+            </svg>
+          </button>
+        }
+        {{ wizardStep === 1 ? 'Buscar Activo' : (transaccionTipo === 'buy' ? 'Comprar' : 'Vender') + ' ' + (activoSeleccionado?.symbol || '') }}
+      </h2>
+      <button (click)="cerrar.emit()" class="text-neutral-500 hover:text-white transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- PASO 1: BUSCADOR -->
+    @if (wizardStep === 1) {
+      <div class="flex flex-col gap-4 overflow-hidden">
+        <!-- Filtros -->
+        <div class="flex bg-neutral-900 rounded-lg p-1 shrink-0 border border-neutral-800">
+          <button (click)="cambiarFiltro('all')" [ngClass]="filtroActivo === 'all' ? 'bg-neutral-800 text-white shadow' : 'text-neutral-400 hover:text-neutral-300'" class="flex-1 py-1.5 text-sm font-medium rounded-md transition-all">
+            Todos
+          </button>
+          <button (click)="cambiarFiltro('crypto')" [ngClass]="filtroActivo === 'crypto' ? 'bg-neutral-800 text-white shadow' : 'text-neutral-400 hover:text-neutral-300'" class="flex-1 py-1.5 text-sm font-medium rounded-md transition-all">
+            Criptos
+          </button>
+          <button (click)="cambiarFiltro('stock')" [ngClass]="filtroActivo === 'stock' ? 'bg-neutral-800 text-white shadow' : 'text-neutral-400 hover:text-neutral-300'" class="flex-1 py-1.5 text-sm font-medium rounded-md transition-all">
+            Acciones
+          </button>
+        </div>
+
+        <!-- Input Búsqueda -->
+        <div class="relative shrink-0">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 text-neutral-500">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            </svg>
+          </div>
+          <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="buscarActivos()" placeholder="Ej. AAPL, Bitcoin..." class="w-full bg-neutral-900 text-white border border-neutral-800 rounded-lg pl-10 p-2.5 focus:outline-none focus:border-orange-500 transition-colors">
+        </div>
+
+        <!-- Resultados -->
+        <div class="overflow-y-auto pr-2 custom-scrollbar flex-1 min-h-[200px]">
+          @if (isSearching) {
+            <div class="flex justify-center py-8">
+              <svg class="animate-spin h-8 w-8 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+          } @else if (searchResults.length === 0 && searchQuery.length >= 2) {
+            <div class="text-center py-8 text-neutral-500">
+              <p>Pulsa enter o en la lupa para buscar.</p>
+            </div>
+          } @else {
+            <div class="flex flex-col gap-2">
+              @for (res of searchResults; track $index) {
+                <div (click)="seleccionarParaComprarVender(res)" class="flex items-center justify-between p-3 rounded-lg bg-neutral-900 border border-neutral-800 hover:border-orange-500/50 cursor-pointer transition-colors group">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-neutral-800 overflow-hidden flex items-center justify-center border border-neutral-700 shrink-0">
+                      @if (res.thumb) {
+                        <img [src]="res.thumb" alt="{{res.name}}" class="w-full h-full object-cover">
+                      }
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="text-white font-bold group-hover:text-orange-500 transition-colors">{{ res.symbol }}</span>
+                      <span class="text-neutral-400 text-xs">{{ res.name }}</span>
+                    </div>
+                  </div>
+                  <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded bg-neutral-800 text-neutral-400">
+                    {{ res.type }}
+                  </span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- PASO 2: FORMULARIO -->
+    @if (wizardStep === 2) {
+      <form (ngSubmit)="guardarTransaccion()" class="flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1">
+        
+        <!-- Switch Compra/Venta -->
+        <div class="flex bg-neutral-900 border border-neutral-800 rounded-lg p-1 w-full shrink-0">
+          <button type="button" (click)="transaccionTipo = 'buy'" [ngClass]="transaccionTipo === 'buy' ? 'bg-green-500 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'" class="flex-1 py-2 rounded-md text-sm font-medium transition-all">
+            Comprar
+          </button>
+          <button type="button" (click)="transaccionTipo = 'sell'" [ngClass]="transaccionTipo === 'sell' ? 'bg-red-500 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'" class="flex-1 py-2 rounded-md text-sm font-medium transition-all">
+            Vender
+          </button>
+        </div>
+
+        <!-- Inputs Cantidad y Precio -->
+        <div class="grid grid-cols-2 gap-4 shrink-0">
+          <div>
+            <label class="block text-sm text-neutral-400 mb-1.5">Cantidad</label>
+            <input type="number" [(ngModel)]="formulario.quantity" name="quantity" min="0" step="any" required class="w-full bg-neutral-900 text-white border border-neutral-800 rounded-lg p-2.5 focus:outline-none focus:border-orange-500 transition-colors placeholder:text-neutral-600">
+          </div>
+          <div>
+            <label class="block text-sm text-neutral-400 mb-1.5 items-center justify-between">
+              Precio (€)
+              @if (isFetchingPrice) { <span class="text-[10px] text-orange-500 animate-pulse">Buscando...</span> }
+            </label>
+            <input type="number" [(ngModel)]="formulario.avg_buy_price" name="avg_buy_price" min="0" step="any" required class="w-full bg-neutral-900 text-white border border-neutral-800 rounded-lg p-2.5 focus:outline-none focus:border-orange-500 transition-colors placeholder:text-neutral-600">
+          </div>
+        </div>
+
+        <!-- Input Fecha -->
+        <div class="shrink-0">
+          <label class="block text-sm text-neutral-400 mb-1.5">Fecha de la transacción</label>
+          <input type="date" [(ngModel)]="formulario.fecha" (change)="obtenerPrecioHistorico()" name="fecha" required class="w-full bg-neutral-900 text-white border border-neutral-800 rounded-lg p-2.5 focus:outline-none focus:border-orange-500 transition-colors color-scheme-dark">
+          <p class="text-xs text-neutral-500 mt-1.5">El precio se autocompleta con el valor de mercado en la fecha indicada.</p>
+        </div>
+
+        <!-- Total Estimado -->
+        <div class="bg-neutral-900 border border-neutral-800 rounded-lg p-4 flex justify-between items-center shrink-0 mt-2">
+          <span class="text-neutral-400 text-sm">Total estimado</span>
+          <span class="text-xl font-bold text-white">
+            {{ (formulario.quantity * formulario.avg_buy_price) || 0 | number:'1.2-2' }}€
+          </span>
+        </div>
+
+        <!-- Botones Acción -->
+        <div class="flex justify-end gap-3 mt-4 shrink-0">
+          <button type="button" (click)="cerrar.emit()" class="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" [disabled]="!formulario.quantity || !formulario.avg_buy_price" [ngClass]="transaccionTipo === 'buy' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'" class="px-5 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            Guardar Transacción
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</div>

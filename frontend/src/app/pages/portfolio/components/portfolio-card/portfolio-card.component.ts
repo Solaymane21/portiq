@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Cartera } from '../../../../../models/cartera.model';
+import { Cartera } from '../../../../models/cartera.model';
 
 @Component({
   selector: 'app-portfolio-card',

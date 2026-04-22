@@ -1,0 +1,24 @@
+::ng-deep .mat-mdc-table {
+  background-color: transparent !important;
+}
+
+::ng-deep th.text-right .mat-sort-header-container {
+  justify-content: flex-end;
+}
+
+::ng-deep .mat-sort-header-arrow {
+  color: #a3a3a3 !important;
+}
+
+::ng-deep .mat-mdc-paginator {
+  background-color: transparent !important;
+  color: #a3a3a3 !important;
+}
+
+::ng-deep .mat-mdc-paginator-icon {
+  fill: #a3a3a3 !important;
+}
+
+::ng-deep .mat-mdc-icon-button[disabled] .mat-mdc-paginator-icon {
+  fill: #52525b !important;
+}

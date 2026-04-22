@@ -1,267 +1,59 @@
-<!-- DISEÑO RESTAURADO: p-6 y max-w-7xl para evitar el scroll -->
-<div class="p-6 text-white max-w-7xl mx-auto font-inter">
-  
-  <!-- ENCABEZADO -->
-  <div class="flex justify-between items-center mb-6">
-    <div class="flex items-center gap-4">
-      <a routerLink="/app/portfolios" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-base border border-neutral-800 hover:bg-neutral-800 transition-colors text-neutral-400 hover:text-white cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-        </svg>
-      </a>
-      <h1 class="text-3xl font-ibm text-white">
-        @if (cargando()) { Cargando... }
-        @else { Portfolio - {{ nombreCartera() }} }
-      </h1>
-    </div>
-    
-    <div class="flex items-center gap-3">
-      <button class="bg-white p-2 rounded-md text-black flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-        </svg>
-        <p class="whitespace-nowrap">Exportar CSV</p>
-      </button>
-
-      <button (click)="abrirModalNuevaPosicion()" class="bg-orange-500 p-2 rounded-md flex items-center gap-2 hover:bg-orange-600 transition-colors text-white">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-        <span>Nueva Posición</span>
-      </button>
-    </div>
+<!-- ENCABEZADO -->
+<div class="mx-12 mb-6 flex justify-between items-center">
+  <div class="flex items-center gap-4">
+    <a routerLink="/app/portfolios" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-base border border-neutral-800 hover:bg-neutral-800 transition-colors text-neutral-400 hover:text-white cursor-pointer">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+      </svg>
+    </a>
+    <h1 class="text-3xl font-ibm text-white">
+      @if (cargando()) { Cargando... } @else { {{ nombreCartera() }} }
+    </h1>
   </div>
 
-  <!-- TARJETAS DE RESUMEN (KPIs) -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-    <div class="bg-base border border-neutral-800/80 p-5 rounded-2xl flex flex-col gap-3">
-      <h3 class="text-neutral-400 text-sm font-medium">Valor total</h3>
-      <p class="text-4xl font-bold font-ibm text-white">
-        @if (cargando()) { ... } @else { {{ valorTotal() | number:'1.0-0' }}€ }
-      </p>
-    </div>
-    
-    <div class="bg-base border border-neutral-800/80 p-5 rounded-2xl flex flex-col gap-1">
-      <h3 class="text-neutral-400 text-sm font-medium mb-2">Ganancias/pérdidas</h3>
-      <p class="text-4xl font-bold font-ibm" [ngClass]="ganancias() >= 0 ? 'text-green-500' : 'text-red-500'">
-        @if (cargando()) { ... } @else { {{ ganancias() >= 0 ? '+' : '' }}{{ ganancias() | number:'1.0-0' }}€ }
-      </p>
-      <p class="text-sm font-ibm mt-1" [ngClass]="porcentajeGanancias() >= 0 ? 'text-green-500' : 'text-red-500'">
-        @if (!cargando()) { {{ porcentajeGanancias() >= 0 ? '+' : '' }}{{ porcentajeGanancias() }}% }
-      </p>
-    </div>
-    
-    <div class="bg-base border border-neutral-800/80 p-5 rounded-2xl flex flex-col gap-3">
-      <h3 class="text-neutral-400 text-sm font-medium">Total posiciones</h3>
-      <p class="text-4xl font-bold font-ibm text-white">
-        @if (cargando()) { ... } @else { {{ totalPosiciones() }} }
-      </p>
-    </div>
-  </div>
+  <div class="flex items-center gap-3">
+    <!-- BOTÓN EXPORTAR CSV -->
+    <button class="bg-white p-2 rounded-md text-black flex items-center gap-2 hover:bg-neutral-200 transition-colors cursor-pointer">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+      </svg>
+      <p class="whitespace-nowrap">Exportar CSV</p>
+    </button>
 
-  <!-- TABLA DE ACTIVOS -->
-  <div class="bg-base border border-neutral-800/80 rounded-2xl overflow-hidden">
-    <div class="px-6 py-5 border-b border-neutral-800/60">
-      <h2 class="text-neutral-300 text-sm font-medium">Rendimiento semanal de los activos</h2>
-    </div>
-    
-    <div class="w-full">
-      <table class="w-full text-left" matSort>
-        <thead class="text-neutral-500 text-[13px] border-b border-neutral-800/60">
-          <tr>
-            <th class="px-6 py-4 font-normal" mat-sort-header="simbolo">Activo</th>
-            <th class="px-6 py-4 font-normal text-right" mat-sort-header="peso">Peso</th>
-            <th class="px-6 py-4 font-normal text-right" mat-sort-header="retorno7d">7D retorno</th>
-            <th class="px-6 py-4 font-normal text-right" mat-sort-header="valor">Valor</th>
-            <th class="px-6 py-4 font-normal text-right" mat-sort-header="acciones">Acciones</th>
-            <th class="px-4 py-4 font-normal w-12"></th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-neutral-800/40 text-neutral-300 text-[14px]">
-          @if (cargando()) {
-            <tr>
-              <td colspan="6" class="px-6 py-8 text-center text-neutral-500">Cargando datos...</td>
-            </tr>
-          } @else {
-            @for (activo of activos$ | async; track $index) {
-              <tr class="hover:bg-neutral-900/30 transition-colors group">
-                
-                <!-- AQUI MOSTRAMOS LA IMAGEN DE LA BASE DE DATOS EN LA TABLA -->
-                <td class="px-6 py-4 flex items-center gap-3">
-                  @if (activo.image_url) {
-                    <img [src]="activo.image_url" [alt]="activo.simbolo" class="w-7 h-7 rounded-full object-cover shadow-sm">
-                  } @else {
-                    <div class="w-7 h-7 rounded-full bg-neutral-700 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                      {{ activo.simbolo | slice:0:1 }}
-                    </div>
-                  }
-                  <span class="font-bold text-white tracking-wide">{{ activo.simbolo }}</span>
-                </td>
-
-                <td class="px-6 py-4 text-right font-ibm">{{ activo.peso }}%</td>
-                <td class="px-6 py-4 text-right font-ibm" [ngClass]="activo.retorno7d >= 0 ? 'text-green-500' : 'text-red-500'">
-                  {{ activo.retorno7d >= 0 ? '+' : '' }}{{ activo.retorno7d }}%
-                </td>
-                <td class="px-6 py-4 text-right font-ibm">{{ activo.valor | number:'1.0-0' }}€</td>
-                <td class="px-6 py-4 text-right font-ibm">{{ activo.acciones }}</td>
-                
-                <td class="px-4 py-4 text-right relative group/menu">
-                  <button class="text-neutral-500 hover:text-orange-500 transition-colors cursor-pointer p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
-                      <path fill-rule="evenodd" d="M10.5 6a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm0 6a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm0 6a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clip-rule="evenodd" />
-                    </svg>
-                  </button>
-                  <div class="absolute right-10 top-1 w-32 z-50 hidden group-hover/menu:block">
-                    <div class="bg-neutral-900 border border-neutral-800 p-1 rounded-lg shadow-xl text-left">
-                      <button (click)="abrirModalTransaccion(activo, 'buy')" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-green-500 rounded-md transition-colors cursor-pointer">
-                        Comprar
-                      </button>
-                      <button (click)="abrirModalTransaccion(activo, 'sell')" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-orange-500 rounded-md transition-colors cursor-pointer">
-                        Vender
-                      </button>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            }
-          }
-        </tbody>
-      </table>
-    </div>
-    
-    <mat-paginator [pageSize]="5" [pageSizeOptions]="[5]" class="border-t border-neutral-800/60"></mat-paginator>
+    <!-- BOTÓN NUEVA POSICIÓN -->
+    <button (click)="abrirModalNuevaPosicion()" class="bg-orange-500 p-2 rounded-md flex items-center gap-2 hover:bg-orange-600 transition-colors cursor-pointer">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+      <span>Nueva Posición</span>
+    </button>
   </div>
 </div>
 
-<!-- MODAL WIZARD: BUSCADOR / TRANSACCIÓN -->
-<div *ngIf="mostrarModal()" class="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-  <div class="bg-base rounded-xl shadow-2xl border border-neutral-800 w-full max-w-md p-6 font-inter">
-    
-    <div class="flex justify-between items-center mb-6">
-      <div class="flex items-center gap-3">
-        @if (wizardStep() === 2) {
-          <button (click)="volverBuscador()" class="text-neutral-400 hover:text-white transition-colors cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-            </svg>
-          </button>
-        }
-        <h2 class="text-xl font-bold text-white">
-          {{ wizardStep() === 1 ? 'Buscar Activo' : (transaccionTipo() === 'buy' ? 'Registrar Compra' : 'Registrar Venta') }}
-        </h2>
-      </div>
-      <button (click)="cerrarModal()" class="text-neutral-500 hover:text-white transition-colors cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
+<!-- TARJETAS ESTADÍSTICAS -->
+<app-portfolio-stats
+  [cargando]="cargando()"
+  [valorTotal]="valorTotal()"
+  [ganancias]="ganancias()"
+  [porcentajeGanancias]="porcentajeGanancias()"
+  [totalPosiciones]="totalPosiciones()">
+</app-portfolio-stats>
 
-    @if (wizardStep() === 1) {
-      <div class="flex gap-2 mb-3">
-        <input type="text" 
-               [ngModel]="searchQuery()" 
-               (ngModelChange)="actualizarBusqueda($event)" 
-               (keyup.enter)="buscarActivos()"
-               placeholder="Ej: NVDA o BTC"
-               class="w-full bg-neutral-900 text-white border border-neutral-800 rounded-lg p-2.5 focus:outline-none focus:border-orange-500 transition-colors uppercase">
-        <button (click)="buscarActivos()" class="bg-neutral-800 hover:bg-neutral-700 text-white px-4 rounded-lg transition-colors cursor-pointer">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-          </svg>
-        </button>
-      </div>
+<!-- TABLA MAT-TABLE (LLAMADA AL COMPONENTE HIJO, SIN HTML REPETIDO AQUÍ) -->
+<app-portfolio-activos-table
+  [activosData]="activosData()"
+  [cargando]="cargando()"
+  (comprar)="abrirModalTransaccion($event, 'buy')"
+  (vender)="abrirModalTransaccion($event, 'sell')">
+</app-portfolio-activos-table>
 
-      <div class="flex gap-4 mb-4 border-b border-neutral-800">
-        <button (click)="cambiarFiltro('all')" 
-                [class.text-orange-500]="filtroActivo() === 'all'" 
-                [class.border-orange-500]="filtroActivo() === 'all'"
-                class="text-sm font-medium text-neutral-400 hover:text-white transition-colors pb-2 border-b-2 border-transparent">
-          Todos
-        </button>
-        <button (click)="cambiarFiltro('crypto')" 
-                [class.text-orange-500]="filtroActivo() === 'crypto'" 
-                [class.border-orange-500]="filtroActivo() === 'crypto'"
-                class="text-sm font-medium text-neutral-400 hover:text-white transition-colors pb-2 border-b-2 border-transparent">
-          Criptomonedas
-        </button>
-        <button (click)="cambiarFiltro('stock')" 
-                [class.text-orange-500]="filtroActivo() === 'stock'" 
-                [class.border-orange-500]="filtroActivo() === 'stock'"
-                class="text-sm font-medium text-neutral-400 hover:text-white transition-colors pb-2 border-b-2 border-transparent">
-          Acciones
-        </button>
-      </div>
-
-      <div class="max-h-64 overflow-y-auto space-y-2">
-        @if (isSearching()) {
-          <p class="text-center text-neutral-500 py-6 text-sm">Buscando...</p>
-        } @else if (searchResults().length === 0 && searchQuery().length >= 2) {
-          <p class="text-center text-neutral-500 py-6 text-sm">Pulsa enter o en la lupa para buscar.</p>
-        } @else {
-          @for (res of searchResults(); track $index) {
-            <div (click)="seleccionarParaComprarVender(res)" class="flex items-center gap-3 p-3 bg-neutral-900/50 hover:bg-neutral-800 border border-neutral-800 rounded-lg cursor-pointer transition-colors">
-              <img [src]="res.thumb" [alt]="res.symbol" class="w-8 h-8 rounded-full object-cover">
-              <div class="flex-1 min-w-0">
-                <p class="text-white font-medium truncate">{{ res.symbol }}</p>
-                <p class="text-neutral-500 text-xs truncate">{{ res.name }}</p>
-              </div>
-              <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-neutral-800"
-                    [ngClass]="res.type === 'crypto' ? 'text-blue-400' : 'text-green-400'">
-                {{ res.type === 'crypto' ? 'Cripto' : 'Acción' }}
-              </span>
-            </div>
-          }
-        }
-      </div>
-    }
-
-    @if (wizardStep() === 2) {
-      <div class="mb-6 bg-neutral-900/50 p-4 rounded-lg border border-neutral-800 flex items-center justify-center gap-3">
-        @if (activoSeleccionado()?.thumb) {
-          <img [src]="activoSeleccionado()?.thumb" class="w-8 h-8 rounded-full shadow-md">
-        }
-        <span class="text-2xl font-bold text-white">{{ activoSeleccionado()?.symbol || formulario().simbolo }}</span>
-      </div>
-
-      <div class="flex gap-2 p-1 bg-neutral-900 rounded-lg mb-6">
-        <button (click)="cambiarTipoTransaccion('buy')" [class.bg-orange-500]="transaccionTipo() === 'buy'" [class.text-white]="transaccionTipo() === 'buy'" [class.text-neutral-400]="transaccionTipo() !== 'buy'" class="flex-1 py-1.5 rounded-md text-sm font-medium transition-colors">Comprar</button>
-        <button (click)="cambiarTipoTransaccion('sell')" [class.bg-orange-500]="transaccionTipo() === 'sell'" [class.text-white]="transaccionTipo() === 'sell'" [class.text-neutral-400]="transaccionTipo() !== 'sell'" class="flex-1 py-1.5 rounded-md text-sm font-medium transition-colors">Vender</button>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <label class="block text-sm text-neutral-400 mb-1.5">Fecha</label>
-          <input type="date" [ngModel]="formulario().fecha" (ngModelChange)="actualizarFecha($event)" [max]="fechaHoy()" required class="w-full bg-neutral-900 text-white border border-neutral-800 rounded-lg p-2.5 focus:outline-none focus:border-orange-500 transition-colors cursor-pointer">
-        </div>
-        <div>
-          <label class="block text-sm text-neutral-400 mb-1.5">Cantidad</label>
-          <input type="number" step="any" [ngModel]="formulario().quantity" (ngModelChange)="actualizarCantidad($event)" required class="w-full bg-neutral-900 text-white border border-neutral-800 rounded-lg p-2.5 focus:outline-none focus:border-orange-500 transition-colors" placeholder="Ej: 15.5">
-        </div>
-      </div>
-      
-      <div class="mb-8">
-        <label class="block text-sm text-neutral-400 mb-1.5 items-center justify-between">
-          <span>Precio Unitario</span>
-          @if (isFetchingPrice()) {
-            <svg class="animate-spin h-3.5 w-3.5 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          }
-        </label>
-        <div class="relative">
-          <input type="number" step="any" [ngModel]="formulario().avg_buy_price" (ngModelChange)="actualizarPrecio($event)" [disabled]="isFetchingPrice()" required class="w-full bg-neutral-900 text-white border border-neutral-800 rounded-lg p-2.5 focus:outline-none focus:border-orange-500 transition-colors disabled:opacity-50" placeholder="0.00">
-        </div>
-        <p class="text-xs text-neutral-500 mt-1.5">El precio se autocompleta con el valor de mercado en la fecha indicada.</p>
-      </div>
-
-      <div class="flex justify-end gap-3">
-        <button type="button" (click)="cerrarModal()" class="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer">Cancelar</button>
-        <button (click)="guardarTransaccion()" [disabled]="formulario().quantity <= 0 || formulario().avg_buy_price <= 0 || isFetchingPrice()" class="px-5 py-2 text-sm font-medium bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-          Confirmar
-        </button>
-      </div>
-    }
-  </div>
-</div>
+<!-- MODAL DE TRANSACCIONES -->
+@if (mostrarModal()) {
+  <app-portfolio-transaction-modal
+    [carteraId]="carteraId!"
+    [activoInicial]="activoParaTransaccion()"
+    [tipoInicial]="tipoTransaccion()"
+    (cerrar)="mostrarModal.set(false)"
+    (guardado)="cargarInversiones()">
+  </app-portfolio-transaction-modal>
+} 

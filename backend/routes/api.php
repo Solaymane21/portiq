@@ -36,3 +36,5 @@ Route::get('/prices', [MarketController::class, 'prices']);
 Route::get('/portfolio/value', [MarketController::class, 'portfolioValue']);
 Route::get('/history/{symbol}', [MarketController::class, 'history']);  
 
+//Admmin
+Route::get('/admin/users', [AdminController::class, 'users']);

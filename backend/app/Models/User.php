@@ -57,4 +57,9 @@ class User extends Authenticatable
     {
         return $this->email;
     }
+
+    public function portfolios()
+    {
+        return $this->hasMany(Portfolio::class);
+    }
 }

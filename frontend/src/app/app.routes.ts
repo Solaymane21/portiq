@@ -15,10 +15,11 @@ import { resetPasswordGuard } from './guards/reset-password.guard';
 import { CallbackComponent } from './pages/auth/callback/callback.component';
 import { authGuard } from './guards/auth.guard';
 import { guestGuard } from './guards/guest.guard';
-import { PortfolioComponent } from './pages/portfolio/portfolio/portfolio.component';
-import { PortfolioDetailComponent } from './pages/portfolio/portfolio-detail/portfolio-detail.component';
 import { AdminLayoutComponent } from './layout/admin-layout/admin-layout.component';
 import { AdminComponent } from './pages/admin/admin.component';
+import { InvestmentsComponent } from './pages/wallets/investments/investments.component';
+import { PortfoliosComponent } from './pages/wallets/portfolios/portfolios.component';
+
 
 export const routes: Routes = [
     {
@@ -31,12 +32,12 @@ export const routes: Routes = [
                 component: DashboardComponent
             },
             {
-                path: 'portfolios',
-                component: PortfolioComponent
+                path: 'wallets',
+                component: PortfoliosComponent
             },
-            {
-                path: 'portfolios/:id',
-                component: PortfolioDetailComponent
+            { 
+                path: 'wallets/:id', 
+                component: InvestmentsComponent
             },
             {
                 path: 'favorites',

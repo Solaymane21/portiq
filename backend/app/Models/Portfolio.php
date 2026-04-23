@@ -10,7 +10,6 @@ class Portfolio extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
         'name',
         'is_default',
         'is_public'
@@ -20,7 +19,4 @@ class Portfolio extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function investments() {
-        return $this->hasMany(Investment::class);
-    }
 }

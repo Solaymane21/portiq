@@ -12,7 +12,7 @@ export class PortfoliosComponent implements OnInit {
   //Vistas List / Grid
   viewMode = signal<'list' | 'grid'>('list');
 
-  ngOnInit() {
+  ngOnInit() {  
     this.cargarCarteras();
     const guardado = localStorage.getItem('vistaCarteras');
     

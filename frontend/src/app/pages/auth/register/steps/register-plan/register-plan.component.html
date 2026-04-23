@@ -24,7 +24,13 @@
                                 <p>Sin límite de activos por cartera</p>
                             </div>
                         </div>
-                        <button (click)="onPremiumPlan()" class="w-full text-white bg-orange-500 hover:bg-orange-500/80 rounded-md py-2 mt-4">Seleccionar</button>
+                        <button (click)="onPremiumPlan()" [disabled]="this.authService.isLoading()" class="w-full text-white bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 mt-4">
+                          @if (this.authService.isLoading() && this.planSelected() === 'premium') {
+                            <mat-spinner diameter="20"></mat-spinner>
+                          } @else {
+                            Seleccionar
+                          }
+                        </button>
                     </div>
                 </div>
                 <div class="flex flex-1 flex-col items-center justify-evenly gap-5 p-4 border border-black rounded-2xl mt-4">
@@ -49,7 +55,7 @@
                             </div>
                         </div>
                         <button (click)="onFreePlan()" [disabled]="this.authService.isLoading()" class="w-full text-white bg-black hover:bg-black/80 flex justify-center rounded-md py-2 mt-4 disabled:cursor-not-allowed">
-                            @if (this.authService.isLoading()) {
+                            @if (this.authService.isLoading() && this.planSelected() === 'free') {
                               <mat-spinner diameter="20"></mat-spinner>
                             } @else {
                               Seleccionar

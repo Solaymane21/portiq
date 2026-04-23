@@ -5,9 +5,8 @@ use App\Http\Controllers\EmailController;
 use App\Http\Controllers\MarketController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PortfolioController;
-use App\Http\Controllers\InvestmentController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SubscriptionController;
-use Laravel\Cashier\Http\Controllers\WebhookController;
 
 Route::prefix('auth')->group(function() {
     Route::post('/reset-code', [EmailController::class, 'sendForgotPasswordCode']);
@@ -20,6 +19,8 @@ Route::prefix('auth')->group(function() {
     Route::get('/google/callback', [AuthController::class, 'googleCallback']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 });
+
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // Stripe
@@ -36,5 +37,5 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/search/{symbol}', [MarketController::class, 'search']);
 Route::get('/prices', [MarketController::class, 'prices']);
 Route::get('/portfolio/value', [MarketController::class, 'portfolioValue']);
-Route::get('/history/{symbol}', [MarketController::class, 'history']);  
+Route::get('/history/{symbol}', [MarketController::class, 'history']);
 

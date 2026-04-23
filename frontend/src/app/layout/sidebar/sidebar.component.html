@@ -1,8 +1,8 @@
 <aside
-  class="relative h-full w-60 flex flex-col text-white bg-neutral-950 px-5 py-7 border-r border-neutral-600"
-  [class.w-60]="!collapsed()"
-  [class.w-24]="collapsed()"
+  class="hidden md:flex relative h-full md:flex-col text-white bg-neutral-950 px-5 py-7 border-r border-neutral-600"
+  [ngClass]="sidebarWidth()"
 >
+  @if (!this.isTablet()) {
     <button
           (click)="toggle()"
           class="absolute -right-8 top-24 -translate-y
@@ -16,6 +16,7 @@
             <path fill-rule="evenodd" d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z" clip-rule="evenodd" />
           </svg>
     </button>
+  }
 
   <div class="mb-10 px-3">
     <p class="font-ibm text-2xl" [class.invisible]="collapsed()">PortIQ</p>
@@ -27,7 +28,7 @@
         routerLinkActive="active-link"
         routerLink="/app/dashboard"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
+        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -52,7 +53,7 @@
         routerLinkActive="active-link"
         routerLink="/app/wallets"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
+        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -77,7 +78,7 @@
         routerLinkActive="active-link"
         routerLink="/app/favorites"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
+        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -102,7 +103,7 @@
         routerLinkActive="active-link"
         routerLink="/app/investor-profile"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
+        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -127,7 +128,7 @@
         routerLinkActive="active-link"
         routerLink="/app/ranking"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
+        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -152,7 +153,7 @@
         routerLinkActive="active-link"
         routerLink="/app/alerts"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
+        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -179,7 +180,7 @@
         routerLinkActive="active-link"
         routerLink="/app/settings"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
+        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -209,7 +210,7 @@
         (click)="showLogoutModal.set(true)"
         routerLinkActive="active-link"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-interactivo p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
+        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-naranja-secundario"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

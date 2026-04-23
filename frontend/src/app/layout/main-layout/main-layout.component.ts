@@ -3,10 +3,11 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { TopbarComponent } from '../topbar/topbar.component';
 import { FooterComponent } from '../footer/footer.component';
+import { NavbarMobileComponent } from '../navbar-mobile/navbar-mobile.component';
 
 @Component({
   selector: 'app-main-layout',
-  imports: [SidebarComponent, RouterOutlet, TopbarComponent, FooterComponent],
+  imports: [SidebarComponent, RouterOutlet, TopbarComponent, FooterComponent, NavbarMobileComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })

@@ -2,9 +2,11 @@
   <app-sidebar class="h-full"></app-sidebar>
   <div class="flex flex-col overflow-hidden flex-1">
   <app-topbar></app-topbar>
-    <main class="flex-1 overflow-y-auto my-5 px-14">
+    <main class="flex-1 overflow-y-auto my-5 px-6 md:px-12 lg:px-14">
       <router-outlet />
+      <div class="h-16 md:hidden"></div>
     </main>
-  <app-footer></app-footer>
+  <app-navbar-mobile class="md:hidden"></app-navbar-mobile>
+  <app-footer class="hidden md:block"></app-footer>
   </div>
 </div>

@@ -208,4 +208,8 @@ export class AuthService {
     localStorage.removeItem('portiqUser')
   }
 
+  getUserInfo() {
+    return localStorage.getItem('portiqUser')
+  }
+
 }

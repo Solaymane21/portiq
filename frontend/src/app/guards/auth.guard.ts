@@ -1,21 +1,37 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { HttpClient } from '@angular/common/http';
+import { catchError, map, of } from 'rxjs';
 
 export const authGuard: CanActivateFn = (route, state) => {
+  const http = inject(HttpClient);
   const router = inject(Router);
   const authService = inject(AuthService);
   const token  = localStorage.getItem('token');
 
-  if (token) {
-    return true
+  if (!token) {
+    authService.redirectMsg.set({
+      msg: 'Debes iniciar sesión o registrarte primero para acceder.',
+      type: 'warning'
+    })
+
+    router.navigate(['/auth/login'])
+    return false
   }
 
-  authService.redirectMsg.set({
-    msg: 'Debes iniciar sesión o registrarte primero para acceder.',
-    type: 'warning'
-  })
+  return http.get('http://localhost:8000/api/auth/validate-token').pipe(
+    map(() => true),
+    catchError(() => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('portiqUser');
 
-  router.navigate(['/auth/login'])
-  return false
+      authService.redirectMsg.set({
+        msg: 'Debes iniciar sesión o registrarte primero para acceder.',
+        type: 'warning'
+      })
+      router.navigate(['/auth/login']);
+      return of(false);
+    })
+  );
 };

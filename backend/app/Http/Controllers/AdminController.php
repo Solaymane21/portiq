@@ -14,7 +14,7 @@ class AdminController extends Controller
                 return [
                     'usuario' => $user->name,
                     'email' => $user->email,
-                    'suscripcion' => !empty($user->suscription_type),
+                    'suscripcion' => $user->suscription_type,
                 ];
             });
 

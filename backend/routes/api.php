@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\MarketController;
@@ -31,7 +32,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/portfolios', [PortfolioController::class, 'store']);
     Route::get('/portfolios', [PortfolioController::class, 'index']);
-    
+
+    Route::get('/auth/validate-token', [AuthController::class, 'validateToken']);
 });
 
 Route::get('/search/{symbol}', [MarketController::class, 'search']);

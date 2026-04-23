@@ -8,31 +8,116 @@
       <button 
         (click)="cambiarVista('list')" 
         class="p-2 rounded-md"
-        [class]="viewMode() === 'list' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-neutral-950 hover:text-orange-500'">
+        [class]="viewMode() === 'list' ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-neutral-950 text-neutral-500 hover:text-white'">
         <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
       </button>
       
       <!-- Boton Vista Grid (Estilo "Inactivo" por defecto) -->
       <button 
         (click)="cambiarVista('grid')" 
-        class="p-2 rounded-md text-white"
-        [class]="viewMode() === 'grid' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-neutral-950 hover:text-orange-500'">
+        class="p-2 rounded-md"
+        [class]="viewMode() === 'grid' ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-neutral-950 text-neutral-500 hover:text-white'">
         <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" /></svg>
       </button>
       
       <!-- Boton Importar -->
-      <button class="bg-white p-2 rounded-md text-black flex items-center gap-2">
+      <button class="bg-white hover:bg-neutral-200/80 p-2 rounded-md text-black flex items-center gap-2">
         <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
         <span class="whitespace-nowrap">Importar CSV</span>
       </button>
       
       <!-- Boton Nueva Cartera -->
-      <button (click)="abrirModal()" class="bg-orange-500 p-2 rounded-md text-white flex items-center gap-2">
+      <button (click)="abrirModal()" class="bg-orange-500 hover:bg-orange-500/80 p-2 rounded-md text-white flex items-center gap-2">
         <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
         <span>Nueva Cartera</span>
       </button>
     </div>
   </div>
+
+  <!-- CONTENEDOR GRID -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+    
+    @for (cartera of misCarteras; track cartera.id) {
+      <!-- TARJETA ORIGINAL -->
+      <div class="bg-base p-4 rounded-xl border transition-colors cursor-pointer flex flex-col sm:flex-row justify-between"
+          [class.border-orange-500]="cartera.is_public"
+          [class.border-neutral-800]="!cartera.is_public"
+          [class.hover:border-neutral-700]="!cartera.is_public">
+        
+        <!-- Título y Public/Private -->
+        <div class="flex flex-col gap-1 w-full sm:w-1/3">
+          <div class="flex items-center gap-2">
+            <h3 class="text-lg font-medium text-white truncate">{{ cartera.name }}</h3>
+            
+            <!-- Si quieres puedes dejar la etiquetita default, si no la borras -->
+            @if (cartera.is_default) {
+              <span class="bg-orange-500/10 text-orange-500 text-[10px] px-1.5 py-0.5 rounded border border-orange-500/20">
+                Default
+              </span>
+            }
+          </div>
+          
+          <div class="flex items-center gap-1.5 text-xs">
+            @if (cartera.is_public) {
+              <!-- Icono Pública -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-3.5 text-orange-500">
+                <path d="M18 1.5c2.9 0 5.25 2.35 5.25 5.25v3.75a.75.75 0 0 1-1.5 0V6.75a3.75 3.75 0 1 0-7.5 0v3a3 3 0 0 1 3 3v6.75a3 3 0 0 1-3 3H3.75a3 3 0 0 1-3-3v-6.75a3 3 0 0 1 3-3h9v-3c0-2.9 2.35-5.25 5.25-5.25Z" />
+              </svg>
+            } @else {
+              <!-- Icono Privada -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-3.5 text-orange-500">
+                <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clip-rule="evenodd" />
+              </svg>
+            }
+            <span class="text-neutral-400">
+              {{ cartera.is_public ? 'Pública' : 'Privada' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Datos falsos (0 activos, 0€) -->
+        <div class="flex flex-1 w-full justify-between items-center text-sm mt-2 sm:mt-0">
+          <p class="text-neutral-400">
+            0 activos
+          </p>
+          <p class="text-white font-ibm font-medium text-lg">
+            0€
+          </p>
+        </div>
+
+        <!-- MENU TRES PUNTOS -->
+        <div class="relative group mt-2 sm:mt-0">
+          <button class="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-md transition-colors cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+              <path fill-rule="evenodd" d="M10.5 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm0 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm0 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z" clip-rule="evenodd" />
+            </svg>
+          </button>
+
+          <div class="absolute right-0 top-full pt-2 w-36 z-50 hidden group-hover:block">
+            <div class="bg-neutral-900 border border-neutral-800 p-1 rounded-lg shadow-xl">
+              <!-- Botón Editar (sin lógica por ahora) -->
+              <button class="w-full flex items-center gap-2 text-left px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white rounded-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4 text-neutral-500">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                </svg>
+                Editar
+              </button>
+              <div class="my-1 h-[1px] w-full bg-neutral-800"></div>
+              <!-- Botón Eliminar (sin lógica por ahora) -->
+              <button class="w-full flex items-center gap-2 text-left px-3 py-2 text-sm text-neutral-400 hover:bg-red-500/10 hover:text-red-400 rounded-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4 text-red-500/70">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                </svg>
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    }
+  </div>
+  
 
 <!-- Modal Nueva Cartera -->
 @if (isModalOpen()) {
@@ -41,45 +126,69 @@
     <div class="bg-neutral-950 border border-neutral-800 rounded-lg p-6 w-full max-w-sm">
       <h2 class="text-xl text-white font-medium mb-4">Nueva cartera</h2>
       
-      <!-- Input de Texto --> 
-      <input 
-        [ngModel]="nombreCartera()" (ngModelChange)="nombreCartera.set($event)" 
-        type="text" placeholder="Nombre de la cartera"
-        class="w-full bg-neutral-900 border border-neutral-800 rounded px-4 py-2 mb-4 text-white outline-none focus:border-orange-500"
-      >
+      <form [formGroup]="formularioCartera" (ngSubmit)="crearCartera()">
+        <!-- Input de Texto --> 
+        <input  
+          formControlName="name"
+          type="text" placeholder="Nombre de la cartera"
+          class="w-full bg-neutral-900 border border-neutral-800 rounded px-4 py-2 mb-4 text-white outline-none focus:border-orange-500"
+        >
 
-      <!-- Checkboxes -->
-      <div class="space-y-2 mb-6 text-white">
-        <label class="flex items-center gap-3 cursor-pointer">
-          <input [ngModel]="esDefault()" (ngModelChange)="esDefault.set($event)" type="checkbox" class="size-4 accent-orange-500">
-          <span>Hacer cartera por defecto</span>
-        </label>
+        <!-- Bloque Publica/Default-->
+        <div class="space-y-2 mb-6 text-white">
 
-        <label class="flex items-center gap-3 cursor-pointer">
-          <input [ngModel]="esPublica()" (ngModelChange)="esPublica.set($event)" type="checkbox" class="size-4 accent-orange-500">
-          <span>Hacer cartera pública</span>
-        </label>
-      </div>
+            <p class="text-sm text-white mb-2">Visibilidad de la cartera</p>
+            <div class="flex w-full bg-neutral-900 rounded-lg p-1 border border-neutral-800">
+              <label class="flex-1 text-center cursor-pointer">
+                <input type="radio" formControlName="is_public" [value]="false" class="hidden peer">
+                <div class="py-1.5 text-sm rounded-md peer-checked:bg-neutral-800 peer-checked:text-orange-500 text-neutral-500 hover:text-white">
+                  Privada
+                </div>
+              </label>
+              <label class="flex-1 text-center cursor-pointer">
+                <input type="radio" formControlName="is_public" [value]="true" class="hidden peer">
+                <div class="py-1.5 text-sm rounded-md peer-checked:bg-neutral-800 peer-checked:text-orange-500 text-neutral-500 hover:text-white">
+                  Pública
+                </div>
+              </label>
+            </div>
 
-      <!-- Botones -->
-      <div class="flex justify-end gap-4">
-        <button 
-          (click)="cerrarModal()" 
-          class="text-white px-4 py-2 rounded">
-          Cancelar
-        </button>
-        
-        <button 
-          (click)="crearCartera()" 
-          [disabled]="!nombreCartera().trim()" 
-          class="bg-orange-500 text-white px-4 py-2 rounded disabled:opacity-50">
-          Crear
-        </button>
-      </div>
+            <p class="text-sm text-white mb-2">Cartera principal</p>
+            <div class="flex w-full bg-neutral-900 rounded-lg p-1 border border-neutral-800">
+              <label class="flex-1 text-center cursor-pointer">
+                <input type="radio" formControlName="is_default" [value]="false" class="hidden peer">
+                <div class="py-1.5 text-sm rounded-md transition-colors peer-checked:bg-neutral-800 peer-checked:text-orange-500 text-neutral-500 hover:text-white">
+                  No
+                </div>
+              </label>
+              <label class="flex-1 text-center cursor-pointer">
+                <input type="radio" formControlName="is_default" [value]="true" class="hidden peer">
+                <div class="py-1.5 text-sm rounded-md transition-colors peer-checked:bg-neutral-800 peer-checked:text-orange-500 text-neutral-500 hover:text-white">
+                  Hacer Default
+                </div>
+              </label>
+            </div>
 
+        </div>
+
+        <!-- Botones Cancelar/Crear -->
+        <div class="flex gap-3">
+          <button
+            type="button"
+            (click)="cerrarModal()"
+            class="w-1/2 bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="formularioCartera.invalid"
+            class="w-1/2 bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white disabled:cursor-not-allowed disabled:bg-orange-500/80">
+            Crear
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 }
-  
 
 </div>

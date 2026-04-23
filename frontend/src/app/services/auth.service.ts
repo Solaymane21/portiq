@@ -24,7 +24,7 @@ export class AuthService {
   email = signal<User['email']>('')
   code = signal<string>('')
   password = signal<User['password']>('')
-  subscription_type = signal<User['subscription_type']>('free')
+  suscription_type = signal<User['suscription_type']>('free')
 
   next() {
     this.currentStep.update(step => step + 1)
@@ -99,15 +99,28 @@ export class AuthService {
       name: this.username(),
       email: this.email(),
       password: this.password(),
-      suscription_type: this.subscription_type()
+      suscription_type: 'free'
     }).subscribe({
       next: (res: any) => {
         this.saveUserData(res)
-        this.isLoading.set(false);
-        this.router.navigate(['/app/dashboard']);
+
+        if (this.suscription_type() === 'premium') {
+          this.http.post(`${this.apiUrl}/subscription/checkout`, {}).subscribe({
+            next: (checkout: any) => {
+              this.isLoading.set(false);
+              window.location.href = checkout.url;
+            },
+            error: () => {
+              this.isLoading.set(false);
+              this.router.navigate(['/app/dashboard']);
+            }
+          });
+        } else {
+          this.router.navigate(['/app/dashboard']);
+        }
       },
       error: (err) => {
-        console.error(err.error.message);
+        console.error(err.message);
         this.isLoading.set(false);
       }
     });
@@ -134,8 +147,6 @@ export class AuthService {
   }
 
   onLogout() {
-    const token = localStorage.getItem('token');
-
     this.http.post(`${this.apiUrl}/auth/logout`, {}).subscribe({
       next: () => {
         this.removeUserData()

@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { AuthService } from '../../../../../services/auth.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { User } from '../../../../../models/user.model';
 
 @Component({
   selector: 'app-register-plan',
@@ -10,14 +11,17 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 })
 export class RegisterPlanComponent {
   authService = inject(AuthService)
+  planSelected = signal<User['suscription_type']>('free')
 
   onFreePlan() {
-    this.authService.subscription_type.set('free')
+    this.authService.suscription_type.set('free')
+    this.planSelected.set('free')
     this.authService.onStep4()
   }
 
   onPremiumPlan() {
-    this.authService.subscription_type.set('premium')
+    this.authService.suscription_type.set('premium')
+    this.planSelected.set('premium')
     this.authService.onStep4()
   }
 

@@ -9,31 +9,19 @@ class SubscriptionController extends Controller
     // Devuelve la URL de Stripe Checkout
     public function checkout(Request $request)
     {
-        try {
-            $user = $request->user();
+        $user = $request->user();
 
-            $priceId = env('STRIPE_PRICE_PRO');
+        $priceId = env('STRIPE_PRICE_PRO');
 
-            if (!$priceId) {
-                return response()->json(['error' => 'STRIPE_PRICE_PRO no configurado en .env'], 500);
-            }
+        $checkout = $user
+            ->newSubscription('default', $priceId)
+            ->allowPromotionCodes()
+            ->checkout([
+                'success_url' => env('FRONTEND_URL') . '/app/dashboard',
+                'cancel_url'  => env('FRONTEND_URL') . '/app/dashboard',
+            ]);
 
-            $checkout = $user
-                ->newSubscription('default', $priceId)
-                ->allowPromotionCodes()
-                ->checkout([
-                    'success_url' => 'http://localhost:4200/dashboard?subscription=success',
-                    'cancel_url'  => 'http://localhost:4200/pricing',
-                ]);
-
-            return response()->json(['url' => $checkout->url]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => $e->getMessage(),
-                'type'  => get_class($e),
-            ], 500);
-        }
+        return response()->json(['url' => $checkout->url]);
     }
 
     // Consulta el estado actual de la suscripción

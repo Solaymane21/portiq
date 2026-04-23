@@ -9,13 +9,31 @@ import { PortfolioService } from '../../../services/portfolio.service';
   styleUrl: './portfolios.component.css'
 })
 export class PortfoliosComponent implements OnInit {
-  //Vistas List / Grid
+  private portfolioService = inject(PortfolioService);
+
+  // Vistas List / Grid
   viewMode = signal<'list' | 'grid'>('list');
 
-  ngOnInit() {  
+  // Modal Crear / Editar
+  isModalOpen = signal(false);
+  modoFormulario = signal<'create' | 'edit'>('create');
+
+  // Modal Borrar
+  isDeleteModalOpen = signal(false);
+
+  misCarteras: any[] = [];
+  carteraSeleccionada: any = null;
+
+  formularioCartera = new FormGroup({
+    name: new FormControl('', [Validators.required, Validators.maxLength(50)]),
+    is_default: new FormControl(false),
+    is_public: new FormControl(false)
+  });
+
+  ngOnInit() {
     this.cargarCarteras();
+
     const guardado = localStorage.getItem('vistaCarteras');
-    
     if (guardado === 'list' || guardado === 'grid') {
       this.viewMode.set(guardado);
     }
@@ -26,27 +44,39 @@ export class PortfoliosComponent implements OnInit {
     localStorage.setItem('vistaCarteras', modo);
   }
 
-  //CRUD Porfolios
-  private portfolioService = inject(PortfolioService);
+  abrirModalCrear() {
+    this.modoFormulario.set('create');
+    this.carteraSeleccionada = null;
+    this.formularioCartera.reset({
+      name: '',
+      is_default: false,
+      is_public: false
+    });
+    this.isModalOpen.set(true);
+  }
 
-  formularioCartera = new FormGroup({
-    name: new FormControl('', [Validators.required, Validators.maxLength(50)]),
-    is_default: new FormControl(false),
-    is_public: new FormControl(false)
-  });
-
-  isModalOpen = signal(false);
-  misCarteras: any[] = [];
-
-  abrirModal() {
+  abrirModalEditar(cartera: any) {
+    this.modoFormulario.set('edit');
+    this.carteraSeleccionada = cartera;
+    this.formularioCartera.reset({
+      name: cartera.name,
+      is_default: cartera.is_default,
+      is_public: cartera.is_public
+    });
     this.isModalOpen.set(true);
   }
 
   cerrarModal() {
     this.isModalOpen.set(false);
+    this.formularioCartera.reset({
+      name: '',
+      is_default: false,
+      is_public: false
+    });
+    this.carteraSeleccionada = null;
   }
 
-  crearCartera() {
+  guardarCartera() {
     if (this.formularioCartera.invalid) return;
 
     const data = {
@@ -55,13 +85,46 @@ export class PortfoliosComponent implements OnInit {
       is_public: this.formularioCartera.value.is_public!
     };
 
-    this.portfolioService.createPortfolio(data).subscribe({
-      next: (respuesta) => {
-        this.cerrarModal();
-        console.log(respuesta);
+    if (this.modoFormulario() === 'create') {
+      this.portfolioService.createPortfolio(data).subscribe({
+        next: (respuesta) => {
+          this.cerrarModal();
+          console.log(respuesta);
+          this.cargarCarteras();
+        },
+        error: (err) => console.error('Error al crear cartera:', err)
+      });
+    } else if (this.carteraSeleccionada) {
+      this.portfolioService.updatePortfolio(this.carteraSeleccionada.id, data).subscribe({
+        next: (respuesta) => {
+          this.cerrarModal();
+          console.log(respuesta);
+          this.cargarCarteras();
+        },
+        error: (err) => console.error('Error al actualizar cartera:', err)
+      });
+    }
+  }
+
+  abrirModalEliminar(cartera: any) {
+    this.carteraSeleccionada = cartera;
+    this.isDeleteModalOpen.set(true);
+  }
+
+  cerrarModalEliminar() {
+    this.isDeleteModalOpen.set(false);
+    this.carteraSeleccionada = null;
+  }
+
+  eliminarCartera() {
+    if (!this.carteraSeleccionada) return;
+
+    this.portfolioService.deletePortfolio(this.carteraSeleccionada.id).subscribe({
+      next: () => {
+        this.cerrarModalEliminar();
         this.cargarCarteras();
       },
-      error: (err) => console.error("Error al crear cartera:", err)
+      error: (err) => console.error('Error al eliminar cartera:', err)
     });
   }
 
@@ -69,9 +132,9 @@ export class PortfoliosComponent implements OnInit {
     this.portfolioService.getPortfolios().subscribe({
       next: (data) => {
         this.misCarteras = data as any[];
-        console.log("Carteras descargadas:", this.misCarteras);
+        console.log('Carteras descargadas:', this.misCarteras);
       },
-      error: (err) => console.error("Error al cargar carteras", err)
+      error: (err) => console.error('Error al cargar carteras', err)
     });
   }
 

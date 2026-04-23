@@ -12,7 +12,16 @@ export class PortfolioService {
     return this.http.post<any>(this.apiUrl, data);
   }
 
+  updatePortfolio(id: number, data: { name: string, is_default: boolean, is_public: boolean }) {
+    return this.http.put(`${this.apiUrl}/${id}`, data);
+  }
+
+  deletePortfolio(id: number) {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
   getPortfolios() {
     return this.http.get(this.apiUrl);
   }
+
 }

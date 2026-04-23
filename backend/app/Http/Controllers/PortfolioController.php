@@ -7,9 +7,6 @@ use Illuminate\Http\Request;
 
 class PortfolioController extends Controller
 {
-    /**
-     * Guarda una nueva cartera en la base de datos
-     */
     public function store(Request $request)
     {
         $portfolio = $request->user()->portfolios()->create([
@@ -31,5 +28,27 @@ class PortfolioController extends Controller
         return response()->json($portfolios);
     }
 
+    public function update(Request $request, Portfolio $portfolio)
+    {
+        $portfolio->update([
+            'name' => $request->name,
+            'is_default' => $request->is_default ?? false,
+            'is_public' => $request->is_public ?? false,
+        ]);
+
+        return response()->json([
+            'message' => 'Cartera actualizada.',
+            'portfolio' => $portfolio
+        ]);
+    }
+
+    public function destroy(Portfolio $portfolio)
+    {
+        $portfolio->delete();
+
+        return response()->json([
+            'message' => 'Cartera eliminada.'
+        ]);
+    }
     
 }

@@ -27,6 +27,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/subscription/status', [SubscriptionController::class, 'status']);
     Route::post('/subscription/cancel', [SubscriptionController::class, 'cancel']);
     Route::get('/subscription/portal', [SubscriptionController::class, 'portal']);
+
+    Route::post('/portfolios', [PortfolioController::class, 'store']);
 });
 
 Route::get('/search/{symbol}', [MarketController::class, 'search']);
@@ -34,5 +36,3 @@ Route::get('/prices', [MarketController::class, 'prices']);
 Route::get('/portfolio/value', [MarketController::class, 'portfolioValue']);
 Route::get('/history/{symbol}', [MarketController::class, 'history']);  
 
-Route::apiResource('portfolios', PortfolioController::class);
-Route::apiResource('portfolios.investments', InvestmentController::class);

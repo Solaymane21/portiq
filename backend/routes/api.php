@@ -29,6 +29,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/subscription/portal', [SubscriptionController::class, 'portal']);
 
     Route::post('/portfolios', [PortfolioController::class, 'store']);
+    Route::get('/portfolios', [PortfolioController::class, 'index']);
+    
 });
 
 Route::get('/search/{symbol}', [MarketController::class, 'search']);

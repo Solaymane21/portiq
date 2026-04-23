@@ -31,23 +31,17 @@ class AuthController extends Controller
             'message' => 'Login correcte',
             'token' => $token,
             'token_type' => 'Bearer',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'avatar' => $user->avatar,
-                'subscription_type' => $user->suscription_type,
-            ]
+            'user' => $this->formatUser($user)
         ]);
     }
 
     public function register(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8',
-            'suscription_type'     => 'required|in:free,premium',
+            'suscription_type' => 'required|in:free,premium',
         ]);
 
         $user = User::create([
@@ -59,7 +53,7 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json(['token' => $token, 'user' => $user], 201);
+        return response()->json(['token' => $token, 'user' => $this->formatUser($user)], 201);
     }
 
     public function googleRedirect() {
@@ -99,12 +93,7 @@ class AuthController extends Controller
 
         $token = $user->createToken('google-oauth')->plainTextToken;
 
-        $userData = base64_encode(json_encode([
-            'id'     => $user->id,
-            'name'   => $user->name,
-            'email'  => $user->email,
-            'avatar' => $user->avatar,
-        ]));
+        $userData = base64_encode(json_encode($this->formatUser($user)));
 
         $frontend = env('FRONTEND_URL');
         return redirect("{$frontend}/auth/callback#token={$token}&user={$userData}");
@@ -135,8 +124,18 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-
         return response()->json(['message' => 'Sesión cerrada correctamente']);
+    }
+
+    function formatUser(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'avatar' => $user->avatar,
+            'suscription_type' => $user->suscription_type
+        ];
     }
 
 }

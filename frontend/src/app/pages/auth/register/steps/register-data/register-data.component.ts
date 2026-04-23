@@ -38,7 +38,7 @@ export class RegisterDataComponent {
     if (this.registerForm.invalid) return;
 
     this.authService.username.set(this.registerForm.value.username!)
-    this.authService.email.set(this.registerForm.value.email!)
+    this.authService.email.set(this.registerForm.value.email!.toLowerCase())
 
     this.authService.onStep1()
   }

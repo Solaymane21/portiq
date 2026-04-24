@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AdminTable } from '../models/admin.model';
+import { User } from '../models/user.model';
 
 @Injectable({providedIn: 'root'})
 
@@ -10,7 +10,7 @@ export class AdminService{
 
     constructor(private http: HttpClient) {}
 
-    getUsers(): Observable<AdminTable[]> {
-        return this.http.get<AdminTable[]>(this.apiUrl);
+    getUsers(): Observable<User[]> {
+        return this.http.get<User[]>(this.apiUrl);
   }
 }

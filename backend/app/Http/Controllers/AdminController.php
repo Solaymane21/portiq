@@ -8,15 +8,7 @@ class AdminController extends Controller
 {
     public function users(): JsonResponse
     {
-        $users = User::select('name', 'email')
-            ->get()
-            ->map(function ($user) {
-                return [
-                    'usuario' => $user->name,
-                    'email' => $user->email,
-                    'suscripcion' => $user->suscription_type,
-                ];
-            });
+        $users = User::all();
 
         return response()->json($users);
     }

@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [ MatTableModule, MatPaginatorModule, MatSortModule],
+  imports: [ CommonModule,MatTableModule, MatPaginatorModule, MatSortModule],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css'
 })
@@ -17,7 +17,6 @@ export class AdminComponent implements AfterViewInit {
 
   //Tabla admin
   displayedColumns = ['usuario', 'email', 'suscripcion', 'acciones'];
-
   dataSource = new MatTableDataSource<AdminTable>([]);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;

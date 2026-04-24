@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\AdminController; 
 
 Route::prefix('auth')->group(function() {
     Route::post('/reset-code', [EmailController::class, 'sendForgotPasswordCode']);

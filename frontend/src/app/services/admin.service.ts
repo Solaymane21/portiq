@@ -12,5 +12,9 @@ export class AdminService{
 
     getUsers(): Observable<User[]> {
         return this.http.get<User[]>(this.apiUrl);
-  }
+    }
+
+    deleteUser(id: User['id']) {
+        return this.http.delete<User[]>(`${this.apiUrl}/${id}`);
+    }
 }

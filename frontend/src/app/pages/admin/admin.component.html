@@ -83,11 +83,14 @@
             Acciones
           </th>
           <td mat-cell *matCellDef="let user" class="border-b border-neutral-900 py-4 !text-center">
-            <button
-              type="button"
-              class="text-orange-500 hover:text-orange-800 transition-colors">
-              ⋮
-            </button>
+            <button [cdkMenuTriggerFor]="menu" class="text-orange-500">⋮</button>
+
+            <ng-template #menu>
+              <div class="bg-neutral-800 rounded flex flex-col !text-white" cdkMenu>
+                <button (click)="deleteUser(user.id)" class="px-2 py-1" cdkMenuItem>Borrar</button>
+              </div>
+            </ng-template>
+
           </td>
         </ng-container>
 

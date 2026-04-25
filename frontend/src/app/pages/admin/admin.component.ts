@@ -5,11 +5,12 @@ import { MatSortModule, MatSort } from '@angular/material/sort';
 import { AdminService } from '../../services/admin.service';
 import { DatePipe } from '@angular/common';
 import { User } from '../../models/user.model';
+import {CdkMenu, CdkMenuItem, CdkMenuTrigger} from '@angular/cdk/menu';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [ MatTableModule, MatPaginatorModule, MatSortModule, DatePipe],
+  imports: [ MatTableModule, MatPaginatorModule, MatSortModule, DatePipe, CdkMenuTrigger, CdkMenu, CdkMenuItem],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css'
 })
@@ -62,6 +63,15 @@ export class AdminComponent implements AfterViewInit, OnInit {
         if (this.paginator) this.dataSource.paginator = this.paginator;
       },
       error: (err) => console.error('Error al cargar usuarios:', err)
+    });
+  }
+
+  deleteUser(id: number) {
+    this.adminService.deleteUser(id).subscribe({
+      next: () => {
+        this.loadUsers();
+      },
+      error: (err) => console.error(err)
     });
   }
 

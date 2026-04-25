@@ -27,7 +27,8 @@ class User extends Authenticatable
         'google_id',
         'avatar',
         'suscription_type',
-        'stripe_id'
+        'stripe_id',
+        'last_login_at'
     ];
 
     /**

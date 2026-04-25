@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { User } from '../models/user.model';
+import { AdminUsersResponse, User } from '../models/user.model';
 
 @Injectable({providedIn: 'root'})
 
@@ -11,8 +11,8 @@ export class AdminService{
     http = inject(HttpClient)
     isLoading = signal<boolean>(false)
 
-    getUsers(): Observable<User[]> {
-        return this.http.get<User[]>(this.apiUrl);
+    getUsers(): Observable<AdminUsersResponse[]> {
+        return this.http.get<AdminUsersResponse[]>(this.apiUrl);
     }
 
     deleteUser(id: User['id']) {

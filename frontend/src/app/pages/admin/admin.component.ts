@@ -28,6 +28,10 @@ export class AdminComponent implements AfterViewInit, OnInit {
   adminService = inject(AdminService)
   showLogoutModal = signal<boolean>(false)
   userSelected = signal<User['id']>(0)
+  totalUsers = signal<number>(0);
+  loggedToday = signal<number>(0);
+  premiumUsers = signal<number>(0);
+  totalPortfolios = signal<number>(0);
 
   ngOnInit(): void {
     this.loadUsers()
@@ -60,8 +64,13 @@ export class AdminComponent implements AfterViewInit, OnInit {
 
   loadUsers(): void{
     this.adminService.getUsers().subscribe({
-      next: (users)=> {
-        this.dataSource.data = users;
+      next: (res: any)=> {
+        this.dataSource.data = res.users;
+        this.totalUsers.set(res.totalUsers);
+        this.loggedToday.set(res.loggedToday);
+        this.premiumUsers.set(res.premiumUsers);
+        this.totalPortfolios.set(res.totalPortfolios);
+
         if (this.sort) this.dataSource.sort = this.sort;
         if (this.paginator) this.dataSource.paginator = this.paginator;
       },

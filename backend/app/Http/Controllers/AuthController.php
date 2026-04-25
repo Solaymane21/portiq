@@ -25,6 +25,8 @@ class AuthController extends Controller
             ], 401);
         }
 
+        $user->update(['last_login_at' => now()]);
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -42,6 +44,7 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8',
             'suscription_type' => 'required|in:free,premium',
+            'last_login_at' => now()
         ]);
 
         $user = User::create([
@@ -78,7 +81,8 @@ class AuthController extends Controller
             if ($user) {
                 $user->update([
                     'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar()
+                    'avatar' => $googleUser->getAvatar(),
+                    'last_login_at' => now()
                 ]);
             } else {
                 $user = User::create([
@@ -87,9 +91,12 @@ class AuthController extends Controller
                     'google_id' => $googleUser->getId(),
                     'avatar' => $googleUser->getAvatar(),
                     'password' => Hash::make(rand(0, 99999)),
+                    'last_login_at' => now()
                 ]);
             }
         }
+
+        $user->update(['last_login_at' => now()]);
 
         $token = $user->createToken('google-oauth')->plainTextToken;
 

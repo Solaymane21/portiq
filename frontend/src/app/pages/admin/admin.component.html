@@ -4,29 +4,29 @@
   </div>
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5 mb-5">
     <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-      <p class="mb-3">Valor total €</p>
+      <p class="mb-3">Usuarios total</p>
       <p class="text-3xl font-ibm font-bold text-white text-center">
-        123
+        {{ totalUsers() }}
       </p>
     </div>
     <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-      <p class="mb-3">Valor total $</p>
+      <p class="mb-3">Activos hoy</p>
       <p class="text-3xl font-ibm font-bold text-white text-center">
-        456
+        {{ loggedToday() }}
       </p>
     </div>
     <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-      <p class="mb-3">Ganancias/Perdidas</p>
+      <p class="mb-3">Usuarios suscritos</p>
       <p
         class="text-3xl font-ibm font-bold text-white text-center"
       >
-        789
+        {{ premiumUsers() }}
       </p>
     </div>
     <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-      <p class="mb-3">Total de Posiciones</p>
+      <p class="mb-3">Carteras total</p>
       <p class="text-3xl font-ibm font-bold text-white text-center">
-        9
+        {{ totalPortfolios() }}
       </p>
     </div>
   </div>

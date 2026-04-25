@@ -87,7 +87,7 @@
 
             <ng-template #menu>
               <div class="bg-neutral-800 rounded flex flex-col !text-white" cdkMenu>
-                <button (click)="deleteUser(user.id)" class="px-2 py-1" cdkMenuItem>Borrar</button>
+                <button (click)="this.onDelete(user.id)" class="px-2 py-1" cdkMenuItem>Borrar</button>
               </div>
             </ng-template>
 
@@ -100,3 +100,35 @@
     </div>
   </div>
 </section>
+@if (showLogoutModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center rounded">
+    <div
+      class="absolute inset-0 bg-black/50"
+      (click)="showLogoutModal.set(false)">
+    </div>
+
+    <div class="relative bg-neutral-950 border border-neutral-600 rounded p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+      <div class="flex flex-col items-center gap-2 text-center">
+        <h2 class="text-xl">¿Estás seguro de qué quieres elimirar al usuario?</h2>
+        <p class="text-sm text-neutral-400">El usuario será borrado y no se podrá revertir la decisión.</p>
+      </div>
+
+      <div class="flex gap-3">
+        <button
+          (click)="showLogoutModal.set(false)"
+          class="w-1/2 bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black">
+          Cancelar
+        </button>
+        <button
+          (click)="deleteUser()"
+          class="w-1/2 bg-red-500 hover:bg-red-500/80 flex justify-center rounded-md py-2 text-white">
+          @if (this.adminService.isLoading()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            Borrar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

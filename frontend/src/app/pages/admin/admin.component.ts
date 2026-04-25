@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, inject, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
@@ -6,11 +6,12 @@ import { AdminService } from '../../services/admin.service';
 import { DatePipe } from '@angular/common';
 import { User } from '../../models/user.model';
 import {CdkMenu, CdkMenuItem, CdkMenuTrigger} from '@angular/cdk/menu';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [ MatTableModule, MatPaginatorModule, MatSortModule, DatePipe, CdkMenuTrigger, CdkMenu, CdkMenuItem],
+  imports: [ MatTableModule, MatPaginatorModule, MatSortModule, DatePipe, CdkMenuTrigger, CdkMenu, CdkMenuItem, MatProgressSpinnerModule],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css'
 })
@@ -25,6 +26,8 @@ export class AdminComponent implements AfterViewInit, OnInit {
   @ViewChild(MatSort) sort!: MatSort;
 
   adminService = inject(AdminService)
+  showLogoutModal = signal<boolean>(false)
+  userSelected = signal<User['id']>(0)
 
   ngOnInit(): void {
     this.loadUsers()
@@ -66,13 +69,25 @@ export class AdminComponent implements AfterViewInit, OnInit {
     });
   }
 
-  deleteUser(id: number) {
-    this.adminService.deleteUser(id).subscribe({
+  deleteUser() {
+    this.adminService.isLoading.set(true)
+
+    this.adminService.deleteUser(this.userSelected()).subscribe({
       next: () => {
+        this.adminService.isLoading.set(false)
+        this.showLogoutModal.set(false)
         this.loadUsers();
       },
-      error: (err) => console.error(err)
+      error: (err) => {
+        this.adminService.isLoading.set(false)
+        console.error(err)
+      }
     });
+  }
+
+  onDelete(id: User['id']) {
+    this.showLogoutModal.set(true)
+    this.userSelected.set(id)
   }
 
 }

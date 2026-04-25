@@ -46,3 +46,7 @@
 ::ng-deep .mat-sort-header-arrow {
   color: #a3a3a3 !important;
 }
+
+::ng-deep mat-spinner circle {
+  stroke: #fff !important;
+}

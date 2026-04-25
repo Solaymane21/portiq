@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\MarketController;
@@ -7,7 +8,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SubscriptionController;
-use App\Http\Controllers\AdminController; 
 
 Route::prefix('auth')->group(function() {
     Route::post('/reset-code', [EmailController::class, 'sendForgotPasswordCode']);
@@ -32,7 +32,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/portfolios', [PortfolioController::class, 'store']);
     Route::get('/portfolios', [PortfolioController::class, 'index']);
-    
+
+    Route::get('/auth/validate-token', [AuthController::class, 'validateToken']);
 });
 
 Route::get('/search/{symbol}', [MarketController::class, 'search']);

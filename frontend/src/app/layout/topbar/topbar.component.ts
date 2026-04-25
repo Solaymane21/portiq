@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-topbar',
@@ -6,6 +7,19 @@ import { Component } from '@angular/core';
   templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.css'
 })
-export class TopbarComponent {
+export class TopbarComponent implements OnInit {
+  authService = inject(AuthService)
+  avatar: string = "https://api.dicebear.com/9.x/fun-emoji/svg?seed=q"
+
+  ngOnInit(): void {
+    const data = this.authService.getUserInfo()
+
+    if(data) {
+      const user = JSON.parse(data)
+      if(user.avatar) {
+        this.avatar = user.avatar
+      }
+    }
+  }
 
 }

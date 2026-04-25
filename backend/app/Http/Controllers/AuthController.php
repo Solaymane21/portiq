@@ -102,9 +102,9 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'email'                 => 'required|email',
-            'reset_token'           => 'required|string',
-            'password'              => 'required|min:8|confirmed',
+            'email' => 'required|email',
+            'reset_token' => 'required|string',
+            'password' => 'required|min:8|confirmed',
             'password_confirmation' => 'required',
         ]);
 
@@ -136,6 +136,20 @@ class AuthController extends Controller
             'avatar' => $user->avatar,
             'suscription_type' => $user->suscription_type
         ];
+    }
+
+    function validateToken(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['valid' => false], 401);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'user'  => $this->formatUser($user),
+        ]);
     }
 
 }

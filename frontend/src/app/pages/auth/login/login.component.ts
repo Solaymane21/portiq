@@ -35,6 +35,10 @@ export class LoginComponent implements OnInit{
 
   ngOnInit(): void {
     this.redirectMessage.set(this.authService.redirectMsg())
+
+    setTimeout(() => {
+      this.redirectMessage.set({msg: '', type: 'info'})
+    }, 5000);
   }
 
   onSubmit() {

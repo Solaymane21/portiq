@@ -19,6 +19,7 @@ import { AdminLayoutComponent } from './layout/admin-layout/admin-layout.compone
 import { AdminComponent } from './pages/admin/admin.component';
 import { InvestmentsComponent } from './pages/wallets/investments/investments.component';
 import { PortfoliosComponent } from './pages/wallets/portfolios/portfolios.component';
+import { adminGuard } from './guards/admin.guard';
 
 
 export const routes: Routes = [
@@ -92,9 +93,10 @@ export const routes: Routes = [
     {
         path: 'admin',
         component: AdminLayoutComponent,
+        canActivate: [adminGuard],
         children: [
             {
-                path: 'index',
+                path: 'dashboard',
                 component: AdminComponent
             }
         ]

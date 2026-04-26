@@ -8,6 +8,7 @@ export interface User {
   verify_code?: string | null;
   suscription_type?: 'free' | 'premium';
   last_login_at?: string | null;
+  is_admin?: boolean;
   created_at?: string;
   updated_at?: string;
 }

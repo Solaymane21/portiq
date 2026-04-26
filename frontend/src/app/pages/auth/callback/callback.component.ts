@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-callback',
@@ -9,6 +10,7 @@ import { Router } from '@angular/router';
 })
 export class CallbackComponent {
   router = inject(Router);
+  authService = inject(AuthService);
 
   ngOnInit(): void {
     const fragment = window.location.hash.substring(1);
@@ -23,9 +25,16 @@ export class CallbackComponent {
     }
 
     try {
-      localStorage.setItem('token', token);
-      localStorage.setItem('portiqUser', atob(user));
-      this.router.navigate(['/app/dashboard']);
+      const parsedUser = JSON.parse(atob(user));
+      this.authService.saveUserData({ token, user: parsedUser });
+
+      if (parsedUser.is_admin) {
+        this.router.navigate(['/admin/dashboard']);
+        return 
+      } else {
+        this.router.navigate(['/app/dashboard']);
+        return
+      }
     } catch {
       this.router.navigate(['/auth/login']);
     }

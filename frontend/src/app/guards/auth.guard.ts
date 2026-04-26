@@ -21,7 +21,14 @@ export const authGuard: CanActivateFn = (route, state) => {
   }
 
   return http.get('http://localhost:8000/api/auth/validate-token').pipe(
-    map(() => true),
+    map(() => {
+      if (authService.currentUser()?.is_admin) {
+        router.navigate(['/admin/dashboard'])
+        return false
+      } 
+      
+      return true
+    }),
     catchError(() => {
       localStorage.removeItem('token');
       localStorage.removeItem('portiqUser');

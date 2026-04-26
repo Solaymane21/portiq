@@ -14,6 +14,9 @@ export class AuthService {
   msgError = signal<string>('')
   redirectMsg = signal<RedirectMsg>({msg: '',type: 'info'})
   resetToken = signal<string>('');
+  currentUser = signal<User | null>(
+    JSON.parse(localStorage.getItem('portiqUser') ?? 'null')
+  );
 
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8000/api';
@@ -137,7 +140,12 @@ export class AuthService {
       next: (res: any) => {
         this.saveUserData(res)
         this.isLoading.set(false);
-        this.router.navigate(['/app/dashboard'])
+        
+        if (res.user.is_admin) {
+          this.router.navigate(['/admin/dashboard']);
+        } else {
+          this.router.navigate(['/app/dashboard']);
+        }
       },
       error: (err) => {
         this.msgError.set('Credenciales incorrectas o no existe cuenta en PortIQ.');
@@ -201,11 +209,13 @@ export class AuthService {
   saveUserData(res: any) {
     localStorage.setItem('token', res.token)
     localStorage.setItem('portiqUser', JSON.stringify(res.user))
+    this.currentUser.set(res.user)
   }
 
   removeUserData() {
     localStorage.removeItem('token')
     localStorage.removeItem('portiqUser')
+    this.currentUser.set(null)
   }
 
   getUserInfo() {

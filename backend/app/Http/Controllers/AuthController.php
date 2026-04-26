@@ -141,7 +141,8 @@ class AuthController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'avatar' => $user->avatar,
-            'suscription_type' => $user->suscription_type
+            'suscription_type' => $user->suscription_type,
+            'is_admin' => $user->email === 'portiqinfo@gmail.com'
         ];
     }
 

@@ -20,6 +20,7 @@ import { AdminComponent } from './pages/admin/admin.component';
 import { InvestmentsComponent } from './pages/wallets/investments/investments.component';
 import { PortfoliosComponent } from './pages/wallets/portfolios/portfolios.component';
 import { adminGuard } from './guards/admin.guard';
+import { SettingsComponent } from './pages/settings/settings.component';
 
 
 export const routes: Routes = [
@@ -59,6 +60,10 @@ export const routes: Routes = [
             {
                 path: 'not-found',
                 component: NotFoundComponent
+            },
+            {
+                path: 'settings',
+                component: SettingsComponent
             }
         ]
     },

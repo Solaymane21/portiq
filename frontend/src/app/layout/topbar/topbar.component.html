@@ -11,7 +11,14 @@
                 </svg>
             </span>
         </div>
-        <div class="flex flex-row gap-5">
+        <div class="flex flex-row items-center gap-5">
+            <div>
+                @if (user()?.suscription_type === 'premium') {
+                    <span class="badge-premium rounded-full py-1 px-3 border border-orange-500">
+                        <span class="font-ibm text text-sm font-bold ">Pro</span>
+                    </span>
+                }
+            </div>
             <div class="bg-neutral-800 p-2 rounded text-neutral-300 hover:cursor-pointer hover:opacity-90">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 ">
                     <path fill-rule="evenodd"

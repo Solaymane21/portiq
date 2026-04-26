@@ -10,6 +10,7 @@ import { AuthService } from '../../services/auth.service';
 export class TopbarComponent implements OnInit {
   authService = inject(AuthService)
   avatar: string = "https://api.dicebear.com/9.x/fun-emoji/svg?seed=q"
+  user = this.authService.currentUser;
 
   ngOnInit(): void {
     const data = this.authService.getUserInfo()

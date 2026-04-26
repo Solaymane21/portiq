@@ -41,3 +41,25 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+
+.badge-premium {
+  background: color-mix(in oklch, #f97316 12%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.badge-premium .text {
+  background: linear-gradient(90deg,
+    #f97316, #fb923c, #fbbf24, #fb923c, #f97316);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: orange-pan 3.5s linear infinite;
+}
+
+@keyframes orange-pan {
+  0%   { background-position: 250% 0; }
+  100% { background-position: -250% 0; }
+}

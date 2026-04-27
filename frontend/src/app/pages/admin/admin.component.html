@@ -86,8 +86,9 @@
             <button [cdkMenuTriggerFor]="menu" class="text-orange-500">⋮</button>
 
             <ng-template #menu>
-              <div class="mt-2 bg-white flex flex-col " cdkMenu>
-                <button (click)="this.onDelete(user.id)" class="px-4 py-1" cdkMenuItem>Borrar usuario</button>
+              <div class="mt-2 bg-neutral-800 text-neutral-300 flex flex-col rounded border border-neutral-600" cdkMenu>
+                <button (click)="this.onDelete(user.id)" class="px-4 py-1 border-b border-neutral-600 hover:bg-neutral-700/80" cdkMenuItem>Borrar usuario</button>
+                <button (click)="this.onDelete(user.id)" class="px-4 py-1 hover:bg-neutral-700/80" cdkMenuItem>Cancelar suscripción</button>
               </div>
             </ng-template>
 

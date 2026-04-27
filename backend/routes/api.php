@@ -32,6 +32,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/portfolios', [PortfolioController::class, 'store']);
     Route::get('/portfolios', [PortfolioController::class, 'index']);
+    Route::put('/portfolios/{portfolio}', [PortfolioController::class, 'update']);
+    Route::delete('/portfolios/{portfolio}', [PortfolioController::class, 'destroy']);
 
     Route::get('/auth/validate-token', [AuthController::class, 'validateToken']);
 });

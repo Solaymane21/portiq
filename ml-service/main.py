@@ -13,30 +13,60 @@ app.add_middleware(
 )
 
 
-"""
-Buscar unico simbolo
-"""
-@app.get("/search/{symbol}")
-def search(symbol: str):
+# """
+# Buscar unico simbolo
+# """
+# @app.get("/search/{symbol}")
+# def search(symbol: str):
     
-    if not re.match(r'^[A-Za-z0-9.\-]{1,10}$', symbol):
-        raise HTTPException(status_code=422, detail="Símbolo inválido")
+#     if not re.match(r'^[A-Za-z0-9.\-]{1,10}$', symbol):
+#         raise HTTPException(status_code=422, detail="Símbolo inválido")
 
-    ticker = yf.Ticker(symbol.upper())
-    info = ticker.info
+#     ticker = yf.Ticker(symbol.upper())
+#     info = ticker.info
 
-    if not info.get("regularMarketPrice") and not info.get("currentPrice"):
-        raise HTTPException(status_code=404, detail="Ticker no encontrado")
+#     if not info.get("regularMarketPrice") and not info.get("currentPrice"):
+#         raise HTTPException(status_code=404, detail="Ticker no encontrado")
 
-    return {
-        "symbol":   symbol.upper(),
-        "name":     info.get("longName", ""),
-        "price":    info.get("currentPrice") or info.get("regularMarketPrice"),
-        "currency": info.get("currency", "USD"),
-        "type":     info.get("quoteType", ""),
-        "sector":   info.get("sector", ""),
-        "logo":     info.get("logo_url", ""),
-    }
+#     return {
+#         "symbol":   symbol.upper(),
+#         "name":     info.get("longName", ""),
+#         "price":    info.get("currentPrice") or info.get("regularMarketPrice"),
+#         "currency": info.get("currency", "USD"),
+#         "type":     info.get("quoteType", ""),
+#         "sector":   info.get("sector", ""),
+#         "logo":     info.get("logo_url", ""),
+#     }
+
+@app.get("/search/{query}")
+def search(query: str):
+    # Permite letras, números, puntos, guiones y espacios (para nombres)
+    if not re.match(r'^[A-Za-z0-9.\-\s]{1,50}$', query):
+        raise HTTPException(status_code=422, detail="Búsqueda inválida")
+
+    try:
+        results = yf.Search(query, max_results=8, news_count=0)
+        quotes = results.quotes
+    except Exception:
+        raise HTTPException(status_code=503, detail="Error al conectar con Yahoo Finance")
+
+    if not quotes:
+        return {"data": [], "status": "ok"}
+
+    data = [
+        {
+            "symbol":          q.get("symbol", ""),
+            "instrument_name": q.get("longname") or q.get("shortname", ""),
+            "exchange":        q.get("exchange", ""),
+            "instrument_type": q.get("quoteType", ""),
+            "country":         "",
+            "currency":        q.get("currency", ""),
+        }
+        for q in quotes
+        if q.get("symbol")
+    ]
+
+    return {"data": data, "status": "ok"}
 
 """
 Buscar varios precios

@@ -7,9 +7,13 @@ use Illuminate\Http\Request;
 
 class PortfolioController extends Controller
 {
-    /**
-     * Guarda una nueva cartera en la base de datos
-     */
+    public function index(Request $request)
+    {
+        $portfolios = $request->user()->portfolios()->get();
+
+        return response()->json($portfolios);
+    }
+
     public function store(Request $request)
     {
         $portfolio = $request->user()->portfolios()->create([
@@ -24,12 +28,30 @@ class PortfolioController extends Controller
         ], 201);
     }
 
-    public function index(Request $request)
+    public function update(Request $request, $id) 
     {
-        $portfolios = $request->user()->portfolios()->get();
+        $portfolio = $request->user()->portfolios()->findOrFail($id);
 
-        return response()->json($portfolios);
+        $portfolio->update([
+            'name' => $request->name,
+            'is_default' => $request->is_default ?? false,
+            'is_public' => $request->is_public ?? false,
+        ]);
+
+        return response()->json([
+            'message' => 'Cartera actualizada.',
+            'portfolio' => $portfolio
+        ]);
     }
 
-    
+    public function destroy(Request $request, $id)
+    {
+        $portfolio = $request->user()->portfolios()->findOrFail($id);
+
+        $portfolio->delete();
+
+        return response()->json([
+            'message' => 'Cartera eliminada.'
+        ]);
+    }
 }

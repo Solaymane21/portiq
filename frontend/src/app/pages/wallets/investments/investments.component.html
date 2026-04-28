@@ -1,1 +1,190 @@
-<p>investments works!</p>
+<div>
+  <!-- CABECERA SUPERIOR -->
+  <div class="flex justify-between items-center">
+    <div class="flex items-center gap-4">
+      <a (click)="irAWallets()" class="inline-flex items-center justify-center p-2 rounded-md bg-neutral-950 text-neutral-500 hover:text-white cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+        </svg>
+      </a>
+      <h1 class="text-3xl font-ibm text-white">{{ nombreCartera() }}</h1>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <!-- BOTON EXPORTAR CSV -->
+      <button class="bg-white hover:bg-neutral-200/80 p-2 rounded-md text-black flex items-center gap-2 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+        </svg>
+        <span class="whitespace-nowrap">Exportar CSV</span>
+      </button>
+
+      <!-- BOTON NUEVA POSICION -->
+      <button (click)="abrirModalNuevaPosicion()" class="bg-orange-500 hover:bg-orange-500/80 p-2 rounded-md text-white flex items-center gap-2 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        <span>Nueva Posición</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ESTADISTICAS REALES -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+    <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80">
+      <p class="text-white text-sm mb-1">Valor Total</p>
+      <h3 class="text-2xl font-ibm font-medium text-white">{{ valorTotal() | number:'1.0-0' }}€</h3>
+    </div>
+    <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80">
+      <p class="text-white text-sm mb-1">Ganancias Totales</p>
+      <h3 class="text-2xl font-ibm font-medium text-green-500">+{{ ganancias() | number:'1.0-0' }}€</h3>
+    </div>
+    <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80">
+      <p class="text-white text-sm mb-1">% Retorno</p>
+      <h3 class="text-2xl font-ibm font-medium text-green-500">+{{ porcentajeGanancias() }}%</h3>
+    </div>
+    <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80">
+      <p class="text-white text-sm mb-1">Activos</p>
+      <h3 class="text-2xl font-ibm font-medium text-white">{{ totalPosiciones() }}</h3>
+    </div>
+  </div>
+
+  <!-- CONTENEDOR DE LA TABLA -->
+  <div class="bg-neutral-950 border border-neutral-600 rounded-xl overflow-hidden mt-8">
+    <div class="px-6 py-4 border-b border-neutral-600 flex justify-between items-center bg-neutral-950">
+      <h2 class="!text-white text-base font-medium font-ibm">Rendimiento de Activos</h2>
+      <button (click)="verHistorialTrades()" class="bg-orange-500 hover:bg-orange-500/80 p-2 rounded-md text-white flex items-center gap-2 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Ver Historial
+      </button>
+    </div>
+
+    <!-- Tabla Material (Se mantiene tu código exacto) -->
+    <div class="w-full overflow-x-auto">
+      <table mat-table [dataSource]="dataSource" matSort class="w-full min-w-[800px] !bg-transparent">
+        @for (col of columnasDef; track col.def) {
+          <ng-container [matColumnDef]="col.def">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header 
+                class="px-6 py-4 border-b !border-neutral-800/60 !bg-neutral-950 !text-neutral-500 font-medium text-sm hover:!text-white transition-colors align-middle"
+                [class.!text-right]="col.align === 'right'"
+                [class.!text-left]="col.align !== 'right'"> 
+              {{ col.title }} 
+            </th>
+            
+            <td mat-cell *matCellDef="let element" 
+                class="px-6 py-4 border-b !border-neutral-800/60 align-middle"
+                [class.!text-right]="col.align === 'right'"
+                [class.!text-left]="col.align !== 'right'"
+                [ngClass]="{
+                  '!text-green-500 font-medium': col.def === 'retorno7d' && element[col.def] >= 0,
+                  '!text-red-500 font-medium': col.def === 'retorno7d' && element[col.def] < 0,
+                  '!text-white font-medium': col.def === 'valor',
+                  '!text-neutral-400 font-ibm': col.def !== 'simbolo'
+                }">
+              @switch (col.def) {
+                @case ('simbolo') {
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full overflow-hidden !bg-neutral-800 flex items-center justify-center border !border-neutral-700 shadow-sm shrink-0">
+                      @if (element.image_url) {
+                        <img [src]="element.image_url" [alt]="element.simbolo" class="w-full h-full object-cover">
+                      } @else {
+                        <span class="text-xs font-bold !text-white">{{ element.simbolo | slice:0:1 }}</span>
+                      }
+                    </div>
+                    <span class="font-medium !text-white tracking-wide">{{ element.simbolo }}</span>
+                  </div>
+                }
+                @case ('valor') { {{ element[col.def] | number:'1.0-0' }}€ }
+                @case ('peso') { {{ element[col.def] }}% }
+                @case ('retorno7d') { {{ element[col.def] >= 0 ? '+' : '' }}{{ element[col.def] }}% }
+                @default { {{ element[col.def] }} }
+              }
+            </td>
+          </ng-container>
+        }
+
+        <ng-container matColumnDef="opciones">
+          <th mat-header-cell *matHeaderCellDef class="px-6 py-4 border-b !border-neutral-800/60 !bg-neutral-950 w-32"></th>
+          <td mat-cell *matCellDef="let element" class="px-6 py-4 border-b !border-neutral-800/60 text-right align-middle">
+            <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button (click)="$event.stopPropagation(); comprarActivo(element)" class="px-3 py-1.5 text-xs font-medium bg-green-500/10 !text-green-500 hover:bg-green-500/20 rounded-md transition-colors cursor-pointer">Comprar</button>
+              <button (click)="$event.stopPropagation(); venderActivo(element)" class="px-3 py-1.5 text-xs font-medium bg-red-500/10 !text-red-500 hover:bg-red-500/20 rounded-md transition-colors cursor-pointer">Vender</button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:!bg-neutral-900/80 transition-colors group cursor-pointer"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell text-center py-12 !text-neutral-500 border-none" colspan="6">
+            @if (cargando()) {
+              <div class="flex flex-col items-center justify-center">
+                <svg class="animate-spin h-6 w-6 !text-orange-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span>Cargando activos...</span>
+              </div>
+            } @else {
+              No hay activos en esta cartera
+            }
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <mat-paginator [pageSize]="5" showFirstLastButtons class="border-t !border-neutral-600 !bg-neutral-950 !text-neutral-400"></mat-paginator>
+  </div>
+
+  <!-- MODAL REACTIVO NUEVA POSICIÓN -->
+  @if (modalAbierto()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div class="bg-neutral-900 border border-neutral-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+        <div class="flex justify-between items-center p-6 border-b border-neutral-800">
+          <h3 class="text-xl font-medium text-white font-ibm">Añadir Posición</h3>
+          <button (click)="cerrarModal()" class="text-neutral-500 hover:text-white transition-colors cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form [formGroup]="posicionForm" (ngSubmit)="guardarPosicion()" class="p-6 space-y-5">
+          <div>
+            <label class="block text-sm font-medium text-neutral-400 mb-1.5">Símbolo (Ticker)</label>
+            <input type="text" formControlName="ticker" placeholder="Ej: BTC, AAPL, NVDA"
+              class="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all uppercase">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-neutral-400 mb-1.5">Cantidad</label>
+              <input type="number" step="any" formControlName="quantity" placeholder="0.00"
+                class="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-3 text-white font-ibm placeholder-neutral-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-neutral-400 mb-1.5">Precio de compra (€)</label>
+              <input type="number" step="any" formControlName="price" placeholder="0.00"
+                class="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-3 text-white font-ibm placeholder-neutral-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all">
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-neutral-800">
+            <button type="button" (click)="cerrarModal()" class="px-5 py-2.5 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="posicionForm.invalid || guardando()"
+              class="px-5 py-2.5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer">
+              @if (guardando()) {
+                <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Guardando...
+              } @else {
+                Añadir
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

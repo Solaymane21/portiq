@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, inject, OnInit, signal, ViewChild, ViewEncapsulation } from '@angular/core';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
@@ -7,11 +7,13 @@ import { DatePipe } from '@angular/common';
 import { User } from '../../models/user.model';
 import {CdkMenu, CdkMenuItem, CdkMenuTrigger} from '@angular/cdk/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [ MatTableModule, MatPaginatorModule, MatSortModule, DatePipe, CdkMenuTrigger, CdkMenu, CdkMenuItem, MatProgressSpinnerModule],
+  imports: [ MatTableModule, MatPaginatorModule, MatSortModule, DatePipe, CdkMenuTrigger, CdkMenu, CdkMenuItem, MatProgressSpinnerModule, MatFormFieldModule, MatInputModule],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css'
 })
@@ -35,6 +37,15 @@ export class AdminComponent implements AfterViewInit, OnInit {
 
   ngOnInit(): void {
     this.loadUsers()
+  }
+
+  applyFilter(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = value.trim().toLowerCase();
+
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
   }
 
   ngAfterViewInit(): void {

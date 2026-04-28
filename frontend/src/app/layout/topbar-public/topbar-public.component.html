@@ -1,0 +1,43 @@
+<nav class="w-full bg-neutral-950 border-b border-neutral-600 text-white">
+    <div class="flex justify-between items-center h-16 mx-14">
+        <div>
+          <p class="font-ibm text-2xl text-white">PortIQ</p>
+        </div>
+
+        <div class="hidden md:block relative flex-1 max-w-5xl">
+            <input class="w-full bg-neutral-800 outline-none focus:outline-neutral-600 rounded-full px-3 py-1 text-neutral-300 placeholder:text-neutral-300" type="text"
+                placeholder="Busca una acción o crypto...">
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-300 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+                    <path fill-rule="evenodd"
+                        d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z"
+                        clip-rule="evenodd" />
+                </svg>
+            </span>
+        </div>
+
+        <div class="flex flex-row gap-5">
+            <div class="bg-interactivo p-2 rounded text-white hover:cursor-pointer hover:opacity-80">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                  <path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM18.894 6.166a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.591-1.59ZM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75ZM17.834 18.894a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 1 0-1.061 1.06l1.59 1.591ZM12 18a.75.75 0 0 1 .75.75V21a.75.75 0 0 1-1.5 0v-2.25A.75.75 0 0 1 12 18ZM7.758 17.303a.75.75 0 0 0-1.061-1.06l-1.591 1.59a.75.75 0 0 0 1.06 1.061l1.591-1.59ZM6 12a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h2.25A.75.75 0 0 1 6 12ZM6.697 7.757a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 0 0-1.061 1.06l1.59 1.591Z" />
+                </svg>
+            </div>
+
+            <div class="bg-interactivo p-2 rounded text-white hover:cursor-pointer hover:opacity-80">
+                <button [cdkMenuTriggerFor]="menu" class="flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                      <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                
+                <ng-template #menu>
+                    <div class="mt-2 bg-neutral-800 text-neutral-300 flex flex-col rounded border border-neutral-600" cdkMenu>
+                        <button (click)="goToLogin()" class="px-4 py-1 hover:bg-neutral-700/80" cdkMenuItem>Iniciar Sesion</button>
+                    </div>
+                </ng-template>
+
+            </div>
+
+        </div>
+    </div>
+</nav>

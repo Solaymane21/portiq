@@ -2,142 +2,147 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Portfolio;
 use App\Models\Investment;
+use App\Models\Portfolio;
 use App\Models\Symbol;
 use Illuminate\Http\Request;
 
 class InvestmentController extends Controller
 {
-    public function index(Portfolio $portfolio)
+    /**
+     * GET: Obtener las posiciones de una cartera que pertenece al usuario
+     */
+    public function index(Request $request, $portfolioId)
     {
-        $investments = $portfolio->investments()->with('symbol')->get();
+        // 1. Buscamos la cartera ASEGURÁNDONOS de que sea del usuario autenticado
+        $portfolio = $request->user()->portfolios()->with('investments.symbol')->findOrFail($portfolioId);
+        
+        $investmentsData = [];
+        $totalPortfolioValue = 0;
 
-        $valorTotal = 0;
-        $inversionTotal = 0;
-
-        $data = $investments->map(function ($inv) use (&$valorTotal, &$inversionTotal) {
+        foreach ($portfolio->investments as $investment) {
+            $symbol = $investment->symbol;
             
-            // Como ya no guardamos el current_price en BD, para la demo simulamos un precio de mercado
-            // basándonos en tu precio de compra. (Aquí luego engancharás tu API en tiempo real).
-            $precioActual = $inv->avg_buy_price * (rand(90, 110) / 100);
+            $currentPrice = $investment->avg_buy_price * (1 + (rand(-5, 5) / 100));
+            $currentValue = $investment->quantity * $currentPrice;
+            $totalPortfolioValue += $currentValue;
             
-            $valorCalculado = $precioActual * $inv->quantity;
-            $inversionPosicion = $inv->avg_buy_price * $inv->quantity;
+            $simulated7dReturn = rand(-100, 150) / 10; 
 
-            $valorTotal += $valorCalculado;
-            $inversionTotal += $inversionPosicion;
-
-            return [
-                'id' => $inv->id,
-                'simbolo' => $inv->symbol->symbol,
-                'nombre' => $inv->symbol->name,
-                'image_url' => $inv->symbol->image_url, 
+            $investmentsData[] = [
+                'id' => $investment->id,
+                'simbolo' => $symbol->symbol,
+                'image_url' => $symbol->image_url,
+                'acciones' => (float) $investment->quantity,
+                'avg_buy_price' => (float) $investment->avg_buy_price,
+                'current_price' => $currentPrice,
+                'valor' => $currentValue,
+                'retorno7d' => $simulated7dReturn,
                 'peso' => 0, 
-                'retorno7d' => $inv->avg_buy_price > 0 ? round((($precioActual - $inv->avg_buy_price) / $inv->avg_buy_price) * 100, 2) : 0,
-                'valor' => round($valorCalculado, 2),
-                'acciones' => $inv->quantity,
-                'avg_buy_price' => $inv->avg_buy_price
             ];
-        });
+        }
 
-        $ganancias = $valorTotal - $inversionTotal;
-        $porcentaje = $inversionTotal > 0 ? round(($ganancias / $inversionTotal) * 100, 2) : 0;
-
-        $data = $data->map(function ($item) use ($valorTotal) {
-            $item['peso'] = $valorTotal > 0 ? round(($item['valor'] / $valorTotal) * 100, 2) : 0;
-            return $item;
-        });
+        if ($totalPortfolioValue > 0) {
+            foreach ($investmentsData as &$data) {
+                $data['peso'] = round(($data['valor'] / $totalPortfolioValue) * 100, 2);
+            }
+        }
 
         return response()->json([
-            'cartera_name' => $portfolio->name,
-            'stats' => [
-                'valor_total' => round($valorTotal, 2),
-                'ganancias' => round($ganancias, 2),
-                'porcentaje' => $porcentaje
-            ],
-            'data' => $data
+            'portfolio_name' => $portfolio->name,
+            'total_value' => $totalPortfolioValue,
+            'investments' => $investmentsData
         ]);
     }
 
-    public function store(Request $request, Portfolio $portfolio)
+    /**
+     * POST: Añadir una posición a una cartera del usuario
+     */
+    public function store(Request $request, $portfolioId)
     {
         $request->validate([
-            'simbolo' => 'required|string|max:20',
-            'nombre' => 'nullable|string',
-            'image_url' => 'nullable|string', 
-            'type' => 'required|in:buy,sell', 
-            'quantity' => 'required|numeric|min:0.000001',
-            'price' => 'required|numeric|min:0.01',
+            'symbol' => 'required|string|max:10',
+            'quantity' => 'required|numeric|min:0.00000001',
+            'avg_buy_price' => 'required|numeric|min:0.01',
         ]);
 
-        $symbolTicker = strtoupper($request->simbolo);
+        // Verificamos propiedad
+        $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
+        $symbolTicker = strtoupper($request->symbol);
 
-        // Guardamos el símbolo. (Hemos quitado el current_price de aquí).
         $symbol = Symbol::firstOrCreate(
             ['symbol' => $symbolTicker],
             [
-                'name' => $request->nombre ?? ($symbolTicker . ' (Pendiente API)'),
-                'image_url' => $request->image_url,
-                'asset_type' => 'Crypto/Stock'
+                'name' => $symbolTicker,
+                'asset_type' => 'crypto', 
             ]
         );
 
-        if ($request->image_url && empty($symbol->image_url)) {
-            $symbol->update(['image_url' => $request->image_url]);
+        $investment = Investment::where('portfolio_id', $portfolio->id)
+            ->where('symbol_id', $symbol->id)
+            ->first();
+
+        if ($investment) {
+            $totalCostAntes = $investment->quantity * $investment->avg_buy_price;
+            $costoNuevaCompra = $request->quantity * $request->avg_buy_price;
+            
+            $nuevaCantidad = $investment->quantity + $request->quantity;
+            $nuevoPrecioMedio = ($totalCostAntes + $costoNuevaCompra) / $nuevaCantidad;
+
+            $investment->update([
+                'quantity' => $nuevaCantidad,
+                'avg_buy_price' => $nuevoPrecioMedio
+            ]);
+        } else {
+            $investment = $portfolio->investments()->create([
+                'symbol_id' => $symbol->id,
+                'quantity' => $request->quantity,
+                'avg_buy_price' => $request->avg_buy_price,
+            ]);
         }
 
-        $investment = $portfolio->investments()->where('symbol_id', $symbol->id)->first();
-
-        if ($request->type === 'buy') {
-            if ($investment) {
-                $valorAntiguo = $investment->quantity * $investment->avg_buy_price;
-                $valorNuevo = $request->quantity * $request->price;
-                
-                $nuevaCantidad = $investment->quantity + $request->quantity;
-                $nuevoPrecioMedio = ($valorAntiguo + $valorNuevo) / $nuevaCantidad;
-
-                $investment->update([
-                    'quantity' => $nuevaCantidad,
-                    'avg_buy_price' => $nuevoPrecioMedio
-                ]);
-            } else {
-                $investment = $portfolio->investments()->create([
-                    'symbol_id' => $symbol->id,
-                    'quantity' => $request->quantity,
-                    'avg_buy_price' => $request->price,
-                ]);
-            }
-
-        } elseif ($request->type === 'sell') {
-            if (!$investment) {
-                return response()->json(['message' => 'No tienes posiciones para vender de este activo'], 400);
-            }
-
-            $nuevaCantidad = $investment->quantity - $request->quantity;
-
-            if ($nuevaCantidad <= 0) {
-                $investment->delete(); 
-            } else {
-                $investment->update(['quantity' => $nuevaCantidad]);
-            }
-        }
-
-        return response()->json(['message' => 'Transacción procesada con éxito'], 201);
+        return response()->json([
+            'message' => 'Posición guardada con éxito',
+            'investment' => $investment
+        ], 201);
     }
 
-    public function update(Request $request, Portfolio $portfolio, Investment $investment)
+    /**
+     * PUT: Actualizar posición (Para el futuro)
+     */
+    public function update(Request $request, $portfolioId, $investmentId)
     {
-        return response()->json(['message' => 'Método obsoleto. Usa el endpoint store con type buy/sell.'], 400);
+        $request->validate([
+            'quantity' => 'required|numeric|min:0.00000001',
+            'avg_buy_price' => 'required|numeric|min:0.01',
+        ]);
+
+        $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
+        
+        $investment = $portfolio->investments()->findOrFail($investmentId);
+
+        $investment->update([
+            'quantity' => $request->quantity,
+            'avg_buy_price' => $request->avg_buy_price,
+        ]);
+
+        return response()->json([
+            'message' => 'Inversión actualizada.',
+            'investment' => $investment
+        ]);
     }
 
-    public function destroy(Portfolio $portfolio, Investment $investment)
+    /**
+     * DELETE: Vender activo (Para el futuro)
+     */
+    public function destroy(Request $request, $portfolioId, $investmentId)
     {
-        if ($investment->portfolio_id !== $portfolio->id) {
-            return response()->json(['error' => 'No autorizado'], 403);
-        }
-
+        $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
+        
+        $investment = $portfolio->investments()->findOrFail($investmentId);
+        
         $investment->delete();
-        return response()->json(['message' => 'Inversión eliminada correctamente']);
+
+        return response()->json(['message' => 'Posición eliminada correctamente.']);
     }
 }

@@ -15,6 +15,12 @@ class Portfolio extends Model
         'is_public'
     ];
 
+
+    public function investments()
+    {
+        return $this->hasMany(Investment::class);
+    }
+    
     public function user() {
         return $this->belongsTo(User::class);
     }

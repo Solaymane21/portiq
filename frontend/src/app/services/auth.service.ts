@@ -140,7 +140,7 @@ export class AuthService {
       next: (res: any) => {
         this.saveUserData(res)
         this.isLoading.set(false);
-        
+
         if (res.user.is_admin) {
           this.router.navigate(['/admin/dashboard']);
         } else {
@@ -220,6 +220,11 @@ export class AuthService {
 
   getUserInfo() {
     return localStorage.getItem('portiqUser')
+  }
+
+  updateLocalUser(user: any) {
+    localStorage.setItem('portiqUser', JSON.stringify(user));
+    this.currentUser.set(user);
   }
 
 }

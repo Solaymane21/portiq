@@ -63,3 +63,37 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   0%   { background-position: 250% 0; }
   100% { background-position: -250% 0; }
 }
+
+/* styles.css — GLOBAL, no en el componente */
+
+@keyframes progress-shrink {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(110%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast-progress {
+  transform-origin: left center;
+  animation-name: progress-shrink;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+mat-spinner circle {
+  stroke: #fff !important;
+}
+

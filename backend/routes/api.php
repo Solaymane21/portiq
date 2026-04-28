@@ -6,6 +6,7 @@ use App\Http\Controllers\EmailController;
 use App\Http\Controllers\MarketController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PortfolioController;
+use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SubscriptionController;
 
@@ -30,10 +31,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/subscription/cancel', [SubscriptionController::class, 'cancel']);
     Route::get('/subscription/portal', [SubscriptionController::class, 'portal']);
 
-    Route::post('/portfolios', [PortfolioController::class, 'store']);
     Route::get('/portfolios', [PortfolioController::class, 'index']);
+    Route::post('/portfolios', [PortfolioController::class, 'store']);
     Route::put('/portfolios/{portfolio}', [PortfolioController::class, 'update']);
     Route::delete('/portfolios/{portfolio}', [PortfolioController::class, 'destroy']);
+
+    Route::get('/portfolios/{portfolioId}/investments', [InvestmentController::class, 'index']);
+    Route::post('/portfolios/{portfolioId}/investments', [InvestmentController::class, 'store']);
+    Route::put('/portfolios/{portfolioId}/investments/{investmentId}', [InvestmentController::class, 'update']);
+    Route::delete('/portfolios/{portfolioId}/investments/{investmentId}', [InvestmentController::class, 'destroy']);
 
     Route::get('/auth/validate-token', [AuthController::class, 'validateToken']);
 });

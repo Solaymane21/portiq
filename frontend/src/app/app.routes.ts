@@ -21,6 +21,7 @@ import { InvestmentsComponent } from './pages/wallets/investments/investments.co
 import { PortfoliosComponent } from './pages/wallets/portfolios/portfolios.component';
 import { adminGuard } from './guards/admin.guard';
 import { SettingsComponent } from './pages/settings/settings.component';
+import { TradesComponent } from './pages/wallets/trades/trades.component';
 
 
 export const routes: Routes = [
@@ -40,6 +41,9 @@ export const routes: Routes = [
             { 
                 path: 'wallets/:id', 
                 component: InvestmentsComponent
+            },
+            {   path: 'wallets/:id/trades', 
+                component: TradesComponent
             },
             {
                 path: 'favorites',

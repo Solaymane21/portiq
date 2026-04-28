@@ -13,20 +13,16 @@ export class PortfoliosComponent implements OnInit {
   private router = inject(Router); 
   private portfolioService = inject(PortfolioService);
 
-  // Vistas List / Grid
   viewMode = signal<'list' | 'grid'>('list');
 
-  // Modal Crear / Editar
   isModalOpen = signal(false);
   modoFormulario = signal<'create' | 'edit'>('create');
 
-  // Modal Borrar
   isDeleteModalOpen = signal(false);
 
   misCarteras: any[] = [];
   carteraSeleccionada: any = null;
 
-  //Cargar Carteras
   isLoading = signal(true); 
 
   formularioCartera = new FormGroup({

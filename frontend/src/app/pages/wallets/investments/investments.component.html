@@ -33,15 +33,15 @@
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
     <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80">
       <p class="text-white text-sm mb-1">Valor Total</p>
-      <h3 class="text-2xl font-ibm font-medium text-white">{{ valorTotal() | number:'1.0-0' }}€</h3>
+      <h3 class="text-2xl font-ibm font-medium text-white">{{ formatNumber(valorTotal(), 0) }}€</h3>
     </div>
     <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80">
       <p class="text-white text-sm mb-1">Ganancias Totales</p>
-      <h3 class="text-2xl font-ibm font-medium text-green-500">+{{ ganancias() | number:'1.0-0' }}€</h3>
+      <h3 class="text-2xl font-ibm font-medium text-green-500">+{{ formatNumber(ganancias(), 0) }}€</h3>
     </div>
     <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80">
       <p class="text-white text-sm mb-1">% Retorno</p>
-      <h3 class="text-2xl font-ibm font-medium text-green-500">+{{ porcentajeGanancias() }}%</h3>
+      <h3 class="text-2xl font-ibm font-medium text-green-500">+{{ formatNumber(porcentajeGanancias(), 2) }}%</h3>
     </div>
     <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80">
       <p class="text-white text-sm mb-1">Activos</p>
@@ -61,44 +61,42 @@
       </button>
     </div>
 
-    <!-- Tabla Material (Se mantiene tu código exacto) -->
     <div class="w-full overflow-x-auto">
       <table mat-table [dataSource]="dataSource" matSort class="w-full min-w-[800px] !bg-transparent">
         @for (col of columnasDef; track col.def) {
           <ng-container [matColumnDef]="col.def">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header 
-                class="px-6 py-4 border-b !border-neutral-800/60 !bg-neutral-950 !text-neutral-500 font-medium text-sm hover:!text-white transition-colors align-middle"
-                [class.!text-right]="col.align === 'right'"
-                [class.!text-left]="col.align !== 'right'"> 
-              {{ col.title }} 
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              mat-sort-header
+              class="px-6 py-4 border-b !border-neutral-800/60 !bg-neutral-950 !text-neutral-500 font-medium text-sm hover:!text-white transition-colors align-middle"
+              [class]="getTextAlignClass(col.align)">
+              {{ col.title }}
             </th>
-            
-            <td mat-cell *matCellDef="let element" 
-                class="px-6 py-4 border-b !border-neutral-800/60 align-middle"
-                [class.!text-right]="col.align === 'right'"
-                [class.!text-left]="col.align !== 'right'"
-                [ngClass]="{
-                  '!text-green-500 font-medium': col.def === 'retorno7d' && element[col.def] >= 0,
-                  '!text-red-500 font-medium': col.def === 'retorno7d' && element[col.def] < 0,
-                  '!text-white font-medium': col.def === 'valor',
-                  '!text-neutral-400 font-ibm': col.def !== 'simbolo'
-                }">
+
+            <td
+              mat-cell
+              *matCellDef="let element"
+              class="px-6 py-4 border-b !border-neutral-800/60 align-middle"
+              [class]="getTextAlignClass(col.align) + ' ' + getCellClass(col.def, element[col.def])">
+
               @switch (col.def) {
-                @case ('simbolo') {
+                @case ('symbol') {
                   <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full overflow-hidden !bg-neutral-800 flex items-center justify-center border !border-neutral-700 shadow-sm shrink-0">
                       @if (element.image_url) {
-                        <img [src]="element.image_url" [alt]="element.simbolo" class="w-full h-full object-cover">
+                        <img [src]="element.image_url" [alt]="element.symbol" class="w-full h-full object-cover">
                       } @else {
-                        <span class="text-xs font-bold !text-white">{{ element.simbolo | slice:0:1 }}</span>
+                        <span class="text-xs font-bold !text-white">{{ getInitial(element.symbol) }}</span>
                       }
                     </div>
-                    <span class="font-medium !text-white tracking-wide">{{ element.simbolo }}</span>
+                    <span class="font-medium !text-white tracking-wide">{{ element.symbol }}</span>
                   </div>
                 }
-                @case ('valor') { {{ element[col.def] | number:'1.0-0' }}€ }
-                @case ('peso') { {{ element[col.def] }}% }
-                @case ('retorno7d') { {{ element[col.def] >= 0 ? '+' : '' }}{{ element[col.def] }}% }
+                @case ('value') { {{ formatNumber(element.value, 0) }}€ }
+                @case ('weight') { {{ formatNumber(element.weight, 2) }}% }
+                @case ('return_7d') { {{ (element.return_7d ?? 0) >= 0 ? '+' : '' }}{{ formatNumber(element.return_7d, 2) }}% }
+                @case ('quantity') { {{ formatNumber(element.quantity, 8) }} }
                 @default { {{ element[col.def] }} }
               }
             </td>
@@ -122,7 +120,10 @@
           <td class="mat-cell text-center py-12 !text-neutral-500 border-none" colspan="6">
             @if (cargando()) {
               <div class="flex flex-col items-center justify-center">
-                <svg class="animate-spin h-6 w-6 !text-orange-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <svg class="animate-spin h-6 w-6 !text-orange-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
                 <span>Cargando activos...</span>
               </div>
             } @else {
@@ -136,7 +137,7 @@
     <mat-paginator [pageSize]="5" showFirstLastButtons class="border-t !border-neutral-600 !bg-neutral-950 !text-neutral-400"></mat-paginator>
   </div>
 
-  <!-- MODAL REACTIVO NUEVA POSICIÓN -->
+  <!-- MODAL NUEVA POSICION -->
   @if (modalAbierto()) {
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div class="bg-neutral-900 border border-neutral-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
@@ -176,7 +177,10 @@
             <button type="submit" [disabled]="posicionForm.invalid || guardando()"
               class="px-5 py-2.5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer">
               @if (guardando()) {
-                <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
                 Guardando...
               } @else {
                 Añadir

@@ -48,6 +48,7 @@ export class SettingsService {
       confirm_password: this.confirmPassword()
     }).subscribe({
       next: () => {
+        this.notificationService.success('Contraseña actualizada correctamente.')
         this.isLoading.set(false)
       },
       error: (err) => {

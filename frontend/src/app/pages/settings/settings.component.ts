@@ -18,17 +18,19 @@ export class SettingsComponent {
 
   activeSection = signal<string>('perfil');
 
-  submittedProfile  = signal<boolean>(false);
+  submittedProfile = signal<boolean>(false);
   submittedPassword = signal<boolean>(false);
 
   passwordVisible        = false;
   newPasswordVisible     = false;
   confirmPasswordVisible = false;
 
-  currency        = signal<'EUR' | 'USD'>('EUR');
-  renewalDate     = signal<string>('01/06/2026');
+  currency = signal<'EUR' | 'USD'>('EUR');
+  renewalDate = signal<string>('01/06/2026');
   showDeleteModal = signal<boolean>(false);
   showCancelModal = signal<boolean>(false);
+
+  isSameName = signal<boolean>(false)
 
   profileForm = new FormGroup({
     name: new FormControl(this.user()?.name ?? '', [
@@ -52,7 +54,7 @@ export class SettingsComponent {
     ]),
   });
 
-  isSamePassword(): boolean {
+  isSamePasswordValidator() {
     if (this.passwordForm.invalid) return false;
     return this.passwordForm.value.newPassword === this.passwordForm.value.confirmPassword;
   }
@@ -60,21 +62,36 @@ export class SettingsComponent {
   showHidePassword(id: string) {
     const input = document.getElementById(id) as HTMLInputElement;
     input.type = input.type === 'password' ? 'text' : 'password';
-    if (id === 'currentPassword') this.passwordVisible        = !this.passwordVisible;
-    if (id === 'newPassword')     this.newPasswordVisible     = !this.newPasswordVisible;
+    if (id === 'currentPassword') this.passwordVisible = !this.passwordVisible;
+    if (id === 'newPassword') this.newPasswordVisible = !this.newPasswordVisible;
     if (id === 'confirmPassword') this.confirmPasswordVisible = !this.confirmPasswordVisible;
   }
 
   saveName() {
     this.submittedProfile.set(true);
+    this.isSameName.set(false)
+
     if (this.profileForm.invalid) return;
+
+    if(this.isCurrentNameValidator()) {
+      this.isSameName.set(true)
+      return
+    }
 
     this.settingsService.username.set(this.profileForm.value.name!)
     this.settingsService.onChangeName()
   }
 
+  isCurrentNameValidator() {
+    const currentName = this.user()?.name
+    const newName = this.profileForm.value.name
+    return currentName === newName
+  }
+
   changePassword() {
-    if (this.passwordForm.invalid || !this.isSamePassword()) return;
+    this.submittedPassword.set(true);
+
+    if (this.passwordForm.invalid || !this.isSamePasswordValidator()) return;
 
     this.settingsService.currentPassword.set(this.passwordForm.value.currentPassword!);
     this.settingsService.newPassword.set(this.passwordForm.value.newPassword!);

@@ -133,13 +133,16 @@
             @if (profileForm.get('name')?.errors?.['maxlength'] && profileForm.get('name')?.touched) {
               <p class="ps-2 text-red-500 text-xs mt-1">El nombre no puede superar los 20 caracteres.</p>
             }
+            @if (isSameName() && submittedProfile()) {
+              <p class="ps-2 text-red-500 text-xs mt-1">El nombre es igual al actual. ¡Elije un nuevo nombre!</p>
+            }
           </div>
 
           <div class="flex flex-col">
             <label class="ps-2 text-sm">Email</label>
             <input type="text" [value]="user()?.email" disabled
               class="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-neutral-500 cursor-not-allowed" />
-            <p class="ps-2 text-orange-400 text-xs mt-1">El email no se puede modificar.</p>
+            <p class="ps-2 text-orange-500 text-xs mt-1">El email no se puede modificar.</p>
           </div>
 
           <div class="pt-1">
@@ -237,19 +240,16 @@
                   }
                 </div>
               </div>
-              @if (!isSamePassword() && passwordForm.get('newPassword')?.touched) {
+              @if (!isSamePasswordValidator() && passwordForm.get('newPassword')?.touched) {
                 <p class="ps-2 text-red-500 text-xs">Las contraseñas no coinciden o no son válidas.</p>
               }
-              @if (isSamePassword() && passwordForm.get('newPassword')?.touched) {
-                <p class="ps-2 text-green-500 text-xs">Las contraseñas son válidas.</p>
-              }
-              @if (authService.msgError().length > 0) {
-                <p class="ps-2 text-red-500 text-xs">{{ authService.msgError() }}</p>
+              @if (isSamePasswordValidator() && passwordForm.get('newPassword')?.touched) {
+                <p class="ps-2 text-green-400 text-xs">Las contraseñas son válidas.</p>
               }
             </div>
 
             <div class="pt-1">
-              <button type="submit" [disabled]="passwordForm.invalid || !isSamePassword() || settingsService.isLoading()"
+              <button type="submit" [disabled]="passwordForm.invalid || !isSamePasswordValidator() || settingsService.isLoading()"
                 class="w-full bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white disabled:opacity-50 disabled:cursor-not-allowed">
                 @if (settingsService.isLoading()) {
                   <mat-spinner diameter="20" />

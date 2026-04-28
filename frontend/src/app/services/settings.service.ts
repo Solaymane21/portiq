@@ -1,0 +1,61 @@
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable, signal } from '@angular/core';
+import { User } from '../models/user.model';
+import { AuthService } from './auth.service';
+import { NotificationsService } from './notifications.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class SettingsService {
+
+  http = inject(HttpClient);
+  authService = inject(AuthService);
+  notificationService = inject(NotificationsService)
+
+  apiUrl = 'http://localhost:8000/api/app';
+
+  isLoading = signal<boolean>(false)
+  username = signal<User['name']>('')
+  currentPassword = signal<User['password']>('')
+  newPassword = signal<User['password']>('')
+  confirmPassword = signal<User['password']>('')
+
+
+  onChangeName() {
+    this.isLoading.set(true)
+
+    this.http.post(`${this.apiUrl}/change-name`, {name: this.username()})
+    .subscribe({
+      next: (res: any) => {
+        this.authService.updateLocalUser(res.user)
+        this.notificationService.success('Nombre actualizado correctamente.')
+        this.isLoading.set(false)
+      },
+      error: (err) => {
+        console.error(err.error.message)
+        this.isLoading.set(false)
+      }
+    });
+  }
+
+  onChangePassword() {
+    this.isLoading.set(true)
+
+    this.http.post(`${this.apiUrl}/change-password`, {
+      current_password: this.currentPassword(),
+      new_password: this.newPassword(),
+      confirm_password: this.confirmPassword()
+    }).subscribe({
+      next: () => {
+        this.notificationService.success('Contraseña actualizada correctamente.')
+        this.isLoading.set(false)
+      },
+      error: (err) => {
+        console.error(err)
+        this.isLoading.set(false)
+      }
+    });
+  }
+
+}

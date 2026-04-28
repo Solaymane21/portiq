@@ -1,0 +1,118 @@
+<nav class="w-full bg-neutral-950 border-b border-neutral-600 text-white">
+
+  <div class="flex justify-between items-center h-16 px-4 md:mx-14">
+
+    <div>
+      <p class="font-ibm text-2xl text-white">PortIQ</p>
+    </div>
+
+    <div class="hidden md:block relative flex-1 max-w-screen-sm lg:max-w-5xl mx-6">
+      <input
+  class="w-full bg-neutral-800 outline-none focus:outline-neutral-600 rounded-full px-3 py-1 text-neutral-300 placeholder:text-neutral-300" type="text" autocomplete="off"
+  placeholder="Busca una acción o crypto..." [value]="query()" (input)="onInput($any($event.target).value)" (keydown)="onKeydown($event)"
+/>
+      <span class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-300 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+          <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd"/>
+        </svg>
+      </span>
+      @if (isOpen() && results().length > 0) {
+        <ul class="absolute top-full left-0 mt-2 w-full bg-neutral-900 border border-neutral-700 rounded-xl z-50 overflow-hidden shadow-[0_16px_48px_rgba(0,0,0,0.6)] py-1">
+          @for (r of results(); track r.symbol + r.exchange; let i = $index) {
+            <li>
+              <button
+                type="button"
+                (click)="goToSymbol(r)"
+                (mouseenter)="activeIndex.set(i)"
+                class="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors"
+                [class.bg-neutral-800]="activeIndex() === i"
+              >
+                <span class="font-mono font-bold text-sm text-white bg-neutral-700 rounded px-2 py-0.5 w-[68px] shrink-0 text-center truncate">
+                  {{ r.symbol }}
+                </span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-neutral-100 font-medium truncate">{{ r.instrument_name }}</p>
+                  <p class="text-[11px] text-neutral-500 mt-0.5">
+                    {{ r.exchange }} @if (r.country) { · {{ r.country }} }
+                  </p>
+                </div>
+                <span [class]="badgeClass(r.instrument_type)">{{ typeLabel(r.instrument_type) }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <div class="flex flex-row gap-2 md:gap-5 items-center">
+
+      <!-- Boton buscador para movil -->
+      <button
+        (click)="showSearch = !showSearch"
+        class="md:hidden bg-interactivo p-2 rounded text-white hover:opacity-80">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+          <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd"/>
+        </svg>
+      </button>
+
+      <div class="bg-interactivo p-2 rounded text-white hover:cursor-pointer hover:opacity-80">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+          <path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM18.894 6.166a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.591-1.59ZM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75ZM17.834 18.894a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 1 0-1.061 1.06l1.59 1.591ZM12 18a.75.75 0 0 1 .75.75V21a.75.75 0 0 1-1.5 0v-2.25A.75.75 0 0 1 12 18ZM7.758 17.303a.75.75 0 0 0-1.061-1.06l-1.591 1.59a.75.75 0 0 0 1.06 1.061l1.591-1.59ZM6 12a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h2.25A.75.75 0 0 1 6 12ZM6.697 7.757a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 0 0-1.061 1.06l1.59 1.591Z"/>
+        </svg>
+      </div>
+
+      <div class="bg-interactivo p-2 rounded text-white hover:cursor-pointer hover:opacity-80">
+        <button [cdkMenuTriggerFor]="menu" class="flex">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+        <ng-template #menu>
+          <div class="mt-2 bg-neutral-800 text-neutral-300 flex flex-col rounded border border-neutral-600" cdkMenu>
+            <button (click)="goToLogin()" class="px-4 py-1 hover:bg-neutral-700/80" cdkMenuItem>Iniciar Sesion</button>
+          </div>
+        </ng-template>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- para movil -->
+  @if (showSearch) {
+    <div class="md:hidden px-4 pb-3">
+      <div class="relative">
+        <input class="w-full bg-neutral-800 outline-none focus:outline-neutral-600 rounded-full px-4 py-2 text-neutral-300 placeholder:text-neutral-300"
+          type="text" autocomplete="off" placeholder="Busca una acción o crypto..." autofocus [value]="query()" (input)="onInput($any($event.target).value)" (keydown)="onKeydown($event)">
+        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-300 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+            <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd"/>
+          </svg>
+        </span>
+      </div>
+
+        @if (isOpen() && results().length > 0) {
+          <ul class="mt-2 w-full bg-neutral-900 border border-neutral-700 rounded-xl z-50 overflow-hidden shadow-[0_16px_48px_rgba(0,0,0,0.6)] py-1">
+            @for (r of results(); track r.symbol + r.exchange; let i = $index) {
+              <li>
+                <button type="button" (click)="goToSymbol(r)" (mouseenter)="activeIndex.set(i)"
+                  class="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors"
+                  [class.bg-neutral-800]="activeIndex() === i">
+                  <span class="font-mono font-bold text-sm text-white bg-neutral-700 rounded px-2 py-0.5 w-[68px] shrink-0 text-center truncate">
+                    {{ r.symbol }}
+                  </span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-neutral-100 font-medium truncate">{{ r.instrument_name }}</p>
+                    <p class="text-[11px] text-neutral-500 mt-0.5">
+                      {{ r.exchange }} @if (r.country) { · {{ r.country }} }
+                    </p>
+                  </div>
+                  <span [class]="badgeClass(r.instrument_type)">{{ typeLabel(r.instrument_type) }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+
+</nav>

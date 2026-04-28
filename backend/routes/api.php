@@ -6,9 +6,10 @@ use App\Http\Controllers\EmailController;
 use App\Http\Controllers\MarketController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PortfolioController;
-use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\InvestmentController;
+use App\Http\Controllers\SettingsController;
 
 Route::prefix('auth')->group(function() {
     Route::post('/reset-code', [EmailController::class, 'sendForgotPasswordCode']);
@@ -42,6 +43,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/portfolios/{portfolioId}/investments/{investmentId}', [InvestmentController::class, 'destroy']);
 
     Route::get('/auth/validate-token', [AuthController::class, 'validateToken']);
+
+    Route::post('/app/change-name', [SettingsController::class, 'changeName']);
+    Route::post('/app/change-password', [SettingsController::class, 'changePassword']);
 });
 
 Route::get('/search/{symbol}', [MarketController::class, 'search']);

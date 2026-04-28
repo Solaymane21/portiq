@@ -22,7 +22,8 @@ import { PortfoliosComponent } from './pages/wallets/portfolios/portfolios.compo
 import { adminGuard } from './guards/admin.guard';
 import { SettingsComponent } from './pages/settings/settings.component';
 import { TradesComponent } from './pages/wallets/trades/trades.component';
-
+import { SymbolDetailComponent } from './pages/symbol-detail/symbol-detail.component';
+import { PublicLayoutComponent } from './layout/public-layout/public-layout.component';
 
 export const routes: Routes = [
     {
@@ -107,6 +108,16 @@ export const routes: Routes = [
             {
                 path: 'dashboard',
                 component: AdminComponent
+            }
+        ]
+    },
+    {
+        path: 'public',
+        component: PublicLayoutComponent,
+        children: [
+            {
+                path: 'symbol/:symbol',
+                component: SymbolDetailComponent
             }
         ]
     },

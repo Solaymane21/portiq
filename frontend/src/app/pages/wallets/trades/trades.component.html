@@ -1,1 +1,182 @@
-<p>trades works!</p>
+<div class="space-y-6">
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div class="flex items-center gap-4">
+      <button
+        (click)="volverAInversiones()"
+        class="inline-flex items-center justify-center p-2 rounded-md bg-neutral-950 text-neutral-500 hover:text-white transition-colors cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+        </svg>
+      </button>
+
+      <div class="min-w-0">
+        <h1 class="text-3xl font-ibm text-white">Historial de Operaciones</h1>
+        <p class="text-neutral-500 text-sm mt-1">
+          Cartera: <span class="text-white">{{ nombreCartera() }}</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80 transition-colors">
+      <div class="flex justify-between items-start mb-1">
+        <p class="text-neutral-400 text-sm">Capital Depositado</p>
+        <div class="bg-blue-500/10 p-1.5 rounded-md text-blue-500">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+        </div>
+      </div>
+      <h3 class="text-2xl font-ibm font-medium text-white">{{ formatNumber(totalDepositado(), 2) }}€</h3>
+      <p class="text-xs text-neutral-500 mt-2">Total de compras e ingresos</p>
+    </div>
+
+    <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80 transition-colors">
+      <div class="flex justify-between items-start mb-1">
+        <p class="text-neutral-400 text-sm">Capital Retirado</p>
+        <div class="bg-green-500/10 p-1.5 rounded-md text-green-500">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+          </svg>
+        </div>
+      </div>
+      <h3 class="text-2xl font-ibm font-medium text-green-500">{{ formatNumber(totalRetirado(), 2) }}€</h3>
+      <p class="text-xs text-neutral-500 mt-2">Total de ventas rescatadas</p>
+    </div>
+
+    <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80 transition-colors">
+      <div class="flex justify-between items-start mb-1">
+        <p class="text-neutral-400 text-sm">Exposición Neta</p>
+        <div class="bg-orange-500/10 p-1.5 rounded-md text-orange-500">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.81 1.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+        </div>
+      </div>
+      <h3 class="text-2xl font-ibm font-medium" [class]="exposicionNeta() < 0 ? 'text-green-500' : 'text-white'">
+        {{ exposicionNeta() < 0 ? '+' : '' }}{{ formatNumber(exposicionNeta(), 2) }}€
+      </h3>
+      <p class="text-xs text-neutral-500 mt-2">
+        @if (exposicionNeta() < 0) { ¡Riesgo cero! Ganancias netas. } @else { Dinero de tu bolsillo en juego }
+      </p>
+    </div>
+
+    <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80 transition-colors">
+      <div class="flex justify-between items-start mb-1">
+        <p class="text-neutral-400 text-sm">Operaciones Totales</p>
+        <div class="bg-neutral-800 p-1.5 rounded-md text-neutral-400">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
+          </svg>
+        </div>
+      </div>
+      <h3 class="text-2xl font-ibm font-medium text-white">{{ totalOperaciones() }}</h3>
+      <p class="text-xs text-neutral-500 mt-2">Histórico de movimientos</p>
+    </div>
+  </div>
+
+  <div class="bg-neutral-950 border border-neutral-600 rounded-xl overflow-hidden shadow-lg">
+    <div class="w-full overflow-x-auto">
+      <table mat-table [dataSource]="dataSource" matSort class="w-full min-w-[800px] !bg-transparent">
+        <ng-container matColumnDef="operated_at">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 !bg-neutral-950 !text-neutral-500 font-medium text-sm">
+            Fecha
+          </th>
+          <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 !text-neutral-300">
+            {{ element.operated_at | date:'dd MMM yyyy' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="symbol">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 !bg-neutral-950 !text-neutral-500 font-medium text-sm">
+            Activo
+          </th>
+          <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b !border-neutral-800/60">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-8 h-8 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center border border-neutral-700 shrink-0">
+                @if (element.image_url) {
+                  <img [src]="element.image_url" [alt]="element.symbol" class="w-full h-full object-cover" />
+                } @else {
+                  <span class="text-xs font-bold text-white">{{ getInitial(element.symbol) }}</span>
+                }
+              </div>
+              <div class="min-w-0">
+                <p class="font-medium text-white truncate">{{ element.symbol }}</p>
+                <p class="text-xs text-neutral-500 uppercase truncate">{{ element.asset_type }}</p>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 !bg-neutral-950 !text-neutral-500 font-medium text-sm text-center">
+            Operación
+          </th>
+          <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 text-center">
+            <span [class]="getTypeBadgeClass(element.type)" class="px-2.5 py-1 text-xs font-medium rounded-full inline-block">
+              {{ getTypeLabel(element.type) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="price_per_unit">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 !bg-neutral-950 !text-neutral-500 font-medium text-sm text-right">
+            Precio Ud.
+          </th>
+          <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 text-right text-neutral-300 font-ibm">
+            {{ formatNumber(element.price_per_unit, 2) }}€
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="quantity">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 !bg-neutral-950 !text-neutral-500 font-medium text-sm text-right">
+            Cantidad
+          </th>
+          <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 text-right text-neutral-300 font-ibm">
+            {{ formatNumber(element.quantity, 6) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="total_value">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 !bg-neutral-950 !text-neutral-500 font-medium text-sm text-right">
+            Total
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let element"
+            class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 text-right font-medium font-ibm"
+            [class]="element.type === 'venta' ? 'text-green-500' : 'text-white'">
+            {{ element.type === 'venta' ? '+' : '-' }}{{ formatNumber(element.total_value, 2) }}€
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:!bg-neutral-900/80 transition-colors"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell text-center py-12 !text-neutral-500 border-none" colspan="6">
+            @if (cargando()) {
+              <div class="flex flex-col items-center justify-center">
+                <svg class="animate-spin h-6 w-6 text-orange-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span>Cargando historial...</span>
+              </div>
+            } @else {
+              No hay operaciones registradas en esta cartera
+            }
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <mat-paginator
+      [pageSize]="10"
+      [pageSizeOptions]="[5, 10, 25]"
+      showFirstLastButtons
+      class="border-t !border-neutral-600 !bg-neutral-950 !text-neutral-400">
+    </mat-paginator>
+  </div>
+</div>

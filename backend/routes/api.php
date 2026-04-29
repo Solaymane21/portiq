@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AssetSearchController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\MarketController;
@@ -25,6 +26,9 @@ Route::prefix('auth')->group(function() {
 
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
 
+Route::get('/assets/search', [\App\Http\Controllers\AssetSearchController::class, 'search']);
+Route::get('/assets/history', [\App\Http\Controllers\AssetSearchController::class, 'history']);
+
 Route::middleware('auth:sanctum')->group(function () {
     // Stripe
     Route::post('/subscription/checkout', [SubscriptionController::class, 'checkout']);
@@ -32,15 +36,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/subscription/cancel', [SubscriptionController::class, 'cancel']);
     Route::get('/subscription/portal', [SubscriptionController::class, 'portal']);
 
+    //Portfolios
     Route::get('/portfolios', [PortfolioController::class, 'index']);
     Route::post('/portfolios', [PortfolioController::class, 'store']);
     Route::put('/portfolios/{portfolio}', [PortfolioController::class, 'update']);
     Route::delete('/portfolios/{portfolio}', [PortfolioController::class, 'destroy']);
 
+    //Investments
     Route::get('/portfolios/{portfolioId}/investments', [InvestmentController::class, 'index']);
     Route::post('/portfolios/{portfolioId}/investments', [InvestmentController::class, 'store']);
     Route::put('/portfolios/{portfolioId}/investments/{investmentId}', [InvestmentController::class, 'update']);
     Route::delete('/portfolios/{portfolioId}/investments/{investmentId}', [InvestmentController::class, 'destroy']);
+    Route::post('/portfolios/{portfolioId}/investments/{investmentId}/buy', [InvestmentController::class, 'buy']);
+    Route::post('/portfolios/{portfolioId}/investments/{investmentId}/sell', [InvestmentController::class, 'sell']);
+
+    //Trades
+    Route::get('/portfolios/{portfolioId}/trades', [\App\Http\Controllers\TradeController::class, 'index']);
 
     Route::get('/auth/validate-token', [AuthController::class, 'validateToken']);
 

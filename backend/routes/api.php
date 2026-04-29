@@ -46,9 +46,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/auth/validate-token', [AuthController::class, 'validateToken']);
 
-    Route::post('/app/change-name', [SettingsController::class, 'changeName']);
-    Route::post('/app/change-password', [SettingsController::class, 'changePassword']);
-
+    Route::post('/change-name', [SettingsController::class, 'changeName']);
+    Route::post('/change-password', [SettingsController::class, 'changePassword']);
+    Route::delete('/account', [SettingsController::class, 'deleteAccount']);
     Route::get('/preferences', [PreferencesController::class, 'show']);
     Route::patch('/preferences', [PreferencesController::class, 'update']);
 });

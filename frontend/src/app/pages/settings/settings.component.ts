@@ -6,6 +6,7 @@ import { SettingsService } from '../../services/settings.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { A11yModule } from "@angular/cdk/a11y";
 import { PreferencesService } from '../../services/preferences.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-settings',
@@ -18,6 +19,7 @@ export class SettingsComponent {
   settingsService = inject(SettingsService);
   subscriptionService = inject(SubscriptionService);
   preferencesService = inject(PreferencesService);
+  router = inject(Router)
 
   user = this.authService.currentUser;
 
@@ -156,5 +158,16 @@ export class SettingsComponent {
 
   savePreferences() {
     this.preferencesService.save();
+  }
+
+  deleteAccount() {
+    this.showDeleteModal.set(true)
+  }
+
+  onConfirmDeleteAccount() {
+    this.settingsService.onDeleteAccount(() => {
+      this.showDeleteModal.set(false)
+      this.router.navigate(['/auth/login'])
+    });
   }
 }

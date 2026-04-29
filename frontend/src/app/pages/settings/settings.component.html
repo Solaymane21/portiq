@@ -430,7 +430,7 @@
         <p class="text-neutral-400 text-sm mb-5">
           Se eliminarán permanentemente todos tus portfolios, inversiones, alertas y datos asociados. Esta acción no tiene vuelta atrás.
         </p>
-        <button (click)="showDeleteModal.set(true)"
+        <button (click)="deleteAccount()"
           class="w-full bg-red-600 hover:bg-red-600/80 flex justify-center rounded-md py-2 px-4 text-white disabled:bg-red-600/80 disabled:cursor-not-allowed">
           Eliminar mi cuenta
         </button>
@@ -458,15 +458,21 @@
         <button
           (click)="showDeleteModal.set(false)"
           class="w-1/2 bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black">
-          Cancelar
+          Volver
         </button>
-        <button class="w-1/2 bg-red-600 hover:bg-red-600/80 flex justify-center rounded-md py-2 text-white">Eliminar cuenta</button>
+        <button (click)="onConfirmDeleteAccount()" [disabled]="settingsService.isLoading()" class="w-1/2 bg-red-600 hover:bg-red-600/80 flex justify-center rounded-md py-2 text-white">
+          @if (settingsService.isLoading()) {
+            <mat-spinner diameter="20" />
+          } @else {
+            Eliminar cuenta
+          }
+        </button>
       </div>
     </div>
   </div>
 }
 
-<!-- modal eliminar cuenta -->
+<!-- modal cancelar suscripcion -->
 @if (showCancelModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center rounded">
     <div

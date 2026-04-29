@@ -13,7 +13,7 @@ export class SettingsService {
   authService = inject(AuthService);
   notificationService = inject(NotificationsService)
 
-  apiUrl = 'http://localhost:8000/api/app';
+  apiUrl = 'http://localhost:8000/api';
 
   isLoading = signal<boolean>(false)
   username = signal<User['name']>('')
@@ -54,6 +54,22 @@ export class SettingsService {
       error: (err) => {
         console.error(err)
         this.isLoading.set(false)
+      }
+    });
+  }
+
+  onDeleteAccount(onSuccess: () => void) {
+    this.isLoading.set(true)
+
+    this.http.delete<{ message: string }>(`${this.apiUrl}/account`).subscribe({
+      next: () => {
+        this.authService.removeUserData()
+        this.isLoading.set(false)
+        this.authService.redirectMsg.set({msg: 'Tú cuenta ha sido eliminada de PortIQ.', type: 'info'})
+        onSuccess()
+      },
+      error: () => {
+        this.notificationService.error('Error al eliminar la cuenta');
       }
     });
   }

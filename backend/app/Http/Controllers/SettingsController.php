@@ -49,4 +49,21 @@ class SettingsController extends Controller
             'message' => 'Contraseña actualizada correctamente.'
         ]);
     }
+
+    public function deleteAccount(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->subscribed('default')) {
+            $user->subscription('default')->cancelNow(); // cancela la suscripcion
+        }
+
+        // Revoca todos los tokens de Sanctum
+        $user->tokens()->delete();
+
+        // Elimina el usuario (cascade eliminará preferences, portfolios, ..)
+        $user->delete();
+
+        return response()->json(['message' => 'Cuenta eliminada correctamente.']);
+    }
 }

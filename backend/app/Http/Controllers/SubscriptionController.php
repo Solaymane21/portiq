@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class SubscriptionController extends Controller
 {
@@ -30,25 +31,50 @@ class SubscriptionController extends Controller
         $user = $request->user();
         $subscription = $user->subscription('default');
 
+        $nextBillingDate = null;
+
+        if ($subscription && $subscription->stripe_status === 'active' && !$subscription->onGracePeriod()) {
+            try {
+                $stripeSubscription = $subscription->asStripeSubscription();
+                $nextBillingDate = $stripeSubscription->items->data[0]->current_period_end ?? null;
+
+            } catch (\Exception $e) {
+                Log::error('Error fetching Stripe subscription: ' . $e->getMessage());
+            }
+        }
+
         return response()->json([
-            'is_subscribed' => $user->subscribed('default'),
-            'plan' => $user->suscription_type,
-            'ends_at'  => $subscription?->ends_at,
-            'on_grace' => $subscription?->onGracePeriod() ?? false,
+            'is_subscribed'     => $user->subscribed('default'),
+            'plan'              => $user->suscription_type,
+            'ends_at'           => $subscription?->ends_at,
+            'on_grace'          => $subscription?->onGracePeriod() ?? false,
+            'next_billing_date' => $nextBillingDate,
         ]);
     }
 
     // Cancelar suscripción al final del período
     public function cancel(Request $request)
     {
-        $request->user()->subscription('default')->cancel();
+        $subscription = $request->user()->subscription('default');
+
+        if (!$subscription) {
+            return response()->json(['message' => 'No tienes suscripción activa.'], 400);
+        }
+
+        $subscription->cancel();
         return response()->json(['message' => 'Suscripción cancelada. Activa hasta fin del período.']);
     }
 
-    // Portal de Stripe
-    public function portal(Request $request)
+    // Reanudar suscripcion previamente cancelada
+    public function resume(Request $request)
     {
-        $url = $request->user()->billingPortalUrl(env('FRONTEND_URL') . '/settings');
-        return response()->json(['url' => $url]);
+        $subscription = $request->user()->subscription('default');
+
+        if (!$subscription || !$subscription->onGracePeriod()) {
+            return response()->json(['message' => 'No hay suscripción cancelada para reanudar.'], 400);
+        }
+
+        $subscription->resume();
+        return response()->json(['message' => 'Suscripción reanudada correctamente.']);
     }
 }

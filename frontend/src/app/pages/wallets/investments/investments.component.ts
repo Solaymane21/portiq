@@ -1,8 +1,8 @@
 import { Component, signal, inject, OnInit, effect, viewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { NgClass, DecimalPipe, SlicePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { InvestmentService } from '../../../services/investment.service';
+import { Investment, InvestmentsResponse } from '../../../models/investment.model';
 
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -11,8 +11,7 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 @Component({
   selector: 'app-investments',
   standalone: true,
-  // 1. Añadimos ReactiveFormsModule y quitamos CommonModule
-  imports: [NgClass, DecimalPipe, SlicePipe, ReactiveFormsModule, MatTableModule, MatSortModule, MatPaginatorModule],
+  imports: [ReactiveFormsModule, MatTableModule, MatSortModule, MatPaginatorModule],
   templateUrl: './investments.component.html',
   styleUrl: './investments.component.css'
 })
@@ -24,55 +23,52 @@ export class InvestmentsComponent implements OnInit {
 
   portfolioId = signal<number | null>(null);
 
-  // --- VARIABLES UI CONECTADAS AL BACKEND ---
-  cargando = signal<boolean>(true);
-  nombreCartera = signal<string>('Cargando...');
-  valorTotal = signal<number>(0);
-  ganancias = signal<number>(0);
-  porcentajeGanancias = signal<number>(0);
-  totalPosiciones = signal<number>(0);
+  cargando = signal(true);
+  nombreCartera = signal('Cargando...');
+  valorTotal = signal(0);
+  ganancias = signal(0);
+  porcentajeGanancias = signal(0);
+  totalPosiciones = signal(0);
 
-  // --- CONFIGURACIÓN DE TABLA MATERIAL ---
-  dataSource = new MatTableDataSource<any>([]);
+  dataSource = new MatTableDataSource<Investment>([]);
   paginator = viewChild(MatPaginator);
   sort = viewChild(MatSort);
 
   columnasDef = [
-    { def: 'simbolo', title: 'Activo', align: 'left' },
-    { def: 'peso', title: 'Peso', align: 'right' },
-    { def: 'retorno7d', title: '7D retorno', align: 'right' },
-    { def: 'valor', title: 'Valor', align: 'right' },
-    { def: 'acciones', title: 'Acciones', align: 'right' }
+    { def: 'symbol', title: 'Activo', align: 'left' },
+    { def: 'weight', title: 'Peso', align: 'right' },
+    { def: 'return_7d', title: '7D retorno', align: 'right' },
+    { def: 'value', title: 'Valor', align: 'right' },
+    { def: 'quantity', title: 'Acciones', align: 'right' }
   ];
+
   displayedColumns: string[] = [...this.columnasDef.map(c => c.def), 'opciones'];
 
-  // --- ESTADO DEL MODAL NUEVA POSICIÓN ---
-  modalAbierto = signal<boolean>(false);
-  guardando = signal<boolean>(false);
-  
+  modalAbierto = signal(false);
+  guardando = signal(false);
+
   posicionForm: FormGroup = this.fb.group({
     ticker: ['', [Validators.required, Validators.maxLength(10)]],
     quantity: [null, [Validators.required, Validators.min(0.00000001)]],
     price: [null, [Validators.required, Validators.min(0.01)]],
   });
 
-  // 2. Conectamos Paginator y Sort usando effects modernos
   constructor() {
     effect(() => {
       const pag = this.paginator();
       const srt = this.sort();
+
       if (pag) this.dataSource.paginator = pag;
       if (srt) this.dataSource.sort = srt;
     });
   }
 
   ngOnInit() {
-    // Buscar ID en el padre o en la ruta actual
     this.route.parent?.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
         this.portfolioId.set(Number(id));
-        this.cargarInversiones(); // Traer datos reales
+        this.cargarInversiones();
       }
     });
 
@@ -87,35 +83,33 @@ export class InvestmentsComponent implements OnInit {
     }
   }
 
-  // --- CARGAR DATOS (GET) ---
   cargarInversiones() {
-    const id = this.portfolioId();
-    if (!id) return;
+  const id = this.portfolioId();
+  if (!id) return;
 
-    this.cargando.set(true);
-    this.investmentService.getInvestments(id).subscribe({
-      next: (response: any) => {
-        // Rellenar métricas
-        this.nombreCartera.set(response.portfolio_name);
-        this.valorTotal.set(response.total_value);
-        this.totalPosiciones.set(response.investments.length);
-        
-        // Simulamos ganancias por ahora
-        this.ganancias.set(response.total_value * 0.10); 
-        this.porcentajeGanancias.set(10.5);
+  this.cargando.set(true);
 
-        // Alimentar tabla
-        this.dataSource.data = response.investments;
-        this.cargando.set(false);
-      },
-      error: (err) => {
-        console.error('Error cargando inversiones:', err);
-        this.cargando.set(false);
-      }
-    });
-  }
+  this.investmentService.getInvestments(id).subscribe({
+    next: (response) => {
+      const data = response as InvestmentsResponse;
 
-  // --- CREAR POSICIÓN (POST) ---
+      this.nombreCartera.set(data.portfolio_name);
+      this.valorTotal.set(data.total_value);
+      this.totalPosiciones.set(data.investments.length);
+
+      this.ganancias.set(0);
+      this.porcentajeGanancias.set(0);
+
+      this.dataSource.data = data.investments;
+      this.cargando.set(false);
+    },
+    error: (err) => {
+      console.error('Error cargando inversiones:', err);
+      this.cargando.set(false);
+    }
+  });
+}
+
   abrirModalNuevaPosicion() {
     this.posicionForm.reset();
     this.modalAbierto.set(true);
@@ -141,7 +135,7 @@ export class InvestmentsComponent implements OnInit {
       next: () => {
         this.guardando.set(false);
         this.cerrarModal();
-        this.cargarInversiones(); // Recarga la tabla con la nueva compra
+        this.cargarInversiones();
       },
       error: (err) => {
         console.error('Error guardando posición:', err);
@@ -150,9 +144,8 @@ export class InvestmentsComponent implements OnInit {
     });
   }
 
-  // --- ACCIONES SECUNDARIAS ---
   irAWallets() {
-    this.router.navigate(['/app/wallets']); 
+    this.router.navigate(['/app/wallets']);
   }
 
   verHistorialTrades() {
@@ -162,18 +155,51 @@ export class InvestmentsComponent implements OnInit {
     }
   }
 
-  comprarActivo(activo: any) {
-    // Abrir el modal con el ticker pre-rellenado
-    this.posicionForm.patchValue({ ticker: activo.simbolo, quantity: null, price: null });
+  comprarActivo(activo: Investment) {
+    this.posicionForm.patchValue({
+      ticker: activo.symbol,
+      quantity: null,
+      price: null
+    });
     this.modalAbierto.set(true);
   }
 
-  venderActivo(activo: any) {
-    if (confirm(`¿Seguro que quieres eliminar la posición de ${activo.simbolo}?`)) {
+  venderActivo(activo: Investment) {
+    if (confirm(`¿Seguro que quieres eliminar la posición de ${activo.symbol}?`)) {
       this.investmentService.deleteInvestment(this.portfolioId()!, activo.id).subscribe({
         next: () => this.cargarInversiones(),
         error: (err) => console.error('Error eliminando posición:', err)
       });
     }
+  }
+
+  getInitial(value: string | null | undefined): string {
+    return value ? value.charAt(0).toUpperCase() : '';
+  }
+
+  formatNumber(value: number | null | undefined, digits: number = 2): string {
+    return Number(value ?? 0).toFixed(digits);
+  }
+
+  getTextAlignClass(align: string): string {
+    return align === 'right' ? '!text-right' : '!text-left';
+  }
+
+  getCellClass(colDef: string, value: number | string | null | undefined): string {
+    if (colDef === 'return_7d') {
+      return Number(value ?? 0) >= 0
+        ? '!text-green-500 font-medium'
+        : '!text-red-500 font-medium';
+    }
+
+    if (colDef === 'value') {
+      return '!text-white font-medium';
+    }
+
+    if (colDef !== 'symbol') {
+      return '!text-neutral-400 font-ibm';
+    }
+
+    return '';
   }
 }

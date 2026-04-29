@@ -3,14 +3,16 @@
   <div class="flex justify-between items-center h-16 px-4 md:mx-14">
 
     <div>
+      <button (click)="goToPublic()">
       <p class="font-ibm text-2xl text-white">PortIQ</p>
+      </button>
     </div>
 
     <div class="hidden md:block relative flex-1 max-w-screen-sm lg:max-w-5xl mx-6">
       <input
-  class="w-full bg-neutral-800 outline-none focus:outline-neutral-600 rounded-full px-3 py-1 text-neutral-300 placeholder:text-neutral-300" type="text" autocomplete="off"
-  placeholder="Busca una acción o crypto..." [value]="query()" (input)="onInput($any($event.target).value)" (keydown)="onKeydown($event)"
-/>
+        class="w-full bg-neutral-800 outline-none focus:outline-neutral-600 rounded-full px-3 py-1 text-neutral-300 placeholder:text-neutral-300" type="text" autocomplete="off"
+        placeholder="Busca una acción o crypto..." [value]="query()" (input)="onInput($any($event.target).value)" (keydown)="onKeydown($event)"
+      >
       <span class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-300 cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
           <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd"/>
@@ -36,7 +38,7 @@
                     {{ r.exchange }} @if (r.country) { · {{ r.country }} }
                   </p>
                 </div>
-                <span [class]="badgeClass(r.instrument_type)">{{ typeLabel(r.instrument_type) }}</span>
+                
               </button>
             </li>
           }

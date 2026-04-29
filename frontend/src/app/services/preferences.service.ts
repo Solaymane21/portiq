@@ -1,0 +1,44 @@
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable, signal } from '@angular/core';
+import { NotificationsService } from './notifications.service';
+import { UserPreferences } from '../models/preferences.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+
+export class PreferencesService {
+  http = inject(HttpClient);
+  notification = inject(NotificationsService);
+  apiUrl = 'http://localhost:8000/api';
+
+  currency = signal<'EUR' | 'USD'>('EUR');
+  theme    = signal<'dark' | 'light'>('dark');
+  isLoading = signal(false);
+
+  load() {
+    this.http.get<UserPreferences>(`${this.apiUrl}/preferences`).subscribe({
+      next: (res) => {
+        this.currency.set(res.currency);
+        this.theme.set(res.theme);
+      }
+    });
+  }
+
+  save() {
+    this.isLoading.set(true);
+    this.http.patch<UserPreferences>(`${this.apiUrl}/preferences`, {
+      currency: this.currency(),
+      theme: this.theme(),
+    }).subscribe({
+      next: () => {
+        this.notification.success('Preferencias guardadas');
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.notification.error('Error al guardar preferencias');
+        this.isLoading.set(false);
+      }
+    });
+  }
+}

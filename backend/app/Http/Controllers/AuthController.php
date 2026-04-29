@@ -54,6 +54,11 @@ class AuthController extends Controller
             'suscription_type'     => $request->suscription_type,
         ]);
 
+        $user->preferences()->create([
+            'currency' => 'EUR',
+            'theme'    => 'dark',
+        ]);
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json(['token' => $token, 'user' => $this->formatUser($user)], 201);
@@ -92,6 +97,11 @@ class AuthController extends Controller
                     'avatar' => $googleUser->getAvatar(),
                     'password' => Hash::make(rand(0, 99999)),
                     'last_login_at' => now()
+                ]);
+
+                $user->preferences()->create([
+                    'currency' => 'EUR',
+                    'theme'    => 'dark',
                 ]);
             }
         }

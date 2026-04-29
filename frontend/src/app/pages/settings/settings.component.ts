@@ -3,16 +3,21 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { AuthService } from '../../services/auth.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SettingsService } from '../../services/settings.service';
+import { SubscriptionService } from '../../services/subscription.service';
+import { A11yModule } from "@angular/cdk/a11y";
+import { PreferencesService } from '../../services/preferences.service';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [ReactiveFormsModule, MatProgressSpinnerModule],
+  imports: [ReactiveFormsModule, MatProgressSpinnerModule, A11yModule],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent {
   authService = inject(AuthService);
   settingsService = inject(SettingsService);
+  subscriptionService = inject(SubscriptionService);
+  preferencesService = inject(PreferencesService);
 
   user = this.authService.currentUser;
 
@@ -25,12 +30,37 @@ export class SettingsComponent {
   newPasswordVisible     = false;
   confirmPasswordVisible = false;
 
-  currency = signal<'EUR' | 'USD'>('EUR');
-  renewalDate = signal<string>('01/06/2026');
+  currency = this.preferencesService.currency
+  theme = this.preferencesService.theme
+
   showDeleteModal = signal<boolean>(false);
   showCancelModal = signal<boolean>(false);
+  showResumeModal = signal(false);
 
   isSameName = signal<boolean>(false)
+
+  renewalDate(): string {
+    const status = this.subscriptionService.status();
+
+    localStorage.setItem('abc', JSON.stringify(status))
+
+    if (!status) return '—';
+
+    if (status.on_grace && status.ends_at) {
+      return new Date(status.ends_at).toLocaleDateString('es-ES');
+    }
+
+    if (status.next_billing_date) {
+      return new Date(status.next_billing_date * 1000).toLocaleDateString('es-ES');
+    }
+
+    return '—';
+  }
+
+  ngOnInit() {
+    this.subscriptionService.getStatus()
+    this.preferencesService.load()
+  }
 
   profileForm = new FormGroup({
     name: new FormControl(this.user()?.name ?? '', [
@@ -100,8 +130,31 @@ export class SettingsComponent {
     this.settingsService.onChangePassword();
   }
 
-  savePreferences()    { /* TODO */ }
-  upgradePremium()     { /* TODO: Stripe checkout */ }
-  cancelSubscription() { this.showCancelModal.set(false); }
-  deleteAccount()      { this.showDeleteModal.set(false); }
+  upgradePremium() {
+
+  }
+
+  cancelSubscription() {
+    this.showCancelModal.set(true)
+  }
+
+  onConfirmCancelSubscription() {
+    this.subscriptionService.cancel(() => {
+      this.showCancelModal.set(false)
+    });
+  }
+
+  resumeSubscription() {
+    this.showResumeModal.set(true)
+  }
+
+  onConfirmResumeSubscription() {
+    this.subscriptionService.resume(() => {
+      this.showResumeModal.set(false);
+    })
+  }
+
+  savePreferences() {
+    this.preferencesService.save();
+  }
 }

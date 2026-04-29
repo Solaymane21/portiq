@@ -39,7 +39,7 @@ export class TopbarPublicComponent {
 
   constructor() {
     this.search$.pipe(
-      debounceTime(400),
+      debounceTime(250),
       distinctUntilChanged(),
       switchMap(q => {
         if (!q.trim()) {
@@ -136,5 +136,8 @@ export class TopbarPublicComponent {
 
   goToLogin(): void {
     this.router.navigate(['/auth/login']);
+  }
+  goToPublic(): void{
+    this.router.navigate(['/public'])
   }
 }

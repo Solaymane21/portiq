@@ -158,11 +158,11 @@ export class AuthService {
     this.http.post(`${this.apiUrl}/auth/logout`, {}).subscribe({
       next: () => {
         this.removeUserData()
-        this.router.navigate(['/auth/login'])
+        this.router.navigate(['/public'])
       },
       error: () => {
         this.removeUserData()
-        this.router.navigate(['/auth/login'])
+        this.router.navigate(['/public'])
       }
     });
   }

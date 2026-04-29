@@ -1,1 +1,94 @@
-<p>symbol-detail works!</p>
+
+
+  <!-- Volver -->
+  <button (click)="goBack()"
+    class="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors mb-6 text-sm">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
+      <path fill-rule="evenodd" d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd"/>
+    </svg>
+    Volver
+  </button>
+
+  <!-- Header -->
+  @if (loadingInfo()) {
+    <div class="flex justify-between items-start mb-8 animate-pulse">
+      <div class="space-y-2">
+        <div class="h-8 w-32 bg-neutral-800 rounded-lg"></div>
+        <div class="h-4 w-48 bg-neutral-800 rounded"></div>
+      </div>
+      <div class="space-y-2 text-right">
+        <div class="h-9 w-28 bg-neutral-800 rounded-lg ml-auto"></div>
+        <div class="h-4 w-20 bg-neutral-800 rounded ml-auto"></div>
+      </div>
+    </div>
+  } @else if (info()) {
+    <div class="flex flex-wrap justify-between items-start gap-4 mb-8">
+      <div>
+        <div class="flex items-center gap-3 mb-1">
+          <h1 class="font-mono text-3xl font-bold">{{ symbol() }}</h1>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400">
+            {{ info()!.type }}
+          </span>
+        </div>
+        <p class="text-neutral-400 text-sm">{{ info()!.name }}</p>
+        @if (info()!.sector) {
+          <p class="text-neutral-600 text-xs mt-1">{{ info()!.sector }}</p>
+        }
+      </div>
+      <div class="text-right">
+        <p class="text-4xl font-bold tracking-tight">
+          {{ info()!.price | number:'1.2-2' }}
+          <span class="text-lg text-neutral-400 ml-1">{{ info()!.currency }}</span>
+        </p>
+        @if (chartOptions.series) {
+          <p class="text-sm mt-1 font-medium"
+            [class.text-emerald-400]="changeData.positive"
+            [class.text-red-400]="!changeData.positive">
+            {{ changeData.positive ? '+' : '' }}{{ changeData.value }}
+            ({{ changeData.positive ? '+' : '' }}{{ changeData.percent }}%)
+            · {{ selectedPeriod() }}
+          </p>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Selector de período -->
+  <div class="flex gap-2 mb-4">
+    @for (p of periods; track p) {
+      <button (click)="selectPeriod(p)"
+        class="px-3 py-1 rounded-full text-sm font-medium transition-colors"
+        [class.bg-blue-600]="selectedPeriod() === p"
+        [class.text-white]="selectedPeriod() === p"
+        [class.bg-neutral-800]="selectedPeriod() !== p"
+        [class.text-neutral-400]="selectedPeriod() !== p">
+        {{ p }}
+      </button>
+    }
+  </div>
+
+  <!-- Grafica -->
+  <div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-4 mb-6">
+    @if (loadingChart()) {
+      <div class="h-[320px] flex items-center justify-center">
+        <svg class="animate-spin size-8 text-blue-500" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" fill="currentColor"/>
+        </svg>
+      </div>
+    } @else {
+      <apx-chart
+        [series]="chartOptions.series"
+        [chart]="chartOptions.chart"
+        [xaxis]="chartOptions.xaxis"
+        [yaxis]="chartOptions.yaxis"
+        [stroke]="chartOptions.stroke"
+        [fill]="chartOptions.fill"
+        [grid]="chartOptions.grid"
+        [tooltip]="chartOptions.tooltip"
+        [dataLabels]="chartOptions.dataLabels"
+        [theme]="chartOptions.theme"
+      />
+    }
+  </div>
+

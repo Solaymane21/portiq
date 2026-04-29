@@ -11,47 +11,38 @@ import { Portfolio } from '../../../models/portfolio.model';
   styleUrl: './portfolios.component.css'
 })
 export class PortfoliosComponent implements OnInit {
+  // --- 1. DEPENDENCIAS ---
   private router = inject(Router); 
   private portfolioService = inject(PortfolioService);
 
+  // --- 2. ESTADO (SIGNALS) ---
+  // UI
   viewMode = signal<'list' | 'grid'>('list');
-  isLoading = signal<boolean>(true); 
-
-  // --- MODALES ---
-  isModalOpen = signal<boolean>(false);
+  isLoading = signal(true); 
+  isModalOpen = signal(false);
+  isDeleteModalOpen = signal(false);
   modoFormulario = signal<'create' | 'edit'>('create');
-  isDeleteModalOpen = signal<boolean>(false);
-
-  // --- DATOS ---
+  
+  // Datos
   misCarteras = signal<Portfolio[]>([]);
   carteraSeleccionada = signal<Portfolio | null>(null);
 
-  // --- FORMULARIO ---
+  // --- 3. FORMULARIOS ---
   formularioCartera = new FormGroup({
     name: new FormControl('', [Validators.required, Validators.maxLength(50)]),
     is_default: new FormControl(false),
     is_public: new FormControl(false)
   });
 
+  // --- 4. CICLO DE VIDA ---
   ngOnInit() {
+    this.cargarPreferenciasVista();
     this.cargarCarteras();
-
-    const guardado = localStorage.getItem('vistaCarteras');
-    if (guardado === 'list' || guardado === 'grid') {
-      this.viewMode.set(guardado);
-    }
   }
 
-  // --- VISTAS ---
-  cambiarVista(modo: 'list' | 'grid') {
-    this.viewMode.set(modo);
-    localStorage.setItem('vistaCarteras', modo);
-  }
-
-  // --- LOGICA DE DATOS ---
+  // --- 5. PETICIONES A LA API (LÓGICA DE NEGOCIO) ---
   cargarCarteras() {
     this.isLoading.set(true); 
-
     this.portfolioService.getPortfolios().subscribe({
       next: (data) => {
         this.misCarteras.set(data as Portfolio[]);
@@ -64,39 +55,6 @@ export class PortfoliosComponent implements OnInit {
     });
   }
 
-  // --- CREAR/EDITAR ---
-  abrirModalCrear() {
-    this.modoFormulario.set('create');
-    this.carteraSeleccionada.set(null);
-    this.formularioCartera.reset({
-      name: '',
-      is_default: false,
-      is_public: false
-    });
-    this.isModalOpen.set(true);
-  }
-
-  abrirModalEditar(cartera: Portfolio) {
-    this.modoFormulario.set('edit');
-    this.carteraSeleccionada.set(cartera);
-    this.formularioCartera.reset({
-      name: cartera.name,
-      is_default: cartera.is_default,
-      is_public: cartera.is_public
-    });
-    this.isModalOpen.set(true);
-  }
-
-  cerrarModal() {
-    this.isModalOpen.set(false);
-    this.formularioCartera.reset({
-      name: '',
-      is_default: false,
-      is_public: false
-    });
-    this.carteraSeleccionada.set(null);
-  }
-
   guardarCartera() {
     if (this.formularioCartera.invalid) return;
 
@@ -106,37 +64,17 @@ export class PortfoliosComponent implements OnInit {
       is_public: this.formularioCartera.value.is_public!
     };
 
-    if (this.modoFormulario() === 'create') {
-      this.portfolioService.createPortfolio(data).subscribe({
-        next: (respuesta) => {
-          this.cerrarModal();
-          this.cargarCarteras();
-        },
-        error: (err) => console.error('Error al crear cartera:', err)
-      });
-    } else {
-      const seleccionada = this.carteraSeleccionada();
-      if (seleccionada) {
-        this.portfolioService.updatePortfolio(seleccionada.id, data).subscribe({
-          next: (respuesta) => {
-            this.cerrarModal();
-            this.cargarCarteras();
-          },
-          error: (err) => console.error('Error al actualizar cartera:', err)
-        });
-      }
-    }
-  }
+    const peticion$ = this.modoFormulario() === 'create'
+      ? this.portfolioService.createPortfolio(data)
+      : this.portfolioService.updatePortfolio(this.carteraSeleccionada()!.id, data);
 
-  // --- ELIMINAR ---
-  abrirModalEliminar(cartera: Portfolio) {
-    this.carteraSeleccionada.set(cartera);
-    this.isDeleteModalOpen.set(true);
-  }
-
-  cerrarModalEliminar() {
-    this.isDeleteModalOpen.set(false);
-    this.carteraSeleccionada.set(null);
+    peticion$.subscribe({
+      next: () => {
+        this.cerrarModal();
+        this.cargarCarteras();
+      },
+      error: (err) => console.error('Error al guardar cartera:', err)
+    });
   }
 
   eliminarCartera() {
@@ -152,9 +90,55 @@ export class PortfoliosComponent implements OnInit {
     });
   }
 
-  // --- NAVEGACION ---
+  // --- 6. EVENTOS DE LA INTERFAZ Y MODALES ---
+  cambiarVista(modo: 'list' | 'grid') {
+    this.viewMode.set(modo);
+    localStorage.setItem('vistaCarteras', modo);
+  }
+
+  abrirModalCrear() {
+    this.prepararModal('create', null);
+  }
+
+  abrirModalEditar(cartera: Portfolio) {
+    this.prepararModal('edit', cartera);
+  }
+
+  cerrarModal() {
+    this.isModalOpen.set(false);
+    this.carteraSeleccionada.set(null);
+  }
+
+  abrirModalEliminar(cartera: Portfolio) {
+    this.carteraSeleccionada.set(cartera);
+    this.isDeleteModalOpen.set(true);
+  }
+
+  cerrarModalEliminar() {
+    this.isDeleteModalOpen.set(false);
+    this.carteraSeleccionada.set(null);
+  }
+
   irACartera(carteraId: number) {
     this.router.navigate(['/app/wallets', carteraId]); 
   }
 
+  // --- 7. MÉTODOS PRIVADOS AUXILIARES ---
+  private cargarPreferenciasVista() {
+    const guardado = localStorage.getItem('vistaCarteras');
+    if (guardado === 'list' || guardado === 'grid') {
+      this.viewMode.set(guardado);
+    }
+  }
+
+  private prepararModal(modo: 'create' | 'edit', cartera: Portfolio | null) {
+    this.modoFormulario.set(modo);
+    this.carteraSeleccionada.set(cartera);
+    this.formularioCartera.reset({
+      name: cartera ? cartera.name : '',
+      is_default: cartera ? cartera.is_default : false,
+      is_public: cartera ? cartera.is_public : false
+    });
+    this.isModalOpen.set(true);
+  }
 }

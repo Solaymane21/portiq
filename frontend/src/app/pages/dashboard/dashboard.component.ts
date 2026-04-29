@@ -2,7 +2,7 @@ import { Component, OnInit, inject, ViewChild, AfterViewInit, signal } from '@an
 import { DecimalPipe } from '@angular/common';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { MarketService } from '../../services/market.service';
-import { Portfolio, PortfolioPosition } from '../../models/portfolio.model';
+import { PortfolioDashboard, PortfolioPosition } from '../../models/portfolioDashboard.model';
 import { PORTFOLIOS_MOCK } from './dashboard.mock';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
@@ -55,10 +55,10 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   }
 
   // Carteras
-  portfolios: Portfolio[] = PORTFOLIOS_MOCK;
+  portfolios: PortfolioDashboard[] = PORTFOLIOS_MOCK;
   selectedPortfolioId: number = 1;
 
-  get currentPortfolio(): Portfolio {
+  get currentPortfolio(): PortfolioDashboard {
     return this.portfolios.find(p => p.id === this.selectedPortfolioId) ?? this.portfolios[0];
   }
 

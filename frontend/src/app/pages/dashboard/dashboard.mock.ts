@@ -1,6 +1,6 @@
-import { Portfolio } from '../../models/portfolio.model';
+import { PortfolioDashboard } from '../../models/portfolioDashboard.model';
 
-export const PORTFOLIOS_MOCK: Portfolio[] = [
+export const PORTFOLIOS_MOCK: PortfolioDashboard[] = [
   {
     id: 1,
     name: 'Cartera Principal',

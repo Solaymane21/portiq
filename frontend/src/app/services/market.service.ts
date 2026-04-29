@@ -16,4 +16,8 @@ export class MarketService {
   getPrices(symbols: string): Observable<any> {
     return this.http.get(`${this.mlUrl}/prices?symbols=${symbols}`);
   }
+
+  search(query: string): Observable<any> {
+    return this.http.get(`${this.mlUrl}/search/${query}`);
+  }
 }

@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\MarketController;
+use App\Http\Controllers\PreferencesController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\StripeWebhookController;
@@ -47,6 +48,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/app/change-name', [SettingsController::class, 'changeName']);
     Route::post('/app/change-password', [SettingsController::class, 'changePassword']);
+
+    Route::get('/preferences', [PreferencesController::class, 'show']);
+    Route::patch('/preferences', [PreferencesController::class, 'update']);
 });
 
 Route::get('/search/{symbol}', [MarketController::class, 'search']);

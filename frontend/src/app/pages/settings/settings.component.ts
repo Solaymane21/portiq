@@ -4,17 +4,20 @@ import { AuthService } from '../../services/auth.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SettingsService } from '../../services/settings.service';
 import { SubscriptionService } from '../../services/subscription.service';
+import { A11yModule } from "@angular/cdk/a11y";
+import { PreferencesService } from '../../services/preferences.service';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [ReactiveFormsModule, MatProgressSpinnerModule],
+  imports: [ReactiveFormsModule, MatProgressSpinnerModule, A11yModule],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent {
   authService = inject(AuthService);
   settingsService = inject(SettingsService);
   subscriptionService = inject(SubscriptionService);
+  preferencesService = inject(PreferencesService);
 
   user = this.authService.currentUser;
 
@@ -27,7 +30,8 @@ export class SettingsComponent {
   newPasswordVisible     = false;
   confirmPasswordVisible = false;
 
-  currency = signal<'EUR' | 'USD'>('EUR');
+  currency = this.preferencesService.currency
+  theme = this.preferencesService.theme
 
   showDeleteModal = signal<boolean>(false);
   showCancelModal = signal<boolean>(false);
@@ -54,7 +58,8 @@ export class SettingsComponent {
   }
 
   ngOnInit() {
-    this.subscriptionService.getStatus();
+    this.subscriptionService.getStatus()
+    this.preferencesService.load()
   }
 
   profileForm = new FormGroup({
@@ -149,7 +154,7 @@ export class SettingsComponent {
     })
   }
 
-  deleteAccount() {
-    this.showDeleteModal.set(false)
+  savePreferences() {
+    this.preferencesService.save();
   }
 }

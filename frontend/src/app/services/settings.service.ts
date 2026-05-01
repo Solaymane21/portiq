@@ -21,7 +21,7 @@ export class SettingsService {
   newPassword = signal<User['password']>('')
   confirmPassword = signal<User['password']>('')
 
-
+  // actualiza el nombre del usuario y actualiza los datos locales
   onChangeName() {
     this.isLoading.set(true)
 
@@ -39,6 +39,7 @@ export class SettingsService {
     });
   }
 
+  // envia la contraseña actual y la nueva para actualizarla
   onChangePassword() {
     this.isLoading.set(true)
 
@@ -58,6 +59,7 @@ export class SettingsService {
     });
   }
 
+  // elimina la cuenta, limpia los datos locales y ejecuta el callback de exito
   onDeleteAccount(onSuccess: () => void) {
     this.isLoading.set(true)
 

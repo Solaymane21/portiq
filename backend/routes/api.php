@@ -30,6 +30,7 @@ Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']
 Route::get('/assets/search', [\App\Http\Controllers\AssetSearchController::class, 'search']);
 Route::get('/assets/history', [\App\Http\Controllers\AssetSearchController::class, 'history']);
 
+// rutas protegidas con sanctum
 Route::middleware('auth:sanctum')->group(function () {
     // General
     Route::get('/auth/validate-token', [AuthController::class, 'validateToken']);

@@ -6,20 +6,21 @@ import { Toast } from '../models/toast.model';
 })
 export class NotificationsService {
 
-  private _toasts = signal<Toast[]>([]);
-  toasts = computed(() => this._toasts());
+  toasts = signal<Toast[]>([]);
 
+  // añade un toast a la lista y lo elimina automaticamente al expirar
   show(msg: string, type: Toast['type'] = 'info', duration = 5000): void {
     const id = crypto.randomUUID();
     const toast: Toast = { id, msg, type, duration };
 
-    this._toasts.update(list => [...list, toast]);
+    this.toasts.update(list => [...list, toast]);
 
     setTimeout(() => this.dismiss(id), duration);
   }
 
+  // elimina un toast por su id
   dismiss(id: string): void {
-    this._toasts.update(list => list.filter(t => t.id !== id));
+    this.toasts.update(list => list.filter(t => t.id !== id));
   }
 
   success(msg: string, duration?: number) {

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 
 class SettingsController extends Controller
 {
+    // actualiza el nombre del usuario autenticado
     public function changeName(Request $request)
     {
         $request->validate([
@@ -26,6 +27,7 @@ class SettingsController extends Controller
         ]);
     }
 
+    // verifica la contraseña actual y la reemplaza por la nueva
     public function changePassword(Request $request)
     {
         $request->validate([
@@ -50,18 +52,19 @@ class SettingsController extends Controller
         ]);
     }
 
+    // elimina la cuenta, cancela suscripcion activa y revoca todos los tokens
     public function deleteAccount(Request $request)
     {
         $user = $request->user();
 
+        // cancela la suscripcion si existe antes de borrar el usuario
         if ($user->subscribed('default')) {
-            $user->subscription('default')->cancelNow(); // cancela la suscripcion
+            $user->subscription('default')->cancelNow();
         }
 
-        // Revoca todos los tokens de Sanctum
         $user->tokens()->delete();
 
-        // Elimina el usuario (cascade eliminará preferences, portfolios, ..)
+        // el borrado en cascada elimina preferences, portfolios, etc
         $user->delete();
 
         return response()->json(['message' => 'Cuenta eliminada correctamente.']);

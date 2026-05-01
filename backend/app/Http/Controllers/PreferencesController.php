@@ -6,12 +6,14 @@ use Illuminate\Http\Request;
 
 class PreferencesController extends Controller
 {
+    // devuelve las preferencias del usuario autenticado
     public function show(Request $request)
     {
         $preferences = $request->user()->preferences;
         return response()->json($preferences);
     }
 
+    // actualiza o crea las preferencias del usuario
     public function update(Request $request)
     {
         $request->validate([

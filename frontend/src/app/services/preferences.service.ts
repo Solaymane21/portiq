@@ -16,6 +16,7 @@ export class PreferencesService {
   theme    = signal<'dark' | 'light'>('dark');
   isLoading = signal(false);
 
+  // carga las preferencias del usuario desde la api
   load() {
     this.http.get<UserPreferences>(`${this.apiUrl}/preferences`).subscribe({
       next: (res) => {
@@ -25,6 +26,7 @@ export class PreferencesService {
     });
   }
 
+  // guarda las preferencias actuales en la base de datos mediante la API
   save() {
     this.isLoading.set(true);
     this.http.patch<UserPreferences>(`${this.apiUrl}/preferences`, {

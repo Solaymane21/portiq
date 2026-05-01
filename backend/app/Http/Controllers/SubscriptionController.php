@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 
 class SubscriptionController extends Controller
 {
-    // Devuelve la URL de Stripe Checkout
+    // genera y devuelve la url de pago de stripe checkout
     public function checkout(Request $request)
     {
         $user = $request->user();
@@ -25,7 +25,7 @@ class SubscriptionController extends Controller
         return response()->json(['url' => $checkout->url]);
     }
 
-    // Consulta el estado actual de la suscripción
+    // devuelve el estado actual de la suscripcion del usuario
     public function status(Request $request)
     {
         $user = $request->user();
@@ -33,26 +33,26 @@ class SubscriptionController extends Controller
 
         $nextBillingDate = null;
 
+        // consulta la fecha de siguiente cobro solo si la suscripcion esta activa
         if ($subscription && $subscription->stripe_status === 'active' && !$subscription->onGracePeriod()) {
             try {
                 $stripeSubscription = $subscription->asStripeSubscription();
                 $nextBillingDate = $stripeSubscription->items->data[0]->current_period_end ?? null;
-
             } catch (\Exception $e) {
                 Log::error('Error fetching Stripe subscription: ' . $e->getMessage());
             }
         }
 
         return response()->json([
-            'is_subscribed'     => $user->subscribed('default'),
-            'plan'              => $user->suscription_type,
-            'ends_at'           => $subscription?->ends_at,
-            'on_grace'          => $subscription?->onGracePeriod() ?? false,
+            'is_subscribed' => $user->subscribed('default'),
+            'plan' => $user->suscription_type,
+            'ends_at' => $subscription?->ends_at,
+            'on_grace' => $subscription?->onGracePeriod() ?? false,
             'next_billing_date' => $nextBillingDate,
         ]);
     }
 
-    // Cancelar suscripción al final del período
+    // cancela la suscripcion al final del periodo de facturacion
     public function cancel(Request $request)
     {
         $subscription = $request->user()->subscription('default');
@@ -65,7 +65,7 @@ class SubscriptionController extends Controller
         return response()->json(['message' => 'Suscripción cancelada. Activa hasta fin del período.']);
     }
 
-    // Reanudar suscripcion previamente cancelada
+    // reanuda una suscripcion cancelada si aun no ha expirado la suscripcion
     public function resume(Request $request)
     {
         $subscription = $request->user()->subscription('default');

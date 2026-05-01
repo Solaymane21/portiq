@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 
 class EmailController extends Controller
 {
+    // genera y envia un codigo de verificacion para el registro
     public function sendRegisterCode(Request $request)
     {
         $request->validate([
@@ -19,6 +20,7 @@ class EmailController extends Controller
 
         $code = rand(100000, 999999);
 
+        // guarda el codigo en cache durante quince minutos
         Cache::put('register_verify_' . $request->email, $code, now()->addMinutes(15));
 
         Mail::to($request->email)->send(new VerificationMail($code));
@@ -26,6 +28,7 @@ class EmailController extends Controller
         return response()->json(['message' => 'Código enviado']);
     }
 
+    // genera y envia un codigo de recuperacion de contraseña
     public function sendForgotPasswordCode(Request $request)
     {
         $request->validate([
@@ -34,6 +37,7 @@ class EmailController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
+        // respuesta general para no revelar si el email existe
         if(!$user) {
             return response()->json(['message' => 'Si el email existe, recibirás un código']);
         }
@@ -47,6 +51,7 @@ class EmailController extends Controller
         return response()->json(['message' => 'Código enviado']);
     }
 
+    // verifica el codigo introducido por el usuario
     public function verifyCode(Request $request)
     {
         $request->validate([
@@ -64,6 +69,7 @@ class EmailController extends Controller
 
         Cache::forget($cacheKey);
 
+        // si es reset, genera un token temporal para el cambio de contraseña
         if ($request->type === 'reset') {
             $resetToken = Str::random(64);
             Cache::put('reset_token_' . $request->email, $resetToken, now()->addMinutes(30));
@@ -77,6 +83,7 @@ class EmailController extends Controller
         return response()->json(['verified' => true]);
     }
 
+    // reenvia el codigo de verificacion, reutilizando el existente si aun es valido
     public function resendCode(Request $request)
     {
         $request->validate([
@@ -87,6 +94,7 @@ class EmailController extends Controller
         $cacheKey = $request->type . '_verify_' . $request->email;
         $code = Cache::get($cacheKey);
 
+        // genera uno nuevo solo si el anterior ha expirado
         if (!$code) {
             $code = rand(100000, 999999);
             Cache::put($cacheKey, $code, now()->addMinutes(15));
@@ -97,6 +105,7 @@ class EmailController extends Controller
         return response()->json(['message' => 'Código reenviado']);
     }
 
+    // valida el token de reseteo y actualiza la contraseña del usuario
     public function resetPassword(Request $request)
     {
         $request->validate([
@@ -122,6 +131,7 @@ class EmailController extends Controller
             'password' => bcrypt($request->password)
         ]);
 
+        // elimina el token una vez usado para evitar reutilizaciones
         Cache::forget('reset_token_' . $request->email);
 
         return response()->json(['message' => 'Contraseña actualizada correctamente']);

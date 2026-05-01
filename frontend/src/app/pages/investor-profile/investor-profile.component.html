@@ -1,1 +1,44 @@
-<p>investor-profile works!</p>
+<h1 class="text-3xl font-ibm">Perfil Inversor</h1>
+
+<div>
+    <div class="mt-5 flex flex-col gap-2">
+        <div class="flex justify-between">
+            <p>Progreso</p>
+            <p>Pregunta {{ service.currentQuestion() + 1 }} de 9</p>
+        </div>
+        <div class="h-2 bg-neutral-400 rounded-full overflow-hidden">
+            <div class="bg-orange-500 h-full rounded-full" [style.width.%]="((service.currentQuestion() + 1) / 9) * 100"></div>
+        </div>
+        <div class="bg-neutral-950 flex flex-col justify-center rounded-lg py-8 px-10 mt-5">
+            <p class="text-center text-xl pb-8">{{ service.questions[service.currentQuestion()].text }}</p>
+
+            <div class="flex flex-col gap-3">
+                @for(option of service.questions[service.currentQuestion()].options; track $index) {
+                    <button
+                        class="py-3 rounded hover:opacity-80"
+                        [class]="service.answers()[service.currentQuestion()] === option.score
+                        ? 'bg-orange-500'
+                        : 'bg-neutral-600'"
+                        (click)="service.selectAnswer(option.score)">
+                        {{ option.label }}
+                    </button>
+                }
+            </div>
+        </div>
+        <div class="flex justify-between gap-3 mt-5">
+            <button class="flex justify-center w-1/2 bg-neutral-600 py-3 rounded-lg hover:opacity-80" (click)="service.back()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                    <path fill-rule="evenodd" d="M7.72 12.53a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 1 1 1.06 1.06L9.31 12l6.97 6.97a.75.75 0 1 1-1.06 1.06l-7.5-7.5Z" clip-rule="evenodd" />
+                </svg>
+                Anterior
+                </button>
+            <button
+                class="flex justify-center w-1/2 py-3 rounded-lg transition-opacity"
+                [class]="service.canGoNext() ? 'bg-orange-500 hover:opacity-80' : 'bg-orange-500 opacity-50 cursor-not-allowed'"
+                [disabled]="!service.canGoNext()"
+                (click)="service.next()">
+                {{ service.currentQuestion() === service.lastQuestion() ? 'Ver mi perfil' : 'Siguiente' }}
+            </button>
+        </div>
+    </div>
+</div>

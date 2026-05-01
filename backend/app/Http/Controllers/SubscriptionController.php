@@ -18,7 +18,7 @@ class SubscriptionController extends Controller
             ->newSubscription('default', $priceId)
             ->allowPromotionCodes()
             ->checkout([
-                'success_url' => env('FRONTEND_URL') . '/app/dashboard',
+                'success_url' => env('FRONTEND_URL') . '/app/dashboard?subscribed=1',
                 'cancel_url'  => env('FRONTEND_URL') . '/app/dashboard',
             ]);
 

@@ -132,10 +132,6 @@ export class SettingsComponent {
     this.settingsService.onChangePassword();
   }
 
-  upgradePremium() {
-
-  }
-
   cancelSubscription() {
     this.showCancelModal.set(true)
   }
@@ -170,4 +166,9 @@ export class SettingsComponent {
       this.router.navigate(['/auth/login'])
     });
   }
+
+  upgradePremium() {
+    this.subscriptionService.checkout();
+  }
+  
 }

@@ -9,6 +9,9 @@ import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
 import { FormsModule } from '@angular/forms';
 import {CdkMenu, CdkMenuItem, CdkMenuTrigger} from '@angular/cdk/menu';
+import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { NotificationsService } from '../../services/notifications.service';
 
 
 
@@ -21,8 +24,12 @@ import {CdkMenu, CdkMenuItem, CdkMenuTrigger} from '@angular/cdk/menu';
 })
 export class DashboardComponent implements OnInit, AfterViewInit  {
 
-  //Tabla
+  route = inject(ActivatedRoute);
+  router = inject(Router);
+  authService = inject(AuthService);
+  notificationService = inject(NotificationsService);
 
+  //Tabla
   displayedColumns = ['ticker', 'name', 'price', 'change'];
   dataSource = new MatTableDataSource<PortfolioPosition>([]);
 
@@ -82,6 +89,27 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
     this.buildDonutChart();
     this.loadChart(this.selectedPeriod);
     this.dataSource.data = this.currentPortfolio.positions
+
+    // mostrar notificacion si el usuario se ha suscrito
+    this.route.queryParams.subscribe(params => {
+      if (params['subscribed'] === '1') {
+
+        // Limpia la URL inmediatamente
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: {},
+          replaceUrl: true
+        });
+
+        // Consulta el estado de la suscripcion en la API
+        this.authService.refreshUser().subscribe(user => {
+          // Solo notifica si realmente es premium
+          if (user.suscription_type === 'premium') {
+            this.notificationService.success('¡Bienvenido a PortIQ Pro!');
+          }
+        });
+      }
+    });
   }
 
   onPortfolioChange(portfolioId: number): void {

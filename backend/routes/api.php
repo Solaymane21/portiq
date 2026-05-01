@@ -31,6 +31,10 @@ Route::get('/assets/search', [\App\Http\Controllers\AssetSearchController::class
 Route::get('/assets/history', [\App\Http\Controllers\AssetSearchController::class, 'history']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    // General
+    Route::get('/auth/validate-token', [AuthController::class, 'validateToken']);
+    Route::get('/user', [AuthController::class, 'me']);
+    
     // Stripe
     Route::post('/subscription/checkout', [SubscriptionController::class, 'checkout']);
     Route::get('/subscription/status', [SubscriptionController::class, 'status']);
@@ -55,8 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //Trades
     Route::get('/portfolios/{portfolioId}/trades', [\App\Http\Controllers\TradeController::class, 'index']);
 
-    Route::get('/auth/validate-token', [AuthController::class, 'validateToken']);
-
+    // Settings
     Route::post('/change-name', [SettingsController::class, 'changeName']);
     Route::post('/change-password', [SettingsController::class, 'changePassword']);
     Route::delete('/account', [SettingsController::class, 'deleteAccount']);

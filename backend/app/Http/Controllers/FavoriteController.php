@@ -6,6 +6,7 @@ use App\Models\Favorite;
 use App\Models\Symbol;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
 
 class FavoriteController extends Controller
 {
@@ -37,19 +38,34 @@ class FavoriteController extends Controller
             'asset_type' => 'required|in:crypto,stock,etf',
         ]);
 
-        // crear o recuperar el symbol
+        $imageUrl = $request->image_url;
+
+        // Stocks/ETFs sin imagen, buscar en FMP
+        if (!$imageUrl && in_array($request->asset_type, ['stock', 'etf'])) {
+            $fmpUrl   = 'https://financialmodelingprep.com/image-stock/' . strtoupper($request->symbol) . '.png';
+            $response = Http::timeout(5)->get($fmpUrl);
+
+            if ($response->successful() && str_starts_with($response->header('Content-Type'), 'image/')) {
+                $imageUrl = $fmpUrl;
+            }
+        }
+
         $symbol = Symbol::firstOrCreate(
             ['symbol' => strtoupper($request->symbol)],
             [
                 'name'         => $request->name,
                 'api_id'       => $request->api_id,
-                'image_url'    => $request->image_url,
+                'image_url'    => $imageUrl,
                 'asset_type'   => $request->asset_type,
                 'last_updated' => Carbon::now(),
             ]
         );
 
-        // crear el favorito si no existe ya
+        // Symbol ya existía pero sin imagen, actualizarlo
+        if (!$symbol->image_url && $imageUrl) {
+            $symbol->update(['image_url' => $imageUrl]);
+        }
+
         $favorite = Favorite::firstOrCreate([
             'user_id'   => $request->user()->id,
             'symbol_id' => $symbol->id,

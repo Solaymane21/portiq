@@ -9,6 +9,7 @@ import { SearchResult } from '../../models/search.model';
 import { NgClass } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NotificationsService } from '../../services/notifications.service';
 
 @Component({
   selector: 'app-favorites',
@@ -23,6 +24,7 @@ export class FavoritesComponent implements OnInit {
   favoritesService = inject(FavoritesService);
   searchSubject = new Subject<string>();
   destroyRef = inject(DestroyRef);
+  notificationService = inject(NotificationsService)
 
   favorites = this.favoritesService.favorites;
   sparklines = new Map<number, any>();
@@ -48,7 +50,6 @@ export class FavoritesComponent implements OnInit {
   constructor() {
     effect(() => {
       const favs = this.favorites();
-      console.log(favs)
       if (favs.length === 0) return;
       
       // Cargar precios y sparklines cuando cambien los favoritos
@@ -203,7 +204,10 @@ export class FavoritesComponent implements OnInit {
   }
 
   addToFavorites(result: SearchResult): void {
-    this.favoritesService.add(result).subscribe();
+    this.favoritesService.add(result).subscribe({
+      next: (res: any) => this.notificationService.info(`Has añadido a favoritos a ${res?.name} (${res?.symbol})`),
+      error: () => this.notificationService.error('No se pudo añadir a favoritos')
+    });
     this.searchQuery = '';
     this.searchResults.set([]);
     this.showDropdown.set(false);
@@ -214,10 +218,13 @@ export class FavoritesComponent implements OnInit {
   }
 
   removeFromFavorites(symbolId: number): void {
+    const fav = this.favorites().find(f => f.symbol_id === symbolId);
+
     this.deletingIds.update(ids => new Set(ids).add(symbolId));
 
     this.favoritesService.remove(symbolId).subscribe({
-      next: () => {
+      next: (res: any) => {
+        this.notificationService.info(`${fav?.name} (${fav?.symbol}) quitado de favoritos`);
         this.sparklines.delete(symbolId);
         this.deletingIds.update(ids => {
           const next = new Set(ids);

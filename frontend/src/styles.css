@@ -49,7 +49,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   -webkit-backdrop-filter: blur(12px);
 }
 
-.badge-premium .text {
+.text {
   background: linear-gradient(90deg,
     #f97316, #fb923c, #fbbf24, #fb923c, #f97316);
   background-size: 250% 100%;

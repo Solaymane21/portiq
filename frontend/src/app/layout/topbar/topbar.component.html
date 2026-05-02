@@ -15,8 +15,11 @@
             <div>
                 @if (user()?.suscription_type === 'premium') {
                     <span class="badge-premium rounded-full py-1 px-3 border border-orange-500">
-                        <span class="font-ibm text  font-extrabold ">Pro</span>
+                        <span class="font-ibm text font-extrabold ">Pro</span>
                     </span>
+                }
+                @else {
+                    <a routerLink="/app/settings" fragment="subscription" class="text hover:underline hover:cursor-pointer">¿Hacerse Pro?</a>
                 }
             </div>
             <div class="bg-neutral-800 p-2 rounded text-neutral-300 hover:cursor-pointer hover:opacity-90">

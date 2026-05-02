@@ -6,7 +6,7 @@ import { SettingsService } from '../../services/settings.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { A11yModule } from "@angular/cdk/a11y";
 import { PreferencesService } from '../../services/preferences.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-settings',
@@ -20,6 +20,7 @@ export class SettingsComponent {
   subscriptionService = inject(SubscriptionService);
   preferencesService = inject(PreferencesService);
   router = inject(Router)
+  route = inject(ActivatedRoute)
 
   user = this.authService.currentUser;
 
@@ -62,6 +63,12 @@ export class SettingsComponent {
   ngOnInit() {
     this.subscriptionService.getStatus()
     this.preferencesService.load()
+
+    this.route.fragment.subscribe((fragment) => {
+      if (fragment === 'subscription') {
+        this.activeSection.set('suscripcion');
+      }
+    });
   }
 
   profileForm = new FormGroup({

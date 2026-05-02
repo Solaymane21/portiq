@@ -17,7 +17,7 @@ export interface Question {
 })
 export class InvestorProfileService {
 
-  currentQuestion = signal<number>(2)
+  currentQuestion = signal<number>(0)
   lastQuestion = computed(() => this.questions.length - 1)
   answers = signal<(number | null)[]>(Array(9).fill(null));
   canGoNext = computed(() => this.answers()[this.currentQuestion()] !== null);

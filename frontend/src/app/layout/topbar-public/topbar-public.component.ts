@@ -1,6 +1,6 @@
 import { Component, inject, signal, HostListener, ElementRef} from '@angular/core';
 import {CdkMenu, CdkMenuItem, CdkMenuTrigger} from '@angular/cdk/menu';
-import {Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -17,7 +17,7 @@ interface SearchResult {
 
 @Component({
   selector: 'app-topbar-public',
-  imports: [CdkMenu, CdkMenuItem, CdkMenuTrigger],
+  imports: [CdkMenu, CdkMenuItem, CdkMenuTrigger, RouterLink],
   templateUrl: './topbar-public.component.html',
   styleUrl: './topbar-public.component.css'
 })
@@ -132,11 +132,6 @@ export class TopbarPublicComponent {
     return b + ' bg-orange-400/15 text-orange-400';
   }
 
-
-
-  goToLogin(): void {
-    this.router.navigate(['/auth/login']);
-  }
   goToPublic(): void{
     this.router.navigate(['/public'])
   }

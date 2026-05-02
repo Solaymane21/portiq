@@ -47,7 +47,7 @@ export class SymbolDetailComponent implements OnInit {
 
   loadInfo(symbol: string): void {
     this.loadingInfo.set(true);
-    this.market.getPrices(symbol).subscribe({
+    this.market.getPrices(symbol, 'stock').subscribe({
       next: (res) => {
         const item = res?.results?.[0] ?? null;
         this.info.set(item);

@@ -16,7 +16,8 @@ class Symbol extends Model
         'name',
         'image_url', 
         'last_updated',
-        'asset_type'
+        'asset_type',
+        'api_id'
     ];
 
     public function investments() {

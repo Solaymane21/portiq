@@ -17,7 +17,9 @@ class MarketController extends Controller
     public function prices(Request $request)
     {
         $symbols = explode(',', $request->query('symbols'));
-        return response()->json($this->ml->getPrices($symbols));
+        $assetTypes = explode(',', $request->query('asset_types', ''));
+
+        return response()->json($this->ml->getPrices($symbols, $assetTypes));
     }
 
     public function portfolioValue(Request $request)
@@ -33,7 +35,9 @@ class MarketController extends Controller
 
     public function history(string $symbol, Request $request){
         $period = $request->query('period', '1D');
-        return response()->json($this->ml->getHistory($symbol, $period));
+        $assetType = $request->query('asset_type', 'stock');
+
+        return response()->json($this->ml->getHistory($symbol, $period, $assetType));
     }
 
     

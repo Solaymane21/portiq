@@ -1,23 +1,37 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { SearchResult } from '../models/search.model';
 
 @Injectable({ providedIn: 'root' })
 export class MarketService {
 
-  private mlUrl = 'http://localhost:8000/api';
+  private apiUrl = 'http://localhost:8000/api';
+  private http = inject(HttpClient)
 
-  constructor(private http: HttpClient) {}
-
-  getHistory(symbol: string, period: string): Observable<any> {
-    return this.http.get(`${this.mlUrl}/history/${symbol}?period=${period}`);
+  // Historial de precios
+  getHistory(symbol: string, period: string, assetType: string = 'stock'): Observable<any> {
+    return this.http.get(`${this.apiUrl}/history/${symbol}`, {
+      params: { period, asset_type: assetType }
+    });
   }
 
-  getPrices(symbols: string): Observable<any> {
-    return this.http.get(`${this.mlUrl}/prices?symbols=${symbols}`);
+  // Precios en tiempo real
+  getPrices(symbols: string, assetTypes: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/prices`, {
+      params: { symbols, asset_types: assetTypes }
+    });
   }
 
-  search(query: string): Observable<any> {
-    return this.http.get(`${this.mlUrl}/search/${query}`);
+  // Búsqueda de symbols
+  search(query: string): Observable<SearchResult[]> {
+    return this.http.get<SearchResult[]>(`${this.apiUrl}/assets/search`, {
+      params: { q: query }
+    });
+  }
+
+  // Guardar symbols
+  storeSymbol(result: SearchResult): Observable<any> {
+    return this.http.post(`${this.apiUrl}/assets/store`, result);
   }
 }

@@ -26,10 +26,11 @@ class MLService
     }
 
     // Precios de varios símbolos
-    public function getPrices(array $symbols): array
+    public function getPrices(array $symbols, array $assetTypes = []): array
     {
         $response = Http::get("{$this->baseUrl}/prices", [
-            'symbols' => implode(',', $symbols)
+            'symbols' => implode(',', $symbols),
+            'asset_types' => implode(',', $assetTypes)
         ]);
 
         return $response->json();
@@ -50,9 +51,12 @@ class MLService
     }
 
     //Historial para los precios de la grafica
-    public function getHistory(string $symbol, string $period = '1D'): array{
+    public function getHistory(string $symbol, string $period = '1D', string $assetType = 'stock'): array{
         
-        $response = Http::get("{$this->baseUrl}/history/{$symbol}", ['period' => $period]);
+        $response = Http::get("{$this->baseUrl}/history/{$symbol}", [
+            'period' => $period,
+            'asset_type' => $assetType,
+        ]);
 
         if($response->failed()){
             return ['error' =>'No se puede obtener el historial'];

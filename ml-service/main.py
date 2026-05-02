@@ -73,47 +73,51 @@ Buscar varios precios
 """
 
 @app.get("/prices")
+def getPrices(symbols: str, asset_types: str = ""):
+    symbol_list = [s.strip() for s in symbols.split(",") if s.strip()]
+    type_list = [t.strip() for t in asset_types.split(",") if t.strip()]
 
-def getPrices(symbols: str):
+    if not symbol_list:
+        raise HTTPException(status_code=400, detail="No se enviaron símbolos")
 
-        symbol_list = [s.strip() for s in symbols.split(",") if s.strip()]
+    if len(symbol_list) > 20:
+        raise HTTPException(status_code=400, detail="Máximo 20 símbolos por consulta")
 
-        if not symbol_list:
-            raise HTTPException(status_code=400, detail="No se enviaron símbolos")
+    results = []
 
-        if len(symbol_list) > 20:
-            raise HTTPException(status_code=400, detail="Máximo 20 símbolos por consulta")
+    for i, symbol in enumerate(symbol_list):
+        if not re.match(r'^[A-Za-z0-9.\-]{1,10}$', symbol):
+            results.append({"symbol": symbol, "error": "Símbolo inválido"})
+            continue
 
-        results = []
+        asset_type = type_list[i] if i < len(type_list) else "stock"
+        
+        # Añadir sufijo -USD para crypto
+        yf_symbol = f"{symbol.upper()}-USD" if asset_type == "crypto" else symbol.upper()
 
-        for symbol in symbol_list:
-            if not re.match(r'^[A-Za-z0-9.\-]{1,10}$', symbol):
-                results.append({"symbol": symbol, "error": "Símbolo inválido"})
-                continue
-            
-            try:
-                ticker = yf.Ticker(symbol.upper())
-                info = ticker.info
-                price = info.get("currentPrice") or info.get("regularMarketPrice")
+        try:
+            ticker = yf.Ticker(yf_symbol)
+            info = ticker.info
+            price = info.get("currentPrice") or info.get("regularMarketPrice")
 
-                results.append({
-                    "symbol": symbol.upper(),
-                    "name": info.get("longName", ""),
-                    "price":    price,
-                    "currency": info.get("currency", "USD"),
-                    "change":   info.get("regularMarketChangePercent"),
-                })
-
-            except Exception:
-                results.append({
-                    "symbol": symbol.upper(),
-                    "error":  "No se pudo obtener el precio"
+            results.append({
+                "symbol": symbol.upper(),  # devolver símbolo limpio sin -USD
+                "name": info.get("longName", ""),
+                "price": price,
+                "currency": info.get("currency", "USD"),
+                "change": info.get("regularMarketChangePercent"),
             })
 
-        return {
-            "total":   len(results),
-            "results": results
-        }
+        except Exception:
+            results.append({
+                "symbol": symbol.upper(),
+                "error": "No se pudo obtener el precio"
+            })
+
+    return {
+        "total": len(results),
+        "results": results
+    }
 
 """
 Recoger varios precios y calcular valor total con posiciones
@@ -182,10 +186,13 @@ def portfolio_value(positions: str):
 Historial de precios para gráfica
 """
 @app.get("/history/{symbol}")
-def get_history(symbol: str, period: str = "1D"):
+def get_history(symbol: str, period: str = "1D", asset_type: str = "stock"):
 
     if not re.match(r'^[A-Za-z0-9.\-]{1,10}$', symbol):
         raise HTTPException(status_code=422, detail="Símbolo inválido")
+
+    # Sufijo -USD para crypto
+    yf_symbol = f"{symbol.upper()}-USD" if asset_type == "crypto" else symbol.upper()
 
     period_map = {
         "1D": ("5d",  "5m"),
@@ -197,7 +204,7 @@ def get_history(symbol: str, period: str = "1D"):
 
     try:
         df = yf.download(
-            symbol.upper(),
+            yf_symbol,
             period=yf_period,
             interval=yf_interval,
             progress=False
@@ -221,10 +228,10 @@ def get_history(symbol: str, period: str = "1D"):
         ]
 
         return {
-            "symbol":   symbol.upper(),
-            "period":   period,
+            "symbol": symbol.upper(),
+            "period": period,
             "interval": yf_interval,
-            "data":     data
+            "data": data
         }
 
     except HTTPException:

@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AssetSearchController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\MarketController;
 use App\Http\Controllers\PreferencesController;
 use Illuminate\Support\Facades\Route;
@@ -27,14 +28,13 @@ Route::prefix('auth')->group(function() {
 
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
 
-Route::get('/assets/search', [\App\Http\Controllers\AssetSearchController::class, 'search']);
-Route::get('/assets/history', [\App\Http\Controllers\AssetSearchController::class, 'history']);
-
 // rutas protegidas con sanctum
 Route::middleware('auth:sanctum')->group(function () {
     // General
     Route::get('/auth/validate-token', [AuthController::class, 'validateToken']);
     Route::get('/user', [AuthController::class, 'me']);
+    Route::get('/assets/search', [AssetSearchController::class, 'search']);
+    Route::get('/assets/history', [AssetSearchController::class, 'history']);
     
     // Stripe
     Route::post('/subscription/checkout', [SubscriptionController::class, 'checkout']);
@@ -66,6 +66,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/account', [SettingsController::class, 'deleteAccount']);
     Route::get('/preferences', [PreferencesController::class, 'show']);
     Route::patch('/preferences', [PreferencesController::class, 'update']);
+
+    // Favorites
+    Route::get('/favorites', [FavoriteController::class, 'index']);
+    Route::post('/favorites', [FavoriteController::class, 'store']);
+    Route::delete('/favorites/{symbolId}', [FavoriteController::class, 'destroy']);
 });
 
 Route::get('/search/{symbol}', [MarketController::class, 'search']);

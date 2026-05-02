@@ -1,38 +1,180 @@
-import { Component, signal, HostListener } from '@angular/core';
+import { Component, signal, HostListener, inject, OnInit, effect, DestroyRef, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgApexchartsModule } from 'ng-apexcharts';
-import { Subject } from 'rxjs';
+import { Subject, forkJoin, interval } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-
-interface SearchResult {
-  symbol: string;
-  name: string;
-  type: 'crypto' | 'stock' | 'etf';
-  image?: string;
-}
+import { MarketService } from '../../services/market.service';
+import { FavoritesService, Favorite } from '../../services/favorites.service';
+import { SearchResult } from '../../models/search.model';
+import { NgClass } from '@angular/common';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-favorites',
   standalone: true,
-  imports: [NgApexchartsModule, FormsModule],
+  imports: [NgApexchartsModule, FormsModule, NgClass, MatProgressSpinnerModule],
   templateUrl: './favorites.component.html',
   styleUrl: './favorites.component.css'
 })
-export class FavoritesComponent {
-  isFavorite = signal<boolean>(true);
+export class FavoritesComponent implements OnInit {
+
+  marketService = inject(MarketService);
+  favoritesService = inject(FavoritesService);
+  searchSubject = new Subject<string>();
+  destroyRef = inject(DestroyRef);
+
+  favorites = this.favoritesService.favorites;
+  sparklines = new Map<number, any>();
+  prices = signal<Record<string, number>>({});
+  loadingPrices = signal<boolean>(false);
+
   searchQuery = '';
   searchResults = signal<SearchResult[]>([]);
   isSearching = signal<boolean>(false);
+  isFetching = this.favoritesService.fetching;
   showDropdown = signal<boolean>(false);
-
-  private searchSubject = new Subject<string>();
+  changes = signal<Record<string, number>>({});
+  deletingIds = signal<Set<number>>(new Set());
+  
+  filter = signal<'all' | 'stock' | 'crypto' | 'etf'>('all')
+  assetLabels: Record<string, string> = {
+    all: 'Todos',
+    stock: 'Acciones',
+    crypto: 'Criptomonedas',
+    etf: 'ETF'
+  };
 
   constructor() {
-    // debounce para no disparar en cada tecla
+    effect(() => {
+      const favs = this.favorites();
+      console.log(favs)
+      if (favs.length === 0) return;
+      
+      // Cargar precios y sparklines cuando cambien los favoritos
+      this.loadPrices(favs);
+      this.loadSparklines(favs);
+    });
+  }
+
+  ngOnInit(): void {
+    this.favoritesService.load();
+
+    interval(15000).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      const favs = this.favorites();
+      if (favs.length > 0) {
+        this.loadPrices(favs);
+      }
+    });
+
     this.searchSubject.pipe(
-      debounceTime(350),
+      debounceTime(250),
       distinctUntilChanged()
     ).subscribe(query => this.fetchResults(query));
+  }
+
+  filteredFavorites = computed(() => {
+    const f = this.filter();
+    const favs = this.favorites();
+    if (f === 'all') return favs;
+    return favs.filter(fav => fav.asset_type === f);
+  });
+
+  loadSparklines(favs: Favorite[]): void {
+    const missing = favs.filter(f => !this.sparklines.has(f.symbol_id));
+    if (missing.length === 0) return;
+
+    const requests = missing.reduce((acc, fav) => {
+      acc[fav.symbol_id] = this.marketService.getHistory(fav.symbol, '1M', fav.asset_type);
+      return acc;
+    }, {} as Record<number, any>);
+
+    forkJoin(requests).subscribe({
+      next: (results: Record<string, any>) => {
+        Object.entries(results).forEach(([symbolId, history]) => {
+          const fav = missing.find(f => f.symbol_id === Number(symbolId))!;
+          this.sparklines.set(Number(symbolId), this.buildSparkline(fav, history));
+        });
+      }
+    });
+  }
+
+  loadPrices(favs: Favorite[]): void {
+    this.loadingPrices.set(true);
+    const symbols = favs.map(f => f.symbol).join(',');
+    const assetTypes = favs.map(f => f.asset_type).join(',');
+
+    this.marketService.getPrices(symbols, assetTypes).subscribe({
+      next: (data) => {
+        const priceMap: Record<string, number> = {};
+        const changeMap: Record<string, number> = {};
+
+        (data.results ?? []).forEach((item: any) => {
+          if (item.price != null) {
+            priceMap[item.symbol] = item.price;
+            changeMap[item.symbol] = item.change ?? 0;
+          }
+        });
+
+        this.prices.set(priceMap);
+        this.changes.set(changeMap);
+        this.loadingPrices.set(false);
+      },
+      error: () => this.loadingPrices.set(false)
+    });
+  }
+
+  getPrice(symbol: string): string {
+    const price = this.prices()[symbol];
+    if (price == null) return '—';
+    return price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
+  }
+
+  getChange(symbol: string): number {
+    return this.changes()[symbol] ?? 0;
+  }
+
+  getSparkline(symbolId: number) {
+    return this.sparklines.get(symbolId);
+  }
+
+  buildSparkline(fav: Favorite, history: any) {
+    // history.data ya viene como [{x: timestamp_ms, y: price}]
+    const data = history?.data ?? [];
+
+    return {
+      series: [{ name: fav.symbol, data }],
+      chart: {
+        type: 'area' as const,
+        height: 60,
+        sparkline: { enabled: true },
+        toolbar: { show: false },
+        background: 'transparent'
+      },
+      stroke: { curve: 'smooth' as const, width: 3 },
+      colors: ['#f97316'],
+      fill: {
+        type: 'gradient',
+        gradient: { shade: 'dark', type: 'vertical', opacityFrom: 0.35, opacityTo: 0.02 }
+      },
+      tooltip: {
+        theme: 'dark',
+        enabled: true,
+        x: { show: true, format: 'dd MMM yyyy' },
+        y: { formatter: (v: number) => `${v.toLocaleString('es-ES', { minimumFractionDigits: 2 })}€` }
+      },
+      markers: { size: 0, hover: { size: 4 } },
+      grid: { show: false },
+      xaxis: {
+        type: 'datetime' as const,
+        labels: { show: false },
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+      },
+      yaxis: { labels: { show: false } }
+    };
   }
 
   onSearch(query: string): void {
@@ -45,106 +187,64 @@ export class FavoritesComponent {
     this.searchSubject.next(query);
   }
 
-  private fetchResults(query: string): void {
-    // MOCK estático — sustituir por llamada real a tu MarketService
-    const mock: SearchResult[] = [
-      { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock' },
-      { symbol: 'BTC', name: 'Bitcoin', type: 'crypto', image: 'https://coin-images.coingecko.com/coins/images/1/large/bitcoin.png' },
-      { symbol: 'ETH', name: 'Ethereum', type: 'crypto', image: 'https://coin-images.coingecko.com/coins/images/279/large/ethereum.png' },
-      { symbol: 'NVDA', name: 'NVIDIA Corporation', type: 'stock' },
-      { symbol: 'SPY', name: 'SPDR S&P 500 ETF', type: 'etf' },
-    ];
-
-    const filtered = mock.filter(r =>
-      r.name.toLowerCase().includes(query.toLowerCase()) ||
-      r.symbol.toLowerCase().includes(query.toLowerCase())
-    );
-
-    this.searchResults.set(filtered);
-    this.isSearching.set(false);
-    this.showDropdown.set(true);
+  fetchResults(query: string): void {
+    this.marketService.search(query).subscribe({
+      next: (results) => {
+        const favSymbols = this.favorites().map(f => f.symbol);
+        this.searchResults.set(results.filter(r => !favSymbols.includes(r.symbol)));
+        this.isSearching.set(false);
+        this.showDropdown.set(true);
+      },
+      error: () => {
+        this.searchResults.set([]);
+        this.isSearching.set(false);
+      }
+    });
   }
 
   addToFavorites(result: SearchResult): void {
-    // aquí llamarás a tu FavoritesService más adelante
-    console.log('Añadir a favoritos:', result);
+    this.favoritesService.add(result).subscribe();
     this.searchQuery = '';
     this.searchResults.set([]);
     this.showDropdown.set(false);
   }
 
-  // cerrar dropdown al hacer click fuera
+  isDeleting(symbolId: number): boolean {
+    return this.deletingIds().has(symbolId);
+  }
+
+  removeFromFavorites(symbolId: number): void {
+    this.deletingIds.update(ids => new Set(ids).add(symbolId));
+
+    this.favoritesService.remove(symbolId).subscribe({
+      next: () => {
+        this.sparklines.delete(symbolId);
+        this.deletingIds.update(ids => {
+          const next = new Set(ids);
+          next.delete(symbolId);
+          return next;
+        });
+      },
+      error: () => {
+        this.deletingIds.update(ids => {
+          const next = new Set(ids);
+          next.delete(symbolId);
+          return next;
+        });
+      }
+    });
+  }
+
   @HostListener('document:click', ['$event'])
   onClickOutside(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    if (!target.closest('.relative')) {
-      this.showDropdown.set(false);
-    }
+    if (!target.closest('.relative')) this.showDropdown.set(false);
   }
 
-  updateFavorite() {
-    this.isFavorite.update(prev => !prev);
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.searchResults.set([]);
+    this.showDropdown.set(false);
+    this.isSearching.set(false);
   }
-
-  sparkline = {
-    series: [{
-      name: 'BTC',
-      data: [
-        { x: new Date('2025-01-01').getTime(), y: 42000 },
-        { x: new Date('2025-02-01').getTime(), y: 43500 },
-        { x: new Date('2025-03-01').getTime(), y: 41000 },
-        { x: new Date('2025-04-01').getTime(), y: 45000 },
-        { x: new Date('2025-05-01').getTime(), y: 44200 },
-        { x: new Date('2025-06-01').getTime(), y: 46800 },
-        { x: new Date('2025-07-01').getTime(), y: 47500 },
-        { x: new Date('2025-08-01').getTime(), y: 46000 },
-        { x: new Date('2025-09-01').getTime(), y: 48000 },
-        { x: new Date('2025-10-01').getTime(), y: 66809 },
-      ]
-    }],
-    chart: {
-      type: 'area' as const,
-      height: 60,
-      sparkline: { enabled: true },
-      toolbar: { show: false },
-      background: 'transparent',
-      animations: { enabled: true }
-    },
-    stroke: { curve: 'smooth' as const, width: 3 },
-    colors: ['#f97316'],
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shade: 'dark',
-        type: 'vertical',
-        gradientToColors: ['#ea580c'],
-        opacityFrom: 0.35,
-        opacityTo: 0.02
-      }
-    },
-    tooltip: {
-      theme: 'dark',
-      enabled: true,
-      x: {
-        show: true,
-        format: 'dd MMM yyyy'
-      },
-      y: {
-        formatter: (val: number) => `${val.toLocaleString('es-ES')}€`
-      }
-    },
-    markers: {
-      size: 0,
-      hover: { size: 4 }
-    },
-    grid: { show: false },
-    xaxis: {
-      type: 'datetime' as const,
-      labels: { show: false },
-      axisBorder: { show: false },
-      axisTicks: { show: false }
-    },
-    yaxis: { labels: { show: false } }
-  };
-  
 }

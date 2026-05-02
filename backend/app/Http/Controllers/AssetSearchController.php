@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Symbol;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -16,104 +17,111 @@ class AssetSearchController extends Controller
         ]);
 
         $query = $request->q;
-        $results = [];
 
+        // buscar primero en BD
+        $local = Symbol::where('symbol', 'ilike', "%{$query}%")
+            ->orWhere('name', 'ilike', "%{$query}%")
+            ->limit(8)
+            ->get()
+            ->map(fn($s) => [
+                'symbol'     => $s->symbol,
+                'name'       => $s->name,
+                'api_id'     => $s->api_id,
+                'image_url'  => $s->image_url,
+                'asset_type' => $s->asset_type,
+                'source'     => 'local',
+            ])
+            ->toArray();
+
+        // si hay suficientes resultados locales, devolver directamente
+        if (count($local) >= 4) {
+            return response()->json($local);
+        }
+
+        // buscar en APIs externas solo si faltan resultados
+        $externalResults = [];
+        $localSymbols = array_column($local, 'symbol');
+
+        // CoinGecko para crypto
         try {
             $cgResponse = Http::get('https://api.coingecko.com/api/v3/search', [
                 'query' => $query
             ]);
 
             if ($cgResponse->successful()) {
-                $coins = array_slice($cgResponse->json('coins', []), 0, 4); 
+                $coins = array_slice($cgResponse->json('coins', []), 0, 4);
                 foreach ($coins as $coin) {
-                    $results[] = [
-                        'symbol' => strtoupper($coin['symbol']),
-                        'name' => $coin['name'],
-                        'api_id' => $coin['api_symbol'],
-                        'image_url' => $coin['large'] ?? $coin['thumb'] ?? null,
-                        'asset_type' => 'crypto',
-                    ];
+                    $sym = strtoupper($coin['symbol']);
+                    if (!in_array($sym, $localSymbols)) {
+                        $externalResults[] = [
+                            'symbol'     => $sym,
+                            'name'       => $coin['name'],
+                            'api_id'     => $coin['api_symbol'],
+                            'image_url'  => $coin['large'] ?? $coin['thumb'] ?? null,
+                            'asset_type' => 'crypto',
+                            'source'     => 'api'
+                        ];
+                    }
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error CoinGecko: ' . $e->getMessage());
+            Log::error('Error CoinGecko search: ' . $e->getMessage());
         }
 
+        // Twelve Data para acciones
         try {
             $tdResponse = Http::get('https://api.twelvedata.com/symbol_search', [
-                'symbol' => $query,
+                'symbol'     => $query,
                 'outputsize' => 10,
             ]);
 
             if ($tdResponse->successful() && isset($tdResponse->json()['data'])) {
-                $stocks = $tdResponse->json()['data'];
-                
                 $addedSymbols = [];
-                $stockResults = [];
-                
-                foreach ($stocks as $stock) {
+                foreach ($tdResponse->json()['data'] as $stock) {
                     $sym = strtoupper($stock['symbol']);
-                    
-                    if (!in_array($sym, $addedSymbols)) {
-                        $stockResults[] = [
-                            'symbol' => $sym,
-                            'name' => $stock['instrument_name'],
-                            'api_id' => $stock['symbol'],
-                            'image_url' => null, 
+                    if (!in_array($sym, $localSymbols) && !in_array($sym, $addedSymbols)) {
+                        $externalResults[] = [
+                            'symbol'     => $sym,
+                            'name'       => $stock['instrument_name'],
+                            'api_id'     => $stock['symbol'],
+                            'image_url'  => null,
                             'asset_type' => 'stock',
+                            'source'     => 'api',
                         ];
-                        
                         $addedSymbols[] = $sym;
                     }
-                    
-                    if (count($stockResults) >= 4) {
-                        break;
-                    }
+                    if (count($externalResults) >= 4) break;
                 }
-                
-                $results = array_merge($results, $stockResults);
             }
         } catch (\Exception $e) {
-            Log::error('Error Twelve Data: ' . $e->getMessage());
+            Log::error('Error Twelve Data search: ' . $e->getMessage());
         }
 
-        return response()->json($results);
+        return response()->json(array_merge($local, $externalResults));
     }
 
-    public function history(Request $request)
+    // Se llama cuando el usuario confirma añadir el activo
+    public function store(Request $request)
     {
         $request->validate([
-            'api_id' => 'required|string',
-            'asset_type' => 'required|in:crypto,stock',
-            'date' => 'required|date_format:Y-m-d',
+            'symbol'     => 'required|string|max:20',
+            'name'       => 'required|string|max:100',
+            'api_id'     => 'required|string|max:100',
+            'image_url'  => 'nullable|string',
+            'asset_type' => 'required|in:crypto,stock,etf',
         ]);
 
-        $date = Carbon::parse($request->date);
-        $price = 0;
+        $symbol = Symbol::firstOrCreate(
+            ['symbol' => strtoupper($request->symbol)],
+            [
+                'name'         => $request->name,
+                'api_id'       => $request->api_id,
+                'image_url'    => $request->image_url,
+                'asset_type'   => $request->asset_type,
+                'last_updated' => Carbon::now(),
+            ]
+        );
 
-        if ($request->asset_type === 'crypto') {
-            $formattedDate = $date->format('d-m-Y');
-            $response = Http::get("https://api.coingecko.com/api/v3/coins/{$request->api_id}/history", [
-                'date' => $formattedDate,
-                'localization' => 'false'
-            ]);
-
-            if ($response->successful() && isset($response->json()['market_data']['current_price']['usd'])) {
-                $price = $response->json()['market_data']['current_price']['usd'];
-            }
-        } else {
-            $tdApiKey = env('TWELVEDATA_API_KEY');
-            $response = Http::get('https://api.twelvedata.com/eod', [
-                'symbol' => $request->api_id,
-                'date' => $date->format('Y-m-d'),
-                'apikey' => $tdApiKey
-            ]);
-
-            if ($response->successful() && isset($response->json()['close'])) {
-                $price = (float) $response->json()['close'];
-            }
-        }
-
-        return response()->json(['price' => $price]);
+        return response()->json($symbol, 201);
     }
 }

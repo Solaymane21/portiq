@@ -1,32 +1,328 @@
-<div class="flex justify-between">
+<div class="flex justify-between items-center mb-6">
   <h1 class="text-3xl font-ibm">Favoritos</h1>
+  <div class="relative w-fit">
+    <select
+      class="appearance-none bg-neutral-950 border border-neutral-600 rounded-xl px-3 py-2 pr-8 outline-none cursor-pointer"
+    >
+      <option value="all">Todos</option>
+      <option value="stocks">Acciones</option>
+      <option value="crypto">Criptomonedas</option>
+      <option value="etf">ETF</option>
+    </select>
+    <span class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-orange-500">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+      </svg>
+    </span>
+  </div>
+</div>
+
+<!-- Buscador para añadir favoritos -->
+<div class="relative mb-6">
+  <div class="flex items-center gap-2 bg-neutral-950 border border-neutral-600 rounded-full px-4 py-2 focus-within:border-orange-500">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 text-neutral-400 shrink-0">
+      <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
+    </svg>
+    <input
+      type="text"
+      [(ngModel)]="searchQuery"
+      (ngModelChange)="onSearch($event)"
+      (focus)="showDropdown.set(true)"
+      placeholder="Busca un activo para añadir a favoritos..."
+      class="flex-1 bg-transparent outline-none text-neutral-100 placeholder:text-neutral-500 text-sm"
+    />
+    @if (isSearching()) {
+      <div class="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin shrink-0"></div>
+    }
+  </div>
+
+  <!-- Dropdown resultados -->
+  @if (showDropdown() && searchResults().length > 0) {
+    <div class="absolute top-full left-0 right-0 mt-1 bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden z-50 shadow-xl">
+      @for (result of searchResults(); track result.symbol) {
+        <div
+          class="flex items-center justify-between px-4 py-3 hover:bg-neutral-800 cursor-pointer transition-colors"
+          (click)="addToFavorites(result)"
+        >
+          <div class="flex items-center gap-3">
+            @if (result.image) {
+              <img [src]="result.image" class="h-7 w-7 rounded-full object-cover" />
+            } @else {
+              <div class="h-7 w-7 rounded-full bg-neutral-700 flex items-center justify-center text-xs font-bold text-orange-400">
+                {{ result.symbol[0] }}
+              </div>
+            }
+            <div>
+              <p class="text-sm text-neutral-100">{{ result.name }}</p>
+              <p class="text-xs text-neutral-400 uppercase">{{ result.symbol }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-neutral-400 uppercase bg-neutral-800 px-2 py-0.5 rounded-full">
+              {{ result.type }}
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 text-orange-500">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Sin resultados -->
+  @if (showDropdown() && searchQuery.length > 1 && searchResults().length === 0 && !isSearching()) {
+    <div class="absolute top-full left-0 right-0 mt-1 bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-3 z-50">
+      <p class="text-sm text-neutral-400">No se encontraron activos para "{{ searchQuery }}"</p>
+    </div>
+  }
 </div>
 
 <div class="grid grid-cols-3 gap-4 mt-5 mb-5">
-    <div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-5">
-        <p class="text-sm text-neutral-400 mb-3">Favoritos</p>
-        <span class="text-2xl font-bold text-neutral-100">4</span>
+    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+        <p class="mb-3">Favoritos</p>
+        <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">6</p>
     </div>
-    <div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-5">
-        <p class="text-sm text-neutral-400 mb-3">Mejor hoy</p>
-        <span class="text-2xl text-neutral-100">NVDA +2.01%</span>
+    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+        <p class="mb-3">Mejor hoy</p>
+        <p class="text-3xl font-ibm font-bold text-green-500 text-center">
+            BTC +6,7%
+        </p>
     </div>
-    <div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-5">
-        <p class="text-sm text-neutral-400 mb-3">Peor hoy</p>
-        <span class="text-2xl text-neutral-100">BTC -5.0%</span>
+    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+        <p class="mb-3">Peor hoy</p>
+        <p class="text-3xl font-ibm font-bold text-red-500 text-center">
+            SOL -6,7%
+        </p>
     </div>
 </div>
-<div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mt-5 mb-5">
-    <div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-5">
-        <p class="text-sm text-neutral-400 mb-3">Favoritos</p>
-        <span class="text-2xl font-bold text-neutral-100">4</span>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5 mb-5">
+    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-5 font-ibm">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <img src="https://coin-images.coingecko.com/coins/images/1/large/bitcoin.png?1696501400" class="h-10">
+                <div>
+                    <p>Bitcoin</p>
+                    <p class="text-sm text-neutral-400">BTC</p>
+                </div>
+            </div>
+            <button class="text-orange-500 cursor-pointer" (click)="updateFavorite()">
+                @if(isFavorite()) {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                    <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+                </svg>
+                } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                    </svg>                
+                }
+            </button>
+        </div>
+        <div class="flex justify-between items-center mt-3">
+            <p class="text-2xl">66809€</p>
+            <div class="w-40 h-20">
+                <apx-chart
+                    [series]="sparkline.series"
+                    [chart]="sparkline.chart"
+                    [stroke]="sparkline.stroke"
+                    [fill]="sparkline.fill"
+                    [colors]="sparkline.colors"
+                    [tooltip]="sparkline.tooltip"
+                    [grid]="sparkline.grid"
+                    [xaxis]="sparkline.xaxis"
+                    [yaxis]="sparkline.yaxis"
+                ></apx-chart>
+            </div>
+        </div>
     </div>
-    <div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-5">
-        <p class="text-sm text-neutral-400 mb-3">Favoritos</p>
-        <span class="text-2xl font-bold text-neutral-100">4</span>
+    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-5 font-ibm">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <img src="https://coin-images.coingecko.com/coins/images/279/large/ethereum.png?1696501628" class="h-10">
+                <div>
+                    <p>Ethereum</p>
+                    <p class="text-sm text-neutral-400">ETH</p>
+                </div>
+            </div>
+            <button class="text-orange-500 cursor-pointer" (click)="updateFavorite()">
+                @if(isFavorite()) {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                    <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+                </svg>
+                } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                    </svg>                
+                }
+            </button>
+        </div>
+        <div class="flex justify-between items-center mt-3">
+            <p class="text-2xl">2306.94€</p>
+            <div class="w-40 h-20">
+                <apx-chart
+                    [series]="sparkline.series"
+                    [chart]="sparkline.chart"
+                    [stroke]="sparkline.stroke"
+                    [fill]="sparkline.fill"
+                    [colors]="sparkline.colors"
+                    [tooltip]="sparkline.tooltip"
+                    [grid]="sparkline.grid"
+                    [xaxis]="sparkline.xaxis"
+                    [yaxis]="sparkline.yaxis"
+                ></apx-chart>
+            </div>
+        </div>
     </div>
-    <div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-5">
-        <p class="text-sm text-neutral-400 mb-3">Favoritos</p>
-        <span class="text-2xl font-bold text-neutral-100">4</span>
+    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-5 font-ibm">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <img src="https://coin-images.coingecko.com/coins/images/4128/large/solana.png?1718769756" class="h-10">
+                <div>
+                    <p>Solana</p>
+                    <p class="text-sm text-neutral-400">SOL</p>
+                </div>
+            </div>
+            <button class="text-orange-500 cursor-pointer" (click)="updateFavorite()">
+                @if(isFavorite()) {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                    <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+                </svg>
+                } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                    </svg>                
+                }
+            </button>
+        </div>
+        <div class="flex justify-between items-center mt-3">
+            <p class="text-2xl">83.96€</p>
+            <div class="w-40 h-20">
+                <apx-chart
+                    [series]="sparkline.series"
+                    [chart]="sparkline.chart"
+                    [stroke]="sparkline.stroke"
+                    [fill]="sparkline.fill"
+                    [colors]="sparkline.colors"
+                    [tooltip]="sparkline.tooltip"
+                    [grid]="sparkline.grid"
+                    [xaxis]="sparkline.xaxis"
+                    [yaxis]="sparkline.yaxis"
+                ></apx-chart>
+            </div>
+        </div>
+    </div>
+    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-5 font-ibm">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <img src="https://coin-images.coingecko.com/coins/images/1/large/bitcoin.png?1696501400" class="h-10">
+                <div>
+                    <p>Bitcoin</p>
+                    <p class="text-sm text-neutral-400">BTC</p>
+                </div>
+            </div>
+            <button class="text-orange-500 cursor-pointer" (click)="updateFavorite()">
+                @if(isFavorite()) {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                    <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+                </svg>
+                } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                    </svg>                
+                }
+            </button>
+        </div>
+        <div class="flex justify-between items-center mt-3">
+            <p class="text-2xl">66809€</p>
+            <div class="w-40 h-20">
+                <apx-chart
+                    [series]="sparkline.series"
+                    [chart]="sparkline.chart"
+                    [stroke]="sparkline.stroke"
+                    [fill]="sparkline.fill"
+                    [colors]="sparkline.colors"
+                    [tooltip]="sparkline.tooltip"
+                    [grid]="sparkline.grid"
+                    [xaxis]="sparkline.xaxis"
+                    [yaxis]="sparkline.yaxis"
+                ></apx-chart>
+            </div>
+        </div>
+    </div>
+    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-5 font-ibm">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <img src="https://coin-images.coingecko.com/coins/images/279/large/ethereum.png?1696501628" class="h-10">
+                <div>
+                    <p>Ethereum</p>
+                    <p class="text-sm text-neutral-400">ETH</p>
+                </div>
+            </div>
+            <button class="text-orange-500 cursor-pointer" (click)="updateFavorite()">
+                @if(isFavorite()) {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                    <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+                </svg>
+                } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                    </svg>                
+                }
+            </button>
+        </div>
+        <div class="flex justify-between items-center mt-3">
+            <p class="text-2xl">2306.94€</p>
+            <div class="w-40 h-20">
+                <apx-chart
+                    [series]="sparkline.series"
+                    [chart]="sparkline.chart"
+                    [stroke]="sparkline.stroke"
+                    [fill]="sparkline.fill"
+                    [colors]="sparkline.colors"
+                    [tooltip]="sparkline.tooltip"
+                    [grid]="sparkline.grid"
+                    [xaxis]="sparkline.xaxis"
+                    [yaxis]="sparkline.yaxis"
+                ></apx-chart>
+            </div>
+        </div>
+    </div>
+    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-5 font-ibm">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <img src="https://coin-images.coingecko.com/coins/images/4128/large/solana.png?1718769756" class="h-10">
+                <div>
+                    <p>Solana</p>
+                    <p class="text-sm text-neutral-400">SOL</p>
+                </div>
+            </div>
+            <button class="text-orange-500 cursor-pointer" (click)="updateFavorite()">
+                @if(isFavorite()) {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                    <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+                </svg>
+                } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                    </svg>                
+                }
+            </button>
+        </div>
+        <div class="flex justify-between items-center mt-3">
+            <p class="text-2xl">83.96€</p>
+            <div class="w-40 h-20">
+                <apx-chart
+                    [series]="sparkline.series"
+                    [chart]="sparkline.chart"
+                    [stroke]="sparkline.stroke"
+                    [fill]="sparkline.fill"
+                    [colors]="sparkline.colors"
+                    [tooltip]="sparkline.tooltip"
+                    [grid]="sparkline.grid"
+                    [xaxis]="sparkline.xaxis"
+                    [yaxis]="sparkline.yaxis"
+                ></apx-chart>
+            </div>
+        </div>
     </div>
 </div>

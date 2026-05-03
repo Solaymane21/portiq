@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Portfolio;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class AdminController extends Controller
@@ -30,5 +31,53 @@ class AdminController extends Controller
         $user->delete();
 
         return response()->json(['message' => 'Usuario eliminado correctamente.']);
+    }
+
+    public function cancelUserSubscription(Request $request, int $userId)
+    {
+        if ($request->user()->email !== 'portiqinfo@gmail.com') {
+            return response()->json(['message' => 'No eres el admin.']);
+        }
+
+        $user = User::find($userId);
+
+        if(!$user) {
+            return response()->json(['message' => 'No existe el usuario']);
+        }
+
+        $subscription = $user->subscription('default');
+
+        if (!$subscription || !$subscription->active()) {
+            return response()->json(['message' => 'El usuario no tiene suscripción activa.']);
+        }
+
+        $subscription->cancel();
+        $user->update(['subscription_cancelled' => true]);
+
+        return response()->json(['message' => "Suscripción de {$user->name} cancelada correctamente."]);
+    }
+
+    public function resumeUserSubscription(Request $request, int $userId): JsonResponse
+    {
+        if ($request->user()->email !== 'portiqinfo@gmail.com') {
+            return response()->json(['message' => 'No eres el admin.']);
+        }
+        
+        $user = User::find($userId);
+
+        if (!$user) {
+            return response()->json(['message' => 'No existe el usuario.'], 404);
+        }
+
+        $subscription = $user->subscription('default');
+
+        if (!$subscription || !$subscription->onGracePeriod()) {
+            return response()->json(['message' => 'El usuario no tiene una suscripción cancelada para reanudar.'], 400);
+        }
+
+        $subscription->resume();
+        $user->update(['subscription_cancelled' => false]);
+
+        return response()->json(['message' => "Suscripción de {$user->name} reanudada correctamente."]);
     }
 }

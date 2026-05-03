@@ -9,6 +9,8 @@ import {CdkMenu, CdkMenuItem, CdkMenuTrigger} from '@angular/cdk/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { NotificationsService } from '../../services/notifications.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-admin',
@@ -20,7 +22,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 export class AdminComponent implements AfterViewInit, OnInit {
 
   //Tabla admin
-  displayedColumns = ['usuario', 'email', 'suscripcion', 'fecha_alta', 'acciones'];
+  displayedColumns = ['usuario', 'email', 'suscripcion', 'estado_suscripcion', 'ultimo_acceso', 'fecha_alta', 'acciones'];
 
   dataSource = new MatTableDataSource<User>([]);
 
@@ -28,7 +30,11 @@ export class AdminComponent implements AfterViewInit, OnInit {
   @ViewChild(MatSort) sort!: MatSort;
 
   adminService = inject(AdminService)
-  showLogoutModal = signal<boolean>(false)
+  notificationService = inject(NotificationsService)
+
+  showDeleteModal = signal<boolean>(false)
+  showCancelSubscriptionModal = signal<boolean>(false)
+  showResumeSubscriptionModal = signal<boolean>(false)
   userSelected = signal<User['id']>(0)
   totalUsers = signal<number>(0);
   loggedToday = signal<number>(0);
@@ -67,6 +73,11 @@ export class AdminComponent implements AfterViewInit, OnInit {
           return item.email?.toLowerCase() ?? '';
         case 'fecha_alta':
           return item.created_at ?? '';
+        case 'estado_suscripcion':
+          if (item.suscription_type !== 'premium') return '-';
+          return item.subscription_cancelled ? 'cancelada' : 'activa';
+        case 'ultimo_acceso':
+          return item.last_login_at ?? '';
         default:
           return (item as any)[sortHeaderId] ?? '';
         }
@@ -95,7 +106,8 @@ export class AdminComponent implements AfterViewInit, OnInit {
     this.adminService.deleteUser(this.userSelected()).subscribe({
       next: () => {
         this.adminService.isLoading.set(false)
-        this.showLogoutModal.set(false)
+        this.showDeleteModal.set(false)
+        this.notificationService.info(`Usuario eliminado correctamente`);
         this.loadUsers();
       },
       error: (err) => {
@@ -106,8 +118,52 @@ export class AdminComponent implements AfterViewInit, OnInit {
   }
 
   onDelete(id: User['id']) {
-    this.showLogoutModal.set(true)
+    this.showDeleteModal.set(true)
     this.userSelected.set(id)
+  }
+
+  onCancelSubscription(id: User['id']) {
+    this.showCancelSubscriptionModal.set(true)
+    this.userSelected.set(id)
+  }
+
+  cancelSubscription() {
+    this.adminService.isLoading.set(true)
+
+    this.adminService.cancelSubscription(this.userSelected()!).subscribe({
+      next: (res: any) => {
+        this.adminService.isLoading.set(false)
+        this.showCancelSubscriptionModal.set(false)
+        this.notificationService.info(res.message)
+        this.loadUsers();
+      },
+      error: (err) => {
+        this.adminService.isLoading.set(false)
+        console.error(err)
+      }
+    });
+  }
+
+  onResumeSubscription(id: User['id']) {
+    this.showResumeSubscriptionModal.set(true);
+    this.userSelected.set(id);
+  }
+
+  resumeSubscription() {
+    this.adminService.isLoading.set(true);
+
+    this.adminService.resumeSubscription(this.userSelected()!).subscribe({
+      next: (res: any) => {
+        this.adminService.isLoading.set(false);
+        this.showResumeSubscriptionModal.set(false);
+        this.notificationService.success(res.message)
+        this.loadUsers();
+      },
+      error: (err) => {
+        this.adminService.isLoading.set(false);
+        console.error(err);
+      }
+    });
   }
 
 }

@@ -78,8 +78,10 @@ Route::get('/prices', [MarketController::class, 'prices']);
 Route::get('/portfolio/value', [MarketController::class, 'portfolioValue']);
 Route::get('/history/{symbol}', [MarketController::class, 'history']);
 
-//Admmin
-Route::prefix('admin')->group(function() {
+//Admin
+Route::prefix('admin')->middleware('auth:sanctum')->group(function() {
     Route::get('/users', [AdminController::class, 'users']);
     Route::delete('/users/{id}', [AdminController::class, 'delete']);
+    Route::post('/users/{user}/subscription/cancel', [AdminController::class, 'cancelUserSubscription']);
+    Route::post('/users/{user}/subscription/resume', [AdminController::class, 'resumeUserSubscription']);
 });

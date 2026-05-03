@@ -71,6 +71,21 @@
           </td>
         </ng-container>
 
+        <ng-container matColumnDef="estado_suscripcion">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-transparent border-b border-neutral-800 text-xs uppercase tracking-wide text-neutral-100">
+            Estado suscripción
+          </th>
+          <td mat-cell *matCellDef="let user" class="border-b border-neutral-900 py-4">
+            @if (user.suscription_type === 'premium') {
+              <span class="text-neutral-100" [class.text]="!user.subscription_cancelled">
+                {{ user.subscription_cancelled ? 'Cancelada' : 'Activa' }}
+              </span>
+            } @else {
+              <span class="text-neutral-100">-</span>
+            }
+          </td>
+        </ng-container>
+
         <ng-container matColumnDef="fecha_alta">
           <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-transparent border-b border-neutral-800 text-xs uppercase tracking-wide text-neutral-100">
             Fecha de alta
@@ -79,6 +94,15 @@
             <span class="text-neutral-100">
               {{ user.created_at  | date:'dd/MM/yyyy HH:mm' }}
             </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="ultimo_acceso">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-transparent border-b border-neutral-800 text-xs uppercase tracking-wide text-neutral-100">
+            Último acceso
+          </th>
+          <td mat-cell *matCellDef="let user" class="border-b border-neutral-900 py-4 text-sm text-neutral-300">
+            {{ user.last_login_at ? (user.last_login_at | date:'dd/MM/yyyy HH:mm') : '—' }}
           </td>
         </ng-container>
 
@@ -94,6 +118,28 @@
                 class="mt-2 min-w-[180px] bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-xl"
                 cdkMenu
               >
+                @if (user?.suscription_type === 'premium') {
+                  @if (!user.subscription_cancelled) {
+                    <button
+                      (click)="onCancelSubscription(user.id)"
+                      class="w-full flex items-center gap-2 px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white"
+                      cdkMenuItem
+                    >
+                      Cancelar suscripción
+                    </button>
+                  } @else {
+                    <button
+                      (click)="onResumeSubscription(user.id)"
+                      class="w-full flex items-center gap-2 px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white"
+                      cdkMenuItem
+                    >
+                      Reanudar suscripción
+                    </button>
+                  }
+
+                  <div class="h-px bg-neutral-700/60 mx-3"></div>
+                }
+
                 <button
                   (click)="onDelete(user.id)"
                   class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-neutral-800"
@@ -105,17 +151,6 @@
                   Borrar usuario
                 </button>
 
-                <div class="h-px bg-neutral-700/60 mx-3"></div>
-
-                <button
-                  class="w-full flex items-center gap-2 px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white"
-                  cdkMenuItem
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-4 text-neutral-400">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
-                  </svg>
-                  Cancelar suscripción
-                </button>
               </div>
             </ng-template>
 
@@ -128,11 +163,12 @@
     </div>
   </div>
 </section>
-@if (showLogoutModal()) {
+
+@if (showDeleteModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center rounded">
     <div
       class="absolute inset-0 bg-black/50"
-      (click)="showLogoutModal.set(false)">
+      (click)="showDeleteModal.set(false)">
     </div>
 
     <div class="relative bg-neutral-950 border border-neutral-600 rounded p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
@@ -143,9 +179,9 @@
 
       <div class="flex gap-3">
         <button
-          (click)="showLogoutModal.set(false)"
+          (click)="showDeleteModal.set(false)"
           class="w-1/2 bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black">
-          Cancelar
+          Volver
         </button>
         <button
           (click)="deleteUser()"
@@ -154,6 +190,72 @@
             <mat-spinner diameter="20"></mat-spinner>
           } @else {
             Borrar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showCancelSubscriptionModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center rounded">
+    <div
+      class="absolute inset-0 bg-black/50"
+      (click)="showCancelSubscriptionModal.set(false)">
+    </div>
+
+    <div class="relative bg-neutral-950 border border-neutral-600 rounded p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+      <div class="flex flex-col items-center gap-2 text-center">
+        <h2 class="text-xl">¿Estás seguro de qué quieres cancelar la suscripción?</h2>
+        <p class="text-sm text-neutral-400">La suscripción será cancelada a final del periodo.</p>
+      </div>
+
+      <div class="flex gap-3">
+        <button
+          (click)="showCancelSubscriptionModal.set(false)"
+          class="w-1/2 bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black">
+          Volver
+        </button>
+        <button
+          (click)="cancelSubscription()"
+          class="w-1/2 bg-red-600 hover:bg-red-600/80 flex justify-center rounded-md py-2 text-white">
+          @if (this.adminService.isLoading()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            Cancelar suscripción
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showResumeSubscriptionModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center rounded">
+    <div
+      class="absolute inset-0 bg-black/50"
+      (click)="showResumeSubscriptionModal.set(false)">
+    </div>
+
+    <div class="relative bg-neutral-950 border border-neutral-600 rounded p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+      <div class="flex flex-col items-center gap-2 text-center">
+        <h2 class="text-xl">¿Reanudar la suscripción?</h2>
+        <p class="text-sm text-neutral-400">La suscripción del usuario será reactivada.</p>
+      </div>
+
+      <div class="flex gap-3">
+        <button
+          (click)="showResumeSubscriptionModal.set(false)"
+          class="w-1/2 bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black">
+          Volver
+        </button>
+        <button
+          (click)="resumeSubscription()"
+          class="w-1/2 bg-orange-500 hover:opacity-80 flex justify-center rounded-md py-2 text-white">
+          @if (adminService.isLoading()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            Reanudar
           }
         </button>
       </div>

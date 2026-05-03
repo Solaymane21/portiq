@@ -7,6 +7,7 @@ export interface User {
   google_id?: string | null;
   verify_code?: string | null;
   suscription_type?: 'free' | 'premium';
+  subscription_cancelled: boolean;
   last_login_at?: string | null;
   is_admin?: boolean;
   created_at?: string;

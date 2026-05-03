@@ -61,7 +61,7 @@ export class FavoritesComponent implements OnInit {
   ngOnInit(): void {
     this.favoritesService.load();
 
-    interval(15000).pipe(
+    interval(30000).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       const favs = this.favorites();
@@ -142,7 +142,6 @@ export class FavoritesComponent implements OnInit {
   }
 
   buildSparkline(fav: Favorite, history: any) {
-    // history.data ya viene como [{x: timestamp_ms, y: price}]
     const data = history?.data ?? [];
 
     return {
@@ -163,7 +162,7 @@ export class FavoritesComponent implements OnInit {
       tooltip: {
         theme: 'dark',
         enabled: true,
-        x: { show: true, format: 'dd MMM yyyy' },
+        x: { show: true, format: 'dd/MM/yyyy' },
         y: { formatter: (v: number) => `${v.toLocaleString('es-ES', { minimumFractionDigits: 2 })}€` }
       },
       markers: { size: 0, hover: { size: 4 } },

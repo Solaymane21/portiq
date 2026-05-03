@@ -53,7 +53,7 @@ export class SettingsService {
         this.isLoading.set(false)
       },
       error: (err) => {
-        console.error(err)
+        this.notificationService.error(err.error.message)
         this.isLoading.set(false)
       }
     });

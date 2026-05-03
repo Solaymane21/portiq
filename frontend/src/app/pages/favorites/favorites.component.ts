@@ -203,10 +203,7 @@ export class FavoritesComponent implements OnInit {
   }
 
   addToFavorites(result: SearchResult): void {
-    this.favoritesService.add(result).subscribe({
-      next: (res: any) => this.notificationService.info(`Has añadido a favoritos a ${res?.name} (${res?.symbol})`),
-      error: () => this.notificationService.error('No se pudo añadir a favoritos')
-    });
+    this.favoritesService.add(result).subscribe();
     this.searchQuery = '';
     this.searchResults.set([]);
     this.showDropdown.set(false);
@@ -221,9 +218,8 @@ export class FavoritesComponent implements OnInit {
 
     this.deletingIds.update(ids => new Set(ids).add(symbolId));
 
-    this.favoritesService.remove(symbolId).subscribe({
-      next: (res: any) => {
-        this.notificationService.info(`${fav?.name} (${fav?.symbol}) quitado de favoritos`);
+    this.favoritesService.remove(symbolId, fav?.name, fav?.symbol).subscribe({
+      next: () => {
         this.sparklines.delete(symbolId);
         this.deletingIds.update(ids => {
           const next = new Set(ids);

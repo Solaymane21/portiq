@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { SearchResult } from '../models/search.model';
+import { NotificationsService } from './notifications.service';
 
 export interface Favorite {
   id: number;
@@ -20,6 +21,7 @@ export class FavoritesService {
 
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8000/api';
+  private notificationService = inject(NotificationsService)
 
   favorites = signal<Favorite[]>([]);
   loaded = signal<boolean>(false);
@@ -43,21 +45,33 @@ export class FavoritesService {
   }
 
   add(result: SearchResult): Observable<Favorite> {
+    if (this.isFavorite(result.symbol)) {
+      return new Observable();
+    }
+
     return this.http.post<Favorite>(`${this.apiUrl}/favorites`, result).pipe(
-      tap((newFav) => {
-        // actualizar signal
-        this.favorites.update(favs => [...favs, newFav]);
+      tap({
+        next: (newFav) => {
+          this.favorites.update(favs => [...favs, newFav]);
+          this.notificationService.success(`Has añadido a favoritos a ${newFav?.name} (${newFav?.symbol})`);
+        },
+        error: () => {
+          this.notificationService.error('No se pudo añadir a favoritos');
+        }
       })
     );
   }
 
-  remove(symbolId: number): Observable<any> {
+  remove(symbolId: number, name?: string, symbol?: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/favorites/${symbolId}`).pipe(
-      tap(() => {
-        // actualizar signal
-        this.favorites.update(favs =>
-          favs.filter(f => f.symbol_id !== symbolId)
-        );
+      tap({
+        next: () => {
+          this.favorites.update(favs => favs.filter(f => f.symbol_id !== symbolId));
+          this.notificationService.info(`${name} (${symbol}) quitado de favoritos`);
+        },
+        error: () => {
+          this.notificationService.error('No se pudo quitar de favoritos');
+        }
       })
     );
   }

@@ -12,6 +12,7 @@ export interface Investment {
   return_7d?: number;
   asset_type?: 'stock' | 'crypto' | string;
   name?: string;
+  api_id?: string;
 }
 
 export interface InvestmentsResponse {

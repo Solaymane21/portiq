@@ -40,6 +40,7 @@ class InvestmentController extends Controller
                 'name' => $symbol->name,
                 'asset_type' => $symbol->asset_type,
                 'image_url' => $symbol->image_url,
+                'api_id' => $symbol->api_id,
                 'current_price' => $currentPrice,
                 'value' => $currentValue,
                 'weight' => 0,

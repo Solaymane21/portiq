@@ -344,6 +344,12 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
     const apiId = this.posicionForm.get('api_id')?.value;
     const assetType = this.posicionForm.get('asset_type')?.value;
 
+    console.log('histórico', {
+  apiId: this.posicionForm.get('api_id')?.value,
+  assetType: this.posicionForm.get('asset_type')?.value,
+  fecha
+});
+
     if (fecha && apiId && assetType) {
       this.buscandoPrecio.set(true);
       
@@ -369,6 +375,9 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
   private prepararModal(modo: 'create' | 'buy' | 'sell', activo?: Investment) {
     this.modalModo.set(modo);
     this.modalPaso.set(modo === 'create' ? 'search' : 'details');
+
+    console.log('activo', activo);
+    console.log('api_id', activo?.api_id);
     
     if (modo === 'create') {
       this.busqueda.set('');
@@ -392,10 +401,31 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
       name: activo?.name ?? (activo?.symbol ?? ''),
       asset_type: activo?.asset_type ?? 'crypto',
       image_url: activo?.image_url ?? '',
-      api_id: activo?.symbol ?? '',
+      api_id: activo?.api_id ?? '',
       operated_at: today,
       quantity: null,
       price: null
+    }, { emitEvent: false });
+
+    queueMicrotask(() => {
+      const apiId = this.posicionForm.get('api_id')?.value;
+      const assetType = this.posicionForm.get('asset_type')?.value;
+      const fecha = this.posicionForm.get('operated_at')?.value;
+
+      if (apiId && assetType && fecha) {
+        this.investmentService.getHistoricalPrice(apiId, assetType, fecha).subscribe({
+          next: (res: any) => {
+            if (res && res.price && res.price > 0) {
+              this.posicionForm.patchValue({ price: res.price }, { emitEvent: false });
+            } else {
+              this.posicionForm.patchValue({ price: null }, { emitEvent: false });
+            }
+          },
+          error: () => {
+            this.posicionForm.patchValue({ price: null }, { emitEvent: false });
+          }
+        });
+      }
     });
 
     this.modalAbierto.set(true);

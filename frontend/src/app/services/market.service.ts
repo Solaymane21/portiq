@@ -34,4 +34,21 @@ export class MarketService {
   storeSymbol(result: SearchResult): Observable<any> {
     return this.http.post(`${this.apiUrl}/assets/store`, result);
   }
+
+  private CRYPTO_SYMBOLS = ['BTC', 'ETH', 'SOL', 'ADA', 'DOGE', 'XRP', 'BNB', 'AVAX', 'MATIC', 'DOT'];
+
+  isCrypto(symbol: string): boolean {
+    const clean = symbol.replace(/-USD$/i, '').toUpperCase();
+    return this.CRYPTO_SYMBOLS.includes(clean) || symbol.toUpperCase().endsWith('-USD');
+  }
+
+  coinGeckoId(symbol: string): string {
+    const map: Record<string, string> = {
+      btc: 'bitcoin', eth: 'ethereum', sol: 'solana',
+      ada: 'cardano', doge: 'dogecoin', xrp: 'ripple',
+      bnb: 'binancecoin', avax: 'avalanche-2', dot: 'polkadot',
+    };
+    return map[symbol] ?? symbol;
+  }
+
 }

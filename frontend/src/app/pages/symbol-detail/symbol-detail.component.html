@@ -1,5 +1,4 @@
 
-
   <!-- Volver -->
   <button (click)="goBack()"
     class="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors mb-6 text-sm">
@@ -11,22 +10,32 @@
 
   <!-- Header -->
   @if (loadingInfo()) {
-    <div class="flex justify-between items-start mb-8 animate-pulse">
+    <div class="flex justify-between items-start mb-6 animate-pulse">
       <div class="space-y-2">
-        <div class="h-8 w-32 bg-neutral-800 rounded-lg"></div>
-        <div class="h-4 w-48 bg-neutral-800 rounded"></div>
+        <div class="h-8 w-32 bg-neutral-600 rounded-lg"></div>
+        <div class="h-4 w-48 bg-neutral-600 rounded"></div>
       </div>
       <div class="space-y-2 text-right">
-        <div class="h-9 w-28 bg-neutral-800 rounded-lg ml-auto"></div>
-        <div class="h-4 w-20 bg-neutral-800 rounded ml-auto"></div>
+        <div class="h-9 w-28 bg-neutral-600 rounded-lg ml-auto"></div>
+        <div class="h-4 w-20 bg-neutral-600 rounded ml-auto"></div>
       </div>
     </div>
   } @else if (info()) {
-    <div class="flex flex-wrap justify-between items-start gap-4 mb-8">
+    <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
       <div>
         <div class="flex items-center gap-3 mb-1">
-          <h1 class="font-mono text-3xl font-bold">{{ symbol() }}</h1>
-          <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400">
+
+          <div class="w-10 h-10 rounded-full bg-neutral-800 shrink-0 flex items-center justify-center overflow-hidden">
+            <img
+              [src]="getLogoUrl(symbol())"
+              [alt]="symbol()"
+              (error)="onImgError($event)"
+              class="w-10 h-10 object-contain"
+            />
+          </div>
+
+          <h1 class="font-ibm text-3xl font-bold">{{ symbol() }}</h1>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-600/15 text-orange-500">
             {{ info()!.type }}
           </span>
         </div>
@@ -36,14 +45,14 @@
         }
       </div>
       <div class="text-right">
-        <p class="text-4xl font-bold tracking-tight">
+        <p class="font-ibm text-4xl font-bold tracking-tight">
           {{ info()!.price | number:'1.2-2' }}
           <span class="text-lg text-neutral-400 ml-1">{{ info()!.currency }}</span>
         </p>
         @if (chartOptions.series) {
           <p class="text-sm mt-1 font-medium"
-            [class.text-emerald-400]="changeData.positive"
-            [class.text-red-400]="!changeData.positive">
+            [class.text-emerald-500]="changeData.positive"
+            [class.text-red-500]="!changeData.positive">
             {{ changeData.positive ? '+' : '' }}{{ changeData.value }}
             ({{ changeData.positive ? '+' : '' }}{{ changeData.percent }}%)
             · {{ selectedPeriod() }}
@@ -53,28 +62,25 @@
     </div>
   }
 
-  <!-- Selector de período -->
-  <div class="flex gap-2 mb-4">
-    @for (p of periods; track p) {
-      <button (click)="selectPeriod(p)"
-        class="px-3 py-1 rounded-full text-sm font-medium transition-colors"
-        [class.bg-blue-600]="selectedPeriod() === p"
-        [class.text-white]="selectedPeriod() === p"
-        [class.bg-neutral-800]="selectedPeriod() !== p"
-        [class.text-neutral-400]="selectedPeriod() !== p">
-        {{ p }}
-      </button>
-    }
-  </div>
-
   <!-- Grafica -->
-  <div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-4 mb-6">
+  <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-5 mb-5">
+
+    <!-- Selector periodo -->
+    <div class="flex justify-end gap-1 mb-2">
+      @for (p of periods; track p) {
+        <button (click)="selectPeriod(p)"
+          class="px-2.5 py-0.5 rounded-md transition-colors"
+          [class.bg-orange-600]="selectedPeriod() === p"
+          [class.text-white]="selectedPeriod() === p"
+          [class.text-neutral-400]="selectedPeriod() !== p">
+          {{ p }}
+        </button>
+      }
+    </div>
+
     @if (loadingChart()) {
-      <div class="h-[320px] flex items-center justify-center">
-        <svg class="animate-spin size-8 text-blue-500" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" fill="currentColor"/>
-        </svg>
+      <div class="h-[250px] flex items-center justify-center">
+        <div class="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     } @else {
       <apx-chart
@@ -91,4 +97,3 @@
       />
     }
   </div>
-

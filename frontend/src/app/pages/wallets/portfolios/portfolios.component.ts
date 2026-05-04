@@ -12,18 +12,17 @@ import { Portfolio } from '../../../models/portfolio.model';
 })
 export class PortfoliosComponent implements OnInit {
   // --- 1. DEPENDENCIAS ---
-  private router = inject(Router); 
+  private router = inject(Router);
   private portfolioService = inject(PortfolioService);
 
   // --- 2. ESTADO (SIGNALS) ---
-  // UI
   viewMode = signal<'list' | 'grid'>('list');
-  isLoading = signal(true); 
+  isLoading = signal(true);
+  isSubmitting = signal(false);
   isModalOpen = signal(false);
   isDeleteModalOpen = signal(false);
   modoFormulario = signal<'create' | 'edit'>('create');
-  
-  // Datos
+
   misCarteras = signal<Portfolio[]>([]);
   carteraSeleccionada = signal<Portfolio | null>(null);
 
@@ -34,15 +33,15 @@ export class PortfoliosComponent implements OnInit {
     is_public: new FormControl(false)
   });
 
-  // --- 4. CICLO DE VIDA ---
+  // --- 4. INICIALIZACION ---
   ngOnInit() {
     this.cargarPreferenciasVista();
     this.cargarCarteras();
   }
 
-  // --- 5. PETICIONES A LA API (LÓGICA DE NEGOCIO) ---
+  // --- 5. PETICIONES A LA API ---
   cargarCarteras() {
-    this.isLoading.set(true); 
+    this.isLoading.set(true);
     this.portfolioService.getPortfolios().subscribe({
       next: (data) => {
         this.misCarteras.set(data as Portfolio[]);
@@ -68,12 +67,17 @@ export class PortfoliosComponent implements OnInit {
       ? this.portfolioService.createPortfolio(data)
       : this.portfolioService.updatePortfolio(this.carteraSeleccionada()!.id, data);
 
+    this.isSubmitting.set(true); // ← NUEVO
     peticion$.subscribe({
       next: () => {
+        this.isSubmitting.set(false); // ← NUEVO
         this.cerrarModal();
         this.cargarCarteras();
       },
-      error: (err) => console.error('Error al guardar cartera:', err)
+      error: (err) => {
+        console.error('Error al guardar cartera:', err);
+        this.isSubmitting.set(false); // ← NUEVO
+      }
     });
   }
 
@@ -81,12 +85,17 @@ export class PortfoliosComponent implements OnInit {
     const seleccionada = this.carteraSeleccionada();
     if (!seleccionada) return;
 
+    this.isSubmitting.set(true); // ← NUEVO
     this.portfolioService.deletePortfolio(seleccionada.id).subscribe({
       next: () => {
+        this.isSubmitting.set(false); // ← NUEVO
         this.cerrarModalEliminar();
         this.cargarCarteras();
       },
-      error: (err) => console.error('Error al eliminar cartera:', err)
+      error: (err) => {
+        console.error('Error al eliminar cartera:', err);
+        this.isSubmitting.set(false); // ← NUEVO
+      }
     });
   }
 
@@ -120,7 +129,7 @@ export class PortfoliosComponent implements OnInit {
   }
 
   irACartera(carteraId: number) {
-    this.router.navigate(['/app/wallets', carteraId]); 
+    this.router.navigate(['/app/wallets', carteraId]);
   }
 
   // --- 7. MÉTODOS PRIVADOS AUXILIARES ---

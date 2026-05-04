@@ -87,9 +87,9 @@
               @switch (col.def) {
                 @case ('symbol') {
                   <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-8 h-8 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center border border-neutral-700 shrink-0">
+                    <div class="w-8 h-8 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center border border-neutral-600">
                       @if (element.image_url) {
-                        <img [src]="element.image_url" [alt]="element.symbol" class="w-full h-full object-cover" />
+                        <img [src]="element.image_url" [alt]="element.symbol" class="w-full h-full object-contain p-1.5" />
                       } @else {
                         <span class="text-xs font-bold text-white">{{ getInitial(element.symbol) }}</span>
                       }
@@ -97,7 +97,7 @@
                     <span class="font-medium text-white truncate">{{ element.symbol }}</span>
                   </div>
                 }
-                @case ('value') { {{ formatNumber(element.value, 0) }}€ }
+                @case ('value') { {{ formatNumber(element.value, 2  ) }}€ }
                 @case ('weight') { {{ formatNumber(element.weight, 2) }}% }
                 @case ('return_7d') { {{ (element.return_7d ?? 0) >= 0 ? '+' : '' }}{{ formatNumber(element.return_7d, 2) }}% }
                 @case ('quantity') { {{ formatNumber(element.quantity, 8) }} }
@@ -149,201 +149,208 @@
     <mat-paginator
       [pageSize]="5"
       showFirstLastButtons
-      class="border-t !border-neutral-600 !bg-neutral-950 !text-neutral-400">
+      class="border-t !border-neutral-600 !bg-neutral-950 !text-neutral-500">
     </mat-paginator>
   </div>
+</div>
 
-  @if (modalAbierto()) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div class="bg-neutral-900 border border-neutral-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-        <div class="flex justify-between items-center p-6 border-b border-neutral-800">
-          <div>
-            <h3 class="text-xl font-medium text-white font-ibm">{{ getModalTitle() }}</h3>
-            @if (modalModo() === 'create' && modalPaso() === 'search') {
-              <p class="text-sm text-neutral-500 mt-1">Busca el activo para crear una nueva posición</p>
-            } @else {
-              <p class="text-sm text-neutral-500 mt-1">Completa la operación y se registrará en trades</p>
-            }
-          </div>
-
-          <button (click)="cerrarModal()" class="text-neutral-500 hover:text-white transition-colors cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+<!-- MODAL -->
+@if (modalAbierto()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
+    <div class="bg-neutral-950 border border-neutral-600 rounded-lg w-full max-w-md overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b border-neutral-800">
+        <div>
+          <h3 class="text-xl font-medium text-white">{{ getModalTitle() }}</h3>
+          @if (modalModo() === 'create' && modalPaso() === 'search') {
+            <p class="text-sm text-neutral-500 mt-1">Busca el activo para crear una nueva posición</p>
+          } @else {
+            <p class="text-sm text-neutral-500 mt-1">Completa la operación y se registrará en trades</p>
+          }
         </div>
 
-        @if (modalModo() === 'create' && modalPaso() === 'search') {
-          <div class="p-6 space-y-4">
-            <div class="flex gap-2">
-              <button
-                type="button"
-                (click)="setFiltro('all')"
-                [class]="filtroTipo() === 'all' ? 'bg-orange-500 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'"
-                class="px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer">
-                Todos
-              </button>
-              <button
-                type="button"
-                (click)="setFiltro('crypto')"
-                [class]="filtroTipo() === 'crypto' ? 'bg-orange-500 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'"
-                class="px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer">
-                Crypto
-              </button>
-              <button
-                type="button"
-                (click)="setFiltro('stock')"
-                [class]="filtroTipo() === 'stock' ? 'bg-orange-500 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'"
-                class="px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer">
-                Stock
-              </button>
+        <button (click)="cerrarModal()" class="text-neutral-500 hover:text-white transition-colors cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      @if (modalModo() === 'create' && modalPaso() === 'search') {
+        <div class="p-6 space-y-4">
+          <div class="flex gap-2">
+            <button
+              type="button"
+              (click)="setFiltro('all')"
+              [class]="filtroTipo() === 'all' ? 'bg-orange-500 text-white' : 'bg-neutral-800 text-neutral-500 hover:text-white'"
+              class="px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer">
+              Todos
+            </button>
+            <button
+              type="button"
+              (click)="setFiltro('crypto')"
+              [class]="filtroTipo() === 'crypto' ? 'bg-orange-500 text-white' : 'bg-neutral-800 text-neutral-500 hover:text-white'"
+              class="px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer">
+              Crypto
+            </button>
+            <button
+              type="button"
+              (click)="setFiltro('stock')"
+              [class]="filtroTipo() === 'stock' ? 'bg-orange-500 text-white' : 'bg-neutral-800 text-neutral-500 hover:text-white'"
+              class="px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer">
+              Stock
+            </button>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-neutral-500 mb-1.5">Buscar activo</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+
+              <input
+                type="text"
+                [value]="busqueda()"
+                (input)="onSearchInput($event)"
+                placeholder="BTC, XRP, AAPL, NVDA"
+                class="w-full bg-neutral-950 border border-neutral-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-neutral-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
+            </div>
+          </div>
+
+          @if (buscandoActivos()) {
+            <div class="text-sm text-neutral-500 flex items-center gap-2">
+              <svg class="animate-spin h-4 w-4 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Buscando activos...
+            </div>
+          } @else if (resultadosFiltrados().length > 0) {
+            <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
+              @for (activo of resultadosFiltrados(); track activo.symbol + activo.asset_type) {
+                <button
+                  type="button"
+                  (click)="seleccionarActivo(activo)"
+                  class="w-full text-left bg-neutral-950 border border-neutral-600 rounded-xl p-4 hover:border-orange-500 transition-colors cursor-pointer">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center">
+                      @if (activo.image_url) {
+                        <img [src]="activo.image_url" [alt]="activo.symbol" class="w-full h-full object-contain p-1.5" />
+                      } @else {
+                        <span class="text-sm font-bold text-white">{{ getInitial(activo.symbol) }}</span>
+                      }
+                    </div>
+
+                    <div class="min-w-0">
+                      <p class="text-white font-medium truncate">{{ activo.name }}</p>
+                      <p class="text-xs font-ibm text-neutral-500">
+                        {{ activo.symbol }} · <span class="uppercase">{{ activo.asset_type }}</span>
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              }
+            </div>
+          } @else if (busqueda().length >= 2) {
+            <div class="text-sm text-neutral-500">No se encontraron resultados para "{{ busqueda() }}".</div>
+          }
+        </div>
+      } @else {
+        <form [formGroup]="posicionForm" (ngSubmit)="guardarPosicion()" class="p-6 space-y-5">
+          @if (activoSeleccionado()) {
+            <div class="flex items-center gap-3 p-4 rounded-xl bg-neutral-950 border border-neutral-800">
+              <div class="w-10 h-10 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center">
+                @if (activoSeleccionado()!.image_url) {
+                  <img [src]="activoSeleccionado()!.image_url!" [alt]="activoSeleccionado()!.symbol" class="w-full h-full object-contain p-1.5" />
+                } @else {
+                  <span class="text-sm font-bold text-white">{{ getInitial(activoSeleccionado()!.symbol) }}</span>
+                }
+              </div>
+
+              <div>
+                <p class="text-white font-medium">{{ activoSeleccionado()!.name }}</p>
+                <p class="text-sm text-neutral-500">
+                  {{ activoSeleccionado()!.symbol }} · <span class="uppercase">{{ activoSeleccionado()!.asset_type }}</span>
+                </p>
+              </div>
+            </div>
+          }
+
+          <div>
+            <label class="block text-sm font-medium text-neutral-500 mb-1.5">Fecha de operación</label>
+            <input
+              type="date"
+              formControlName="operated_at"
+              style="color-scheme: dark;"
+              class="w-full bg-neutral-950 border border-neutral-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all [&::-webkit-calendar-picker-indicator]:cursor-pointer" />
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-neutral-500 mb-1.5">Cantidad</label>
+              <input
+                type="number"
+                step="any"
+                formControlName="quantity"
+                placeholder="0.00"
+                class="w-full bg-neutral-950 border border-neutral-600 rounded-lg px-4 py-3 text-white font-ibm placeholder-neutral-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-neutral-400 mb-1.5">Buscar activo</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg class="h-5 w-5 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-
-                <input
-                  type="text"
-                  [value]="busqueda()"
-                  (input)="onSearchInput($event)"
-                  placeholder="Empieza a escribir... Ej: BTC, AAPL"
-                  class="w-full bg-neutral-950 border border-neutral-700 rounded-lg pl-10 pr-4 py-3 text-white placeholder-neutral-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
-              </div>
+              <label class="flex text-sm font-medium text-neutral-500 mb-1.5 justify-between items-center">
+                <span>Precio por unidad</span>
+                @if (buscandoPrecio()) {
+                  <div class="flex items-center gap-1.5 text-orange-500">
+                    <svg class="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                }
+              </label>
+              <input
+                type="number"
+                step="any"
+                formControlName="price"
+                placeholder="0.00"
+                class="w-full bg-neutral-950 border border-neutral-600 rounded-lg px-4 py-3 text-white font-ibm placeholder-neutral-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" />
             </div>
+          </div>
 
-            @if (buscandoActivos()) {
-              <div class="text-sm text-neutral-500 flex items-center gap-2">
-                <svg class="animate-spin h-4 w-4 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <div class="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+            @if (modalModo() === 'create') {
+              <button
+                type="button"
+                (click)="volverABusqueda()"
+                class="w-full bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
+                Volver
+              </button>
+            } @else {
+              <button
+                type="button"
+                (click)="cerrarModal()"
+                class="w-full bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
+                Cancelar
+              </button>
+            }
+
+            <button
+              type="submit"
+              [disabled]="posicionForm.invalid || guardando()"
+              class="w-full bg-orange-500 hover:bg-orange-500/80 flex justify-center items-center gap-2 rounded-md py-2 text-white transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
+              @if (guardando()) {
+                <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Buscando activos...
-              </div>
-            } @else if (resultadosFiltrados().length > 0) {
-              <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
-                @for (activo of resultadosFiltrados(); track activo.symbol + activo.asset_type) {
-                  <button
-                    type="button"
-                    (click)="seleccionarActivo(activo)"
-                    class="w-full text-left bg-neutral-950 border border-neutral-700 rounded-xl p-4 hover:border-orange-500 transition-colors cursor-pointer">
-                    <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center shrink-0">
-                        @if (activo.image_url) {
-                          <img [src]="activo.image_url" [alt]="activo.symbol" class="w-full h-full object-cover" />
-                        } @else {
-                          <span class="text-sm font-bold text-white">{{ getInitial(activo.symbol) }}</span>
-                        }
-                      </div>
-
-                      <div class="min-w-0">
-                        <p class="text-white font-medium truncate">{{ activo.name }}</p>
-                        <p class="text-xs font-ibm text-neutral-500">
-                          {{ activo.symbol }} · <span class="uppercase">{{ activo.asset_type }}</span>
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-                }
-              </div>
-            } @else if (busqueda().length >= 2) {
-              <div class="text-sm text-neutral-500">No se encontraron resultados para "{{ busqueda() }}".</div>
-            }
-          </div>
-        } @else {
-          <form [formGroup]="posicionForm" (ngSubmit)="guardarPosicion()" class="p-6 space-y-5">
-            @if (activoSeleccionado()) {
-              <div class="flex items-center gap-3 p-4 rounded-xl bg-neutral-950 border border-neutral-800">
-                <div class="w-10 h-10 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center shrink-0">
-                  @if (activoSeleccionado()!.image_url) {
-                    <img [src]="activoSeleccionado()!.image_url!" [alt]="activoSeleccionado()!.symbol" class="w-full h-full object-cover" />
-                  } @else {
-                    <span class="text-sm font-bold text-white">{{ getInitial(activoSeleccionado()!.symbol) }}</span>
-                  }
-                </div>
-
-                <div>
-                  <p class="text-white font-medium">{{ activoSeleccionado()!.name }}</p>
-                  <p class="text-sm text-neutral-500">
-                    {{ activoSeleccionado()!.symbol }} · <span class="uppercase">{{ activoSeleccionado()!.asset_type }}</span>
-                  </p>
-                </div>
-              </div>
-            }
-
-            <div>
-              <label class="block text-sm font-medium text-neutral-400 mb-1.5">Fecha de operación</label>
-              <input
-                type="date"
-                formControlName="operated_at"
-                class="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-neutral-400 mb-1.5">Cantidad</label>
-                <input
-                  type="number"
-                  step="any"
-                  formControlName="quantity"
-                  placeholder="0.00"
-                  class="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-3 text-white font-ibm placeholder-neutral-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-neutral-400 mb-1.5 flex justify-between">
-                  <span>Precio por unidad</span>
-                  @if (buscandoPrecio()) {
-                    <span class="text-orange-500 text-xs animate-pulse">Calculando...</span>
-                  }
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  formControlName="price"
-                  placeholder="0.00"
-                  class="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-3 text-white font-ibm placeholder-neutral-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
-              </div>
-            </div>
-
-            <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 mt-2 border-t border-neutral-800">
-              @if (modalModo() === 'create') {
-                <button
-                  type="button"
-                  (click)="volverABusqueda()"
-                  class="px-5 py-2.5 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer">
-                  Volver
-                </button>
-              } @else {
-                <button
-                  type="button"
-                  (click)="cerrarModal()"
-                  class="px-5 py-2.5 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer">
-                  Cancelar
-                </button>
               }
-
-              <button
-                type="submit"
-                [disabled]="posicionForm.invalid || guardando()"
-                class="px-5 py-2.5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer">
-                @if (guardando()) {
-                  <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                }
-                {{ getModalActionText() }}
-              </button>
-            </div>
-          </form>
-        }
-      </div>
+              {{ getModalActionText() }}
+            </button>
+          </div>
+        </form>
+      }
     </div>
-  }
-</div>
+  </div>
+}

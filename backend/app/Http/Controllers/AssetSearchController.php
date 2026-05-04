@@ -10,6 +10,24 @@ use Carbon\Carbon;
 
 class AssetSearchController extends Controller
 {
+    private function getTwelveDataWithRotation($url, $params) 
+    {
+        $key1 = env('TWELVEDATA_API_KEY_1');
+        $key2 = env('TWELVEDATA_API_KEY_2');
+
+        $params['apikey'] = $key1;
+        $response = Http::get($url, $params);
+
+        if ($response->status() == 429 || (isset($response->json()['code']) && $response->json()['code'] == 429)) {
+            Log::warning('Límite de Twelve Data superado en KEY_1. Cambiando a KEY_2.');
+            
+            $params['apikey'] = $key2;
+            $response = Http::get($url, $params);
+        }
+
+        return $response;
+    }
+
     public function search(Request $request)
     {
         $request->validate([
@@ -18,7 +36,6 @@ class AssetSearchController extends Controller
 
         $query = $request->q;
 
-        // buscar primero en BD
         $local = Symbol::where('symbol', 'ilike', "%{$query}%")
             ->orWhere('name', 'ilike', "%{$query}%")
             ->limit(8)
@@ -33,12 +50,10 @@ class AssetSearchController extends Controller
             ])
             ->toArray();
 
-        // si hay suficientes resultados locales, devolver directamente
         if (count($local) >= 4) {
             return response()->json($local);
         }
 
-        // buscar en APIs externas solo si faltan resultados
         $externalResults = [];
         $localSymbols = array_column($local, 'symbol');
 
@@ -100,28 +115,83 @@ class AssetSearchController extends Controller
         return response()->json(array_merge($local, $externalResults));
     }
 
-    // Se llama cuando el usuario confirma añadir el activo
-    public function store(Request $request)
+    public function history(Request $request)
     {
         $request->validate([
-            'symbol'     => 'required|string|max:20',
-            'name'       => 'required|string|max:100',
-            'api_id'     => 'required|string|max:100',
-            'image_url'  => 'nullable|string',
-            'asset_type' => 'required|in:crypto,stock,etf',
+            'api_id' => 'required|string',
+            'asset_type' => 'required|in:crypto,stock',
+            'date' => 'required|date_format:Y-m-d'
         ]);
 
-        $symbol = Symbol::firstOrCreate(
-            ['symbol' => strtoupper($request->symbol)],
-            [
-                'name'         => $request->name,
-                'api_id'       => $request->api_id,
-                'image_url'    => $request->image_url,
-                'asset_type'   => $request->asset_type,
-                'last_updated' => Carbon::now(),
-            ]
-        );
+        $apiId = $request->api_id;
+        $assetType = $request->asset_type;
+        $date = Carbon::parse($request->date);
 
-        return response()->json($symbol, 201);
+        try {
+            if ($assetType === 'crypto') {
+                $cgDate = $date->format('d-m-Y');
+                $response = Http::get("https://api.coingecko.com/api/v3/coins/{$apiId}/history", [
+                    'date' => $cgDate
+                ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    
+                    if (isset($data['market_data']['current_price']['eur'])) {
+                        return response()->json([
+                            'price' => (float) $data['market_data']['current_price']['eur']
+                        ]);
+                    }
+                }
+            } else {
+                $targetDate = $date->format('Y-m-d');
+                
+                $response = $this->getTwelveDataWithRotation("https://api.twelvedata.com/time_series", [
+                    'symbol' => $apiId,
+                    'interval' => '1day',
+                    'outputsize' => 5,
+                ]);
+
+                if ($response->successful() && isset($response->json()['values'])) {
+                    $values = $response->json()['values'];
+                    $precioOriginal = null;
+                    
+                    foreach ($values as $day) {
+                        if (str_starts_with($day['datetime'], $targetDate)) {
+                            $precioOriginal = (float) $day['open'];
+                            break;
+                        }
+                    }
+
+                    if ($precioOriginal === null && !empty($values)) {
+                        $precioOriginal = (float) $values[0]['open'];
+                    }
+
+                    if ($precioOriginal !== null) {
+
+                        $exchangeResponse = $this->getTwelveDataWithRotation("https://api.twelvedata.com/currency_conversion", [
+                            'symbol' => 'USD/EUR',
+                            'amount' => $precioOriginal,
+                        ]);
+
+                        if ($exchangeResponse->successful() && isset($exchangeResponse->json()['amount'])) {
+                            return response()->json([
+                                'price' => (float) $exchangeResponse->json()['amount']
+                            ]);
+                        }
+
+                        return response()->json([
+                            'price' => $precioOriginal
+                        ]);
+                    }
+                }
+            }
+
+            return response()->json(['price' => null]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching historical price: ' . $e->getMessage());
+            return response()->json(['price' => null]);
+        }
     }
 }

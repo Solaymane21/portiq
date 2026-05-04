@@ -8,7 +8,10 @@ class PortfolioController extends Controller
 {
     public function index(Request $request)
     {
-        $portfolios = $request->user()->portfolios()->with('investments')->get();
+        $portfolios = $request->user()->portfolios()->with('investments')
+            ->orderByDesc('is_default')
+            ->orderBy('created_at')
+            ->get();
 
         $portfoliosData = $portfolios->map(function ($portfolio) {
             $activosCount = $portfolio->investments->count();
@@ -27,7 +30,7 @@ class PortfolioController extends Controller
                 'created_at' => $portfolio->created_at,
                 'updated_at' => $portfolio->updated_at
             ];
-        });
+        }); 
 
         return response()->json($portfoliosData);
     }

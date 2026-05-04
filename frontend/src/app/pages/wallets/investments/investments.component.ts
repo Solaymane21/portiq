@@ -340,27 +340,31 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
   }
 
   private inicializarEscuchaDePrecioHistorico() {
-    this.formSubscription = this.posicionForm.get('operated_at')?.valueChanges.subscribe(fecha => {
-      const apiId = this.posicionForm.get('api_id')?.value;
-      const assetType = this.posicionForm.get('asset_type')?.value;
+  this.formSubscription = this.posicionForm.get('operated_at')?.valueChanges.subscribe(fecha => {
+    const apiId = this.posicionForm.get('api_id')?.value;
+    const assetType = this.posicionForm.get('asset_type')?.value;
 
-      if (fecha && apiId && assetType) {
-        this.buscandoPrecio.set(true);
-        this.investmentService.getHistoricalPrice(apiId, assetType, fecha).subscribe({
-          next: (res: any) => {
-            if (res.price && res.price > 0) {
-              this.posicionForm.patchValue({ price: res.price });
-            }
-            this.buscandoPrecio.set(false);
-          },
-          error: (err: any) => {
-            console.error('Error obteniendo precio histórico', err);
-            this.buscandoPrecio.set(false);
+    if (fecha && apiId && assetType) {
+      this.buscandoPrecio.set(true);
+      
+      this.investmentService.getHistoricalPrice(apiId, assetType, fecha).subscribe({
+        next: (res: any) => {
+          if (res && res.price && res.price > 0) {
+            this.posicionForm.patchValue({ price: res.price }, { emitEvent: false });
+          } else {
+            this.posicionForm.patchValue({ price: null }, { emitEvent: false });
           }
-        });
-      }
-    });
-  }
+          this.buscandoPrecio.set(false);
+        },
+        error: (err: any) => {
+          console.warn('El servidor no pudo obtener el precio de apertura:', err);
+          this.posicionForm.patchValue({ price: null }, { emitEvent: false });
+          this.buscandoPrecio.set(false);
+        }
+      });
+    }
+  });
+}
 
   private prepararModal(modo: 'create' | 'buy' | 'sell', activo?: Investment) {
     this.modalModo.set(modo);

@@ -38,7 +38,7 @@
 
             <ng-template #menu>
               <div
-                class="mt-2 min-w-[140px] bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-xl"
+                class="mt-2 min-w-[140px] bg-neutral-800 border border-neutral-700 rounded-xl overflow-hidden shadow-xl"
                 cdkMenu
               >
                 <button
@@ -109,7 +109,7 @@
       <div class="flex flex-col gap-1">
         <label class="text-sm text-neutral-400">Activo</label>
         <div class="relative">
-          <div class="flex items-center gap-2 bg-neutral-900 border border-neutral-600 rounded-xl px-3 py-2 focus-within:border-orange-500">
+          <div class="flex items-center gap-2 bg-neutral-800 border border-neutral-600 rounded-xl px-3 py-2 focus-within:border-orange-500">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 text-neutral-400 shrink-0">
               <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
             </svg>
@@ -118,12 +118,12 @@
               [(ngModel)]="searchQuery"
               (ngModelChange)="onSearch($event)"
               placeholder="Ej. Bitcoin, AAPL, SPY..."
-              class="flex-1 bg-transparent outline-none text-sm text-neutral-100 placeholder:text-neutral-500"
+              class="flex-1 bg-transparent outline-none text-sm text-neutral-100 placeholder:text-neutral-400"
             />
           </div>
 
           @if (searchResults().length > 0) {
-            <div class="absolute top-full left-0 right-0 mt-1 bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden z-50 shadow-xl">
+            <div class="absolute top-full left-0 right-0 mt-1 bg-neutral-800 border border-neutral-700 rounded-xl overflow-hidden z-50 shadow-xl">
               @for (result of searchResults(); track result.symbol) {
                 <div
                   class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-800 cursor-pointer"
@@ -143,7 +143,7 @@
         </div>
 
         @if (selectedSymbol()) {
-          <div class="flex items-center gap-2 mt-2 bg-neutral-900 border border-orange-500 rounded-xl px-3 py-2">
+          <div class="flex items-center gap-2 mt-2 bg-neutral-800 border border-orange-500 rounded-xl px-3 py-2">
             <span class="text-sm text-orange-400 font-medium">{{ selectedSymbol()?.symbol }}</span>
             <span class="text-sm text-neutral-400">{{ selectedSymbol()?.name }}</span>
             <button
@@ -162,26 +162,23 @@
       <!-- Condición -->
       <div class="flex flex-col gap-1">
         <label class="text-sm text-neutral-400">Condición</label>
-        <div class="flex gap-2">
+        <div class="flex border border-neutral-600 rounded-xl">
           <button
             type="button"
             (click)="condition.set('above')"
-            class="flex-1 py-2 rounded-xl border text-sm"
-            [ngClass]="{
-              'bg-green-900 border-green-500 text-green-400': condition() === 'above',
-              'border-neutral-600 text-neutral-400': condition() !== 'above'
-            }"
+            class="flex-1 py-2 rounded-xl text-sm"
+            [class.bg-orange-500]="condition() === 'above'"
+            [class.text-neutral-400]="condition() !== 'above'"
           >
             <span>Por encima de</span>
           </button>
           <button
             type="button"
             (click)="condition.set('below')"
-            class="flex-1 py-2 rounded-xl border text-sm"
-            [ngClass]="{
-              'bg-red-900 border-red-500 text-red-400': condition() === 'below',
-              'border-neutral-600 text-neutral-400': condition() !== 'below'
-            }"
+            class="flex-1 py-2 rounded-xl text-sm"
+            [class.bg-orange-500]="condition() === 'below'"
+            [class.text-neutral-400]="condition() !== 'below'"
+
           >
             <span>Por debajo de</span>
           </button>
@@ -191,12 +188,12 @@
       <!-- Precio objetivo -->
       <div class="flex flex-col gap-1">
         <label class="text-sm text-neutral-400">Precio objetivo</label>
-        <div class="flex items-center gap-2 bg-neutral-900 border border-neutral-600 rounded-xl px-3 py-2 focus-within:border-orange-500">
+        <div class="flex items-center gap-2 bg-neutral-800 border border-neutral-600 rounded-xl px-3 py-2 focus-within:border-orange-500">
           <input
             type="number"
             [(ngModel)]="targetPrice"
             placeholder="0.00"
-            class="flex-1 bg-transparent outline-none text-sm text-neutral-100 placeholder:text-neutral-500"
+            class="flex-1 bg-transparent outline-none text-sm text-neutral-100 placeholder:text-neutral-400"
           />
           <span class="text-neutral-400 text-sm shrink-0">&#8364;</span>
         </div>

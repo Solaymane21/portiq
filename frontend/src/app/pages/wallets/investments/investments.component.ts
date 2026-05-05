@@ -33,6 +33,8 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
   ganancias = signal(0);
   porcentajeGanancias = signal(0);
   totalPosiciones = signal(0);
+  soloLectura = signal(false);
+  ownerName = signal<string | null>(null);
 
   // --- 3. CONFIGURACIÓN DE TABLA MATERIAL ---
   dataSource = new MatTableDataSource<Investment>([]);
@@ -45,7 +47,10 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
     { def: 'value', title: 'Valor', align: 'left' },
     { def: 'quantity', title: 'Acciones', align: 'left' }
   ];
-  displayedColumns: string[] = [...this.columnasDef.map(c => c.def), 'opciones'];
+  columnasVisibles = computed(() => {
+    const base = this.columnasDef.map(c => c.def);
+    return this.soloLectura() ? base : [...base, 'opciones'];
+  });
 
   // --- 4. ESTADO DE MODALES Y BÚSQUEDA ---
   modalAbierto = signal(false);
@@ -121,6 +126,8 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     this.investmentService.getInvestments(id).subscribe({
       next: (response: any) => {
+        this.soloLectura.set(Boolean(response.read_only));
+        this.ownerName.set(response.owner_name ?? null);
         this.nombreCartera.set(response.portfolio_name);
         this.valorTotal.set(response.total_value);
         
@@ -134,6 +141,8 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
       },
       error: (err: any) => {
         console.error('Error cargando inversiones:', err);
+        this.soloLectura.set(false);
+        this.ownerName.set(null);
         this.cargando.set(false);
       }
     });
@@ -201,14 +210,23 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
 
   // --- 8. MANEJO DEL MODAL Y EVENTOS UI ---
   abrirModalNuevaPosicion() {
+    if (this.soloLectura()) {
+      return;
+    }
     this.prepararModal('create');
   }
 
   comprarActivo(activo: Investment) {
+    if (this.soloLectura()) {
+      return;
+    }
     this.prepararModal('buy', activo);
   }
 
   venderActivo(activo: Investment) {
+    if (this.soloLectura()) {
+      return;
+    }
     this.prepararModal('sell', activo);
   }
 

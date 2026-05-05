@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Investment;
+use App\Models\Portfolio;
 use App\Models\Symbol;
 use App\Models\Trade;
 use Illuminate\Http\Request;
@@ -11,10 +12,14 @@ class InvestmentController extends Controller
 {
     public function index(Request $request, $portfolioId)
     {
-        $portfolio = $request->user()
-            ->portfolios()
-            ->with('investments.symbol')
-            ->findOrFail($portfolioId);
+        $portfolio = Portfolio::with(['investments.symbol', 'user'])
+            ->where('id', $portfolioId)
+            ->firstOrFail();
+
+        $user = $request->user();
+        if ((int) $portfolio->user_id !== (int) $user->id && ! $portfolio->is_public) {
+            abort(403, 'No autorizado');
+        }
 
         $investmentsData = [];
         $totalPortfolioValue = 0;
@@ -55,10 +60,14 @@ class InvestmentController extends Controller
             unset($data);
         }
 
+        $readOnly = (int) $portfolio->user_id !== (int) $user->id;
+
         return response()->json([
             'portfolio_name' => $portfolio->name,
             'total_value' => (float) $totalPortfolioValue,
-            'investments' => $investmentsData
+            'investments' => $investmentsData,
+            'read_only' => $readOnly,
+            'owner_name' => $readOnly ? ($portfolio->user->name ?? null) : null,
         ]);
     }
 

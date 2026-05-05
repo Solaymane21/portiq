@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Portfolio;
 use Illuminate\Http\Request;
 use App\Models\Trade;
 
@@ -9,7 +10,12 @@ class TradeController extends Controller
 {
     public function index(Request $request, $portfolioId)
     {
-        $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
+        $portfolio = Portfolio::where('id', $portfolioId)->firstOrFail();
+
+        $user = $request->user();
+        if ((int) $portfolio->user_id !== (int) $user->id && ! $portfolio->is_public) {
+            abort(403, 'No autorizado');
+        }
 
         $trades = Trade::whereHas('investment', function ($query) use ($portfolioId) {
                 $query->where('portfolio_id', $portfolioId);

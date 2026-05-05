@@ -44,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/subscription/resume', [SubscriptionController::class, 'resume']);
 
     //Portfolios
+    Route::get('/portfolios/public', [PortfolioController::class, 'publicRanking']);
     Route::get('/portfolios', [PortfolioController::class, 'index']);
     Route::post('/portfolios', [PortfolioController::class, 'store']);
     Route::put('/portfolios/{portfolio}', [PortfolioController::class, 'update']);

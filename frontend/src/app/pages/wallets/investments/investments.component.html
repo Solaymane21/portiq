@@ -1,33 +1,41 @@
 <div class="space-y-6">
   <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-    <div class="flex items-center gap-4">
+    <div class="flex items-start gap-4 min-w-0">
       <button
         (click)="irAWallets()"
-        class="inline-flex items-center justify-center p-2 rounded-md bg-neutral-950 text-neutral-500 hover:text-white cursor-pointer">
+        class="inline-flex items-center justify-center p-2 rounded-md bg-neutral-950 text-neutral-500 hover:text-white cursor-pointer shrink-0 mt-1">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
         </svg>
       </button>
-      <h1 class="text-3xl font-ibm text-white truncate">{{ nombreCartera() }}</h1>
+      <div class="min-w-0 flex-1">
+        <h1 class="text-3xl font-ibm text-white truncate">{{ nombreCartera() }}</h1>
+        @if (soloLectura() && ownerName()) {
+          <p class="text-sm text-orange-500 mt-1">Cartera pública de {{ ownerName() }} · solo lectura</p>
+        }
+      </div>
     </div>
 
-    <div class="flex items-center gap-3">
-      <button class="bg-white hover:bg-neutral-200/80 p-2 rounded-md text-black flex items-center gap-2 cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-        </svg>
-        <span class="whitespace-nowrap">Exportar CSV</span>
-      </button>
+    @if (!soloLectura()) {
+      <div class="flex items-center gap-3">
+        <button type="button" class="bg-white hover:bg-neutral-200/80 p-2 rounded-md text-black flex items-center gap-2 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+          </svg>
+          <span class="whitespace-nowrap">Exportar CSV</span>
+        </button>
 
-      <button
-        (click)="abrirModalNuevaPosicion()"
-        class="bg-orange-500 hover:bg-orange-500/80 p-2 rounded-md text-white flex items-center gap-2 cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-        <span>Nueva Posición</span>
-      </button>
-    </div>
+        <button
+          type="button"
+          (click)="abrirModalNuevaPosicion()"
+          class="bg-orange-500 hover:bg-orange-500/80 p-2 rounded-md text-white flex items-center gap-2 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          <span>Nueva Posición</span>
+        </button>
+      </div>
+    }
   </div>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -125,11 +133,15 @@
           </td>
         </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:!bg-neutral-900/80 transition-colors group cursor-pointer"></tr>
+        <tr mat-header-row *matHeaderRowDef="columnasVisibles()"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: columnasVisibles();"
+          class="hover:!bg-neutral-900/80 transition-colors group"
+          [class.cursor-pointer]="!soloLectura()"></tr>
 
         <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell text-center py-12 !text-neutral-500 border-none" colspan="6">
+          <td class="mat-cell text-center py-12 !text-neutral-500 border-none" [attr.colspan]="columnasVisibles().length">
             @if (cargando()) {
               <div class="flex flex-col items-center justify-center">
                 <svg class="animate-spin h-6 w-6 text-orange-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

@@ -38,26 +38,28 @@
     }
   </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-    <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80">
-      <p class="text-white text-sm mb-1">Valor Total</p>
-      <h3 class="text-2xl font-ibm font-medium text-white">{{ formatNumber(valorTotal(), 0) }}€</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-5 mb-5">
+
+    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3">Valor Total</p>
+      <h3 class="text-3xl font-ibm font-bold text-neutral-100 text-center">{{ formatNumber(valorTotal(), 0) }}€</h3>
     </div>
 
-    <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80">
-      <p class="text-white text-sm mb-1">Ganancias Totales</p>
-      <h3 class="text-2xl font-ibm font-medium text-green-500">+{{ formatNumber(ganancias(), 0) }}€</h3>
+    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3">Ganancias Totales</p>
+      <h3 class="text-3xl font-ibm font-bold text-green-500 text-center">+{{ formatNumber(ganancias(), 0) }}€</h3>
     </div>
 
-    <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80">
-      <p class="text-white text-sm mb-1">% Retorno</p>
-      <h3 class="text-2xl font-ibm font-medium text-green-500">+{{ formatNumber(porcentajeGanancias(), 2) }}%</h3>
+    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3">% Retorno</p>
+      <h3 class="text-3xl font-ibm font-bold text-green-500 text-center">+{{ formatNumber(porcentajeGanancias(), 2) }}%</h3>
     </div>
 
-    <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-600 hover:bg-neutral-950/80">
-      <p class="text-white text-sm mb-1">Activos</p>
-      <h3 class="text-2xl font-ibm font-medium text-white">{{ totalPosiciones() }}</h3>
+    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3">Activos</p>
+      <h3 class="text-3xl font-ibm font-bold text-neutral-100 text-center">{{ totalPosiciones() }}</h3>
     </div>
+
   </div>
 
   <div class="bg-neutral-950 border border-neutral-600 rounded-xl overflow-hidden">
@@ -82,7 +84,7 @@
               mat-header-cell
               *matHeaderCellDef
               mat-sort-header
-              class="px-4 md:px-6 py-4 border-b !border-neutral-800 !bg-neutral-950 !text-white text-sm font-medium align-middle"
+              class="px-4 md:px-6 py-4 border-b !border-neutral-800 !bg-neutral-950 !text-neutral-600 text-sm font-medium align-middle hover:!text-white"
               [class]="getTextAlignClass(col.align)">
               {{ col.title }}
             </th>

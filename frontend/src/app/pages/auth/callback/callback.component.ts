@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
+import { InitialDataService } from '../../../services/initial-data.service';
 
 @Component({
   selector: 'app-callback',
@@ -11,6 +12,7 @@ import { AuthService } from '../../../services/auth.service';
 export class CallbackComponent {
   router = inject(Router);
   authService = inject(AuthService);
+  initialDataService = inject(InitialDataService)
 
   ngOnInit(): void {
     const fragment = window.location.hash.substring(1);
@@ -26,15 +28,22 @@ export class CallbackComponent {
 
     try {
       const parsedUser = JSON.parse(atob(user));
+
+      // guarda el token siempre
       this.authService.saveUserData({ token, user: parsedUser });
 
+      // si es admin redirigir automaticamente
       if (parsedUser.is_admin) {
         this.router.navigate(['/admin/dashboard']);
-        return 
-      } else {
-        this.router.navigate(['/app/dashboard']);
-        return
+        return;
       }
+
+      // cargar datos del usuario (favoriots, portfolios etc)
+      this.initialDataService.run().subscribe({
+        next:  () => this.router.navigate(['/app/dashboard']),
+        error: () => this.router.navigate(['/app/dashboard'])
+      });
+
     } catch {
       this.router.navigate(['/auth/login']);
     }

@@ -5,6 +5,7 @@ use App\Http\Controllers\AssetSearchController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\InitialDataController;
 use App\Http\Controllers\MarketController;
 use App\Http\Controllers\PreferencesController;
 use Illuminate\Support\Facades\Route;
@@ -35,7 +36,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'me']);
     Route::get('/assets/search', [AssetSearchController::class, 'search']);
     Route::get('/assets/history', [AssetSearchController::class, 'history']);
-    
+    Route::get('/initial-data', [InitialDataController::class, 'index']);
+
     // Stripe
     Route::post('/subscription/checkout', [SubscriptionController::class, 'checkout']);
     Route::get('/subscription/status', [SubscriptionController::class, 'status']);

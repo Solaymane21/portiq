@@ -4,6 +4,8 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { RedirectMsg } from '../models/redirectMsg.model';
 import { tap } from 'rxjs';
+import { InitialDataService } from './initial-data.service';
+import { FavoritesService } from './favorites.service';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +26,8 @@ export class AuthService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8000/api';
   private router = inject(Router);
+  private initialDataService = inject(InitialDataService)
+  private favoritesService = inject(FavoritesService)
 
   // signals de los campos del formulario
   username = signal<User['name']>('');
@@ -156,7 +160,14 @@ export class AuthService {
       next: (res: any) => {
         this.saveUserData(res);
         this.isLoading.set(false);
-        this.router.navigate([res.user.is_admin ? '/admin/dashboard' : '/app/dashboard']);
+        if(res.user.is_admin) {
+          this.router.navigate(['/admin/dashboard'])
+        } else {
+          this.initialDataService.run().subscribe({
+            next: () => this.router.navigate(['/app/dashboard'])
+          });
+        }
+
       },
       error: () => {
         this.msgError.set('Credenciales incorrectas o no existe cuenta en PortIQ.');
@@ -168,15 +179,24 @@ export class AuthService {
   // cierra sesion y limpia datos locales
   onLogout() {
     this.http.post(`${this.apiUrl}/auth/logout`, {}).subscribe({
-      next:  () => { this.removeUserData(); this.router.navigate(['/public']); },
-      error: () => { this.removeUserData(); this.router.navigate(['/public']); }
+      next:  () => {
+        this.removeUserData();
+        this.favoritesService.clearCache();
+        this.router.navigate(['/public']);
+      },
+      error: () => {
+        this.removeUserData();
+        this.router.navigate(['/public']);
+      }
     });
   }
 
   // redirige a google para iniciar sesion con oauth
   onLoginWithGoogle() {
     this.http.get(`${this.apiUrl}/auth/google/redirect`).subscribe({
-      next:  (res: any) => { window.location.href = res.redirect_url; },
+      next:  (res: any) => {
+        window.location.href = res.redirect_url;
+      },
       error: (err: any) => { console.error(err); }
     });
   }

@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { AuthService } from './services/auth.service';
+import { InitialDataService } from './services/initial-data.service';
 
 @Component({
   selector: 'app-root',
@@ -9,4 +11,13 @@ import { RouterOutlet } from '@angular/router';
 })
 export class AppComponent {
   title = 'frontend';
+
+  private authService = inject(AuthService);
+  private initialDataService = inject(InitialDataService);
+
+  ngOnInit(): void {
+    if (this.authService.currentUser() && !this.initialDataService.ready()) {
+      this.initialDataService.run().subscribe();
+    }
+  }
 }

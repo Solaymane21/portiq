@@ -59,6 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/portfolios/{portfolioId}/investments/{investmentId}', [InvestmentController::class, 'destroy']);
     Route::post('/portfolios/{portfolioId}/investments/{investmentId}/buy', [InvestmentController::class, 'buy']);
     Route::post('/portfolios/{portfolioId}/investments/{investmentId}/sell', [InvestmentController::class, 'sell']);
+    Route::post('/portfolios/{portfolioId}/investments/import', [InvestmentController::class, 'importPositions']);
 
     //Trades
     Route::get('/portfolios/{portfolioId}/trades', [\App\Http\Controllers\TradeController::class, 'index']);

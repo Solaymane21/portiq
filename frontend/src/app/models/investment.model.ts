@@ -46,3 +46,6 @@ export interface TradeActionPayload {
   price_per_unit: number;
   operated_at?: string | null;
 }
+
+/** Lotes para importación masiva (misma forma que el alta manual). */
+export type ImportPositionPayload = UpsertPositionPayload;

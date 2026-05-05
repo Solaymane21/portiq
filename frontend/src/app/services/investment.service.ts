@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AssetSearchResult, Investment, InvestmentsResponse, UpsertPositionPayload, TradeActionPayload } from '../models/investment.model';
+import { AssetSearchResult, Investment, InvestmentsResponse, UpsertPositionPayload, TradeActionPayload, ImportPositionPayload } from '../models/investment.model';
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +16,13 @@ export class InvestmentService {
 
   addInvestment(portfolioId: number, payload: UpsertPositionPayload): Observable<any> {
     return this.http.post(`${this.apiBase}/portfolios/${portfolioId}/investments`, payload);
+  }
+
+  importPositions(portfolioId: number, positions: ImportPositionPayload[]): Observable<{ message: string; count: number }> {
+    return this.http.post<{ message: string; count: number }>(
+      `${this.apiBase}/portfolios/${portfolioId}/investments/import`,
+      { positions }
+    );
   }
 
   buyInvestment(portfolioId: number, investmentId: number, payload: TradeActionPayload): Observable<any> {

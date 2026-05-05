@@ -38,7 +38,7 @@ export class FavoritesComponent implements OnInit {
   showDropdown = signal<boolean>(false);
   changes = signal<Record<string, number>>({});
   deletingIds = signal<Set<number>>(new Set());
-  
+
   filter = signal<'all' | 'stock' | 'crypto' | 'etf'>('all')
   assetLabels: Record<string, string> = {
     all: 'Todos',
@@ -47,19 +47,11 @@ export class FavoritesComponent implements OnInit {
     etf: 'ETF'
   };
 
-  constructor() {
-    effect(() => {
-      const favs = this.favorites();
-      if (favs.length === 0) return;
-      
-      // Cargar precios y sparklines cuando cambien los favoritos
+  ngOnInit(): void {
+    this.favoritesService.load().subscribe(favs => {
       this.loadPrices(favs);
       this.loadSparklines(favs);
     });
-  }
-
-  ngOnInit(): void {
-    this.favoritesService.load();
 
     interval(30000).pipe(
       takeUntilDestroyed(this.destroyRef)
@@ -102,8 +94,9 @@ export class FavoritesComponent implements OnInit {
     });
   }
 
-  loadPrices(favs: Favorite[]): void {
-    this.loadingPrices.set(true);
+  loadPrices(favs: Favorite[], silent = false): void {
+    if (!silent) this.loadingPrices.set(true);
+
     const symbols = favs.map(f => f.symbol).join(',');
     const assetTypes = favs.map(f => f.asset_type).join(',');
 
@@ -119,8 +112,8 @@ export class FavoritesComponent implements OnInit {
           }
         });
 
-        this.prices.set(priceMap);
-        this.changes.set(changeMap);
+        this.prices.update(prev => ({ ...prev, ...priceMap }));
+        this.changes.update(prev => ({ ...prev, ...changeMap }));
         this.loadingPrices.set(false);
       },
       error: () => this.loadingPrices.set(false)
@@ -203,7 +196,14 @@ export class FavoritesComponent implements OnInit {
   }
 
   addToFavorites(result: SearchResult): void {
-    this.favoritesService.add(result).subscribe();
+    this.favoritesService.add(result).subscribe({
+      next: (newFav) => {
+        // Solo carga precio y sparkline del nuevo
+        this.loadPrices([newFav], false);
+        this.loadSparklines([newFav]);
+      }
+    });
+
     this.searchQuery = '';
     this.searchResults.set([]);
     this.showDropdown.set(false);

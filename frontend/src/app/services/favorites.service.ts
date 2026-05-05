@@ -2,7 +2,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { SearchResult } from '../models/search.model';
 import { NotificationsService } from './notifications.service';
 
@@ -27,21 +27,21 @@ export class FavoritesService {
   loaded = signal<boolean>(false);
   fetching = signal<boolean>(false);
 
-  load(): void {
-    if (this.loaded()) return;
+  load(): Observable<Favorite[]> {
+    if (this.loaded()) return of(this.favorites());
 
-    this.fetching.set(true)
+    this.fetching.set(true);
 
-    this.http.get<Favorite[]>(`${this.apiUrl}/favorites`).subscribe({
-      next: (data) => {
-        this.favorites.set(data);
-        this.loaded.set(true);
-        this.fetching.set(false);
-      },
-      error: () => {
-        this.fetching.set(false);
-      }
-    });
+    return this.http.get<Favorite[]>(`${this.apiUrl}/favorites`).pipe(
+      tap({
+        next: (data) => {
+          this.favorites.set(data);
+          this.loaded.set(true);
+          this.fetching.set(false);
+        },
+        error: () => this.fetching.set(false)
+      })
+    );
   }
 
   add(result: SearchResult): Observable<Favorite> {

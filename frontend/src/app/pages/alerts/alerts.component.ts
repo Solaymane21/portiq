@@ -23,7 +23,7 @@ interface SymbolResult {
 @Component({
   selector: 'app-alerts',
   standalone: true,
-  imports: [FormsModule, DatePipe, CdkMenuTrigger, CdkMenu, CdkMenuItem, NgClass],
+  imports: [FormsModule, DatePipe, CdkMenuTrigger, CdkMenu, CdkMenuItem],
   templateUrl: './alerts.component.html',
   styleUrl: './alerts.component.css'
 })

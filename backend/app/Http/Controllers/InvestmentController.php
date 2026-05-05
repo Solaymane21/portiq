@@ -70,7 +70,7 @@ class InvestmentController extends Controller
             'image_url' => 'nullable|string|max:2048',
             'asset_type' => 'required|string|in:stock,crypto',
             'quantity' => 'required|numeric|min:0.00000001',
-            'avg_buy_price' => 'required|numeric|min:0.01',
+            'avg_buy_price' => 'required|numeric',
             'operated_at' => 'nullable|date',
         ]);
 
@@ -144,7 +144,7 @@ class InvestmentController extends Controller
     {
         $request->validate([
             'quantity' => 'required|numeric|min:0.00000001',
-            'price_per_unit' => 'required|numeric|min:0.01',
+            'price_per_unit' => 'required|numeric',
             'operated_at' => 'nullable|date',
         ]);
 
@@ -180,7 +180,7 @@ class InvestmentController extends Controller
     {
         $request->validate([
             'quantity' => 'required|numeric|min:0.00000001',
-            'price_per_unit' => 'required|numeric|min:0.01',
+            'price_per_unit' => 'required|numeric',
             'operated_at' => 'nullable|date',
         ]);
 
@@ -204,9 +204,9 @@ class InvestmentController extends Controller
         ]);
 
         if ($nuevaCantidad <= 0) {
-            $investment->delete();
+            $investment->update(['quantity' => 0]); // ← CAMBIA A 0, NO BORRA
             return response()->json([
-                'message' => 'Venta registrada y posición cerrada.'
+                'message' => 'Venta registrada y posición cerrada (cantidad = 0).'
             ]);
         }
 

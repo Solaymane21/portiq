@@ -54,7 +54,7 @@
 
   <div class="bg-neutral-950 border border-neutral-600 rounded-xl overflow-hidden">
     <div class="px-4 md:px-6 py-4 border-b border-neutral-600 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <h2 class="text-base font-medium font-ibm text-white">Rendimiento de Activos</h2>
+      <h2 class="text-base font-medium text-white">Rendimiento de Activos</h2>
 
       <button
         (click)="verHistorialTrades()"
@@ -74,7 +74,7 @@
               mat-header-cell
               *matHeaderCellDef
               mat-sort-header
-              class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 !bg-neutral-950 !text-neutral-500 text-sm font-medium align-middle"
+              class="px-4 md:px-6 py-4 border-b !border-neutral-800 !bg-neutral-950 !text-white text-sm font-medium align-middle"
               [class]="getTextAlignClass(col.align)">
               {{ col.title }}
             </th>
@@ -82,19 +82,19 @@
             <td
               mat-cell
               *matCellDef="let element"
-              class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 align-middle"
+              class="px-4 md:px-6 py-4 border-b !border-neutral-800 align-middle"
               [class]="getTextAlignClass(col.align) + ' ' + getCellClass(col.def, element[col.def])">
               @switch (col.def) {
                 @case ('symbol') {
                   <div class="flex items-center gap-3 min-w-0">
                     <div class="w-8 h-8 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center border border-neutral-600">
                       @if (element.image_url) {
-                        <img [src]="element.image_url" [alt]="element.symbol" class="w-full h-full object-contain p-1.5" />
+                        <img [src]="element.image_url" [alt]="element.symbol" class="w-full h-full object-cover" />
                       } @else {
                         <span class="text-xs font-bold text-white">{{ getInitial(element.symbol) }}</span>
                       }
                     </div>
-                    <span class="font-medium text-white truncate">{{ element.symbol }}</span>
+                    <span class="font-medium text-white truncate font font-ibm">{{ element.symbol }}</span>
                   </div>
                 }
                 @case ('value') { {{ formatNumber(element.value, 2  ) }}€ }
@@ -108,8 +108,8 @@
         }
 
         <ng-container matColumnDef="opciones">
-          <th mat-header-cell *matHeaderCellDef class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 !bg-neutral-950 w-32"></th>
-          <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b !border-neutral-800/60 text-right align-middle">
+          <th mat-header-cell *matHeaderCellDef class="px-4 md:px-6 py-4 border-b !border-neutral-800 !bg-neutral-950 w-32"></th>
+          <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b !border-neutral-800 text-right align-middle">
             <div class="flex justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
               <button
                 (click)="$event.stopPropagation(); comprarActivo(element)"
@@ -148,7 +148,6 @@
 
     <mat-paginator
       [pageSize]="5"
-      showFirstLastButtons
       class="border-t !border-neutral-600 !bg-neutral-950 !text-neutral-500">
     </mat-paginator>
   </div>
@@ -158,7 +157,7 @@
 @if (modalAbierto()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
     <div class="bg-neutral-950 border border-neutral-600 rounded-lg w-full max-w-md overflow-hidden">
-      <div class="flex justify-between items-center p-6 border-b border-neutral-800">
+      <div class="flex justify-between items-center p-6 border-b border-neutral-600">
         <div>
           <h3 class="text-xl font-medium text-white">{{ getModalTitle() }}</h3>
           @if (modalModo() === 'create' && modalPaso() === 'search') {
@@ -235,9 +234,9 @@
                   (click)="seleccionarActivo(activo)"
                   class="w-full text-left bg-neutral-950 border border-neutral-600 rounded-xl p-4 hover:border-orange-500 transition-colors cursor-pointer">
                   <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center border border-neutral-600">
                       @if (activo.image_url) {
-                        <img [src]="activo.image_url" [alt]="activo.symbol" class="w-full h-full object-contain p-1.5" />
+                        <img [src]="activo.image_url" [alt]="activo.symbol" class="w-full h-full object-cover" />
                       } @else {
                         <span class="text-sm font-bold text-white">{{ getInitial(activo.symbol) }}</span>
                       }
@@ -261,9 +260,9 @@
         <form [formGroup]="posicionForm" (ngSubmit)="guardarPosicion()" class="p-6 space-y-5">
           @if (activoSeleccionado()) {
             <div class="flex items-center gap-3 p-4 rounded-xl bg-neutral-950 border border-neutral-800">
-              <div class="w-10 h-10 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center border border-neutral-600">
                 @if (activoSeleccionado()!.image_url) {
-                  <img [src]="activoSeleccionado()!.image_url!" [alt]="activoSeleccionado()!.symbol" class="w-full h-full object-contain p-1.5" />
+                  <img [src]="activoSeleccionado()!.image_url!" [alt]="activoSeleccionado()!.symbol" class="w-full h-full object-cover" />
                 } @else {
                   <span class="text-sm font-bold text-white">{{ getInitial(activoSeleccionado()!.symbol) }}</span>
                 }
@@ -294,6 +293,7 @@
                 type="number"
                 step="any"
                 formControlName="quantity"
+                (input)="validarCantidadMaxima()"
                 placeholder="0.00"
                 class="w-full bg-neutral-950 border border-neutral-600 rounded-lg px-4 py-3 text-white font-ibm placeholder-neutral-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" />
             </div>

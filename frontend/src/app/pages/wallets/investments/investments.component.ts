@@ -40,10 +40,10 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
   sort = viewChild(MatSort);
   columnasDef = [
     { def: 'symbol', title: 'Activo', align: 'left' },
-    { def: 'weight', title: 'Peso', align: 'right' },
-    { def: 'return_7d', title: '7D retorno', align: 'right' },
-    { def: 'value', title: 'Valor', align: 'right' },
-    { def: 'quantity', title: 'Acciones', align: 'right' }
+    { def: 'weight', title: 'Peso', align: 'left' },
+    { def: 'return_7d', title: '7D retorno', align: 'left' },
+    { def: 'value', title: 'Valor', align: 'left' },
+    { def: 'quantity', title: 'Acciones', align: 'left' }
   ];
   displayedColumns: string[] = [...this.columnasDef.map(c => c.def), 'opciones'];
 
@@ -67,6 +67,17 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
   inversionSeleccionada = signal<Investment | null>(null);
   buscandoPrecio = signal(false);
 
+  validarCantidadMaxima() {
+  if (this.modalModo() === 'sell' && this.inversionSeleccionada()) {
+    const maxQ = this.inversionSeleccionada()!.quantity;
+    const currentQ = this.posicionForm.get('quantity')?.value;
+    
+    if (currentQ > maxQ) {
+      this.posicionForm.patchValue({ quantity: maxQ });
+    }
+  }
+}
+
   // --- 5. FORMULARIOS Y SUSCRIPCIONES ---
   private searchSubject = new Subject<string>();
   private formSubscription?: Subscription;
@@ -78,7 +89,7 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
     image_url: [''],
     operated_at: ['', Validators.required],
     quantity: [null, [Validators.required, Validators.min(0.00000001)]],
-    price: [null, [Validators.required, Validators.min(0.01)]],
+    price: [null, Validators.required],
     api_id: [''] 
   });
 
@@ -112,10 +123,13 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
       next: (response: any) => {
         this.nombreCartera.set(response.portfolio_name);
         this.valorTotal.set(response.total_value);
-        this.totalPosiciones.set(response.investments.length);
+        
+        const inversionesActivas = response.investments.filter((inv: any) => inv.quantity > 0);
+        this.totalPosiciones.set(inversionesActivas.length);
+        
         this.ganancias.set(0);
         this.porcentajeGanancias.set(0);
-        this.dataSource.data = response.investments;
+        this.dataSource.data = inversionesActivas;
         this.cargando.set(false);
       },
       error: (err: any) => {
@@ -265,14 +279,17 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
 
   getCellClass(colDef: string, value: number | string | null | undefined): string {
     if (colDef === 'return_7d') {
-      return Number(value ?? 0) >= 0 ? '!text-green-500 font-medium' : '!text-red-500 font-medium';
+      return Number(value ?? 0) >= 0 ? '!text-green-500 font-ibm' : '!text-red-500 font-ibm';
     }
-    if (colDef === 'value') {
-      return '!text-white font-medium';
+    
+    if (colDef === 'weight' || colDef === 'value') {
+      return '!text-orange-500 font-medium font-ibm';
     }
-    if (colDef !== 'symbol') {
-      return '!text-neutral-400 font-ibm';
+    
+    if (colDef === 'symbol' || colDef === 'quantity') {
+      return '!text-white font-ibm';
     }
+    
     return '';
   }
 
@@ -344,12 +361,6 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
     const apiId = this.posicionForm.get('api_id')?.value;
     const assetType = this.posicionForm.get('asset_type')?.value;
 
-    console.log('histórico', {
-  apiId: this.posicionForm.get('api_id')?.value,
-  assetType: this.posicionForm.get('asset_type')?.value,
-  fecha
-});
-
     if (fecha && apiId && assetType) {
       this.buscandoPrecio.set(true);
       
@@ -375,9 +386,6 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
   private prepararModal(modo: 'create' | 'buy' | 'sell', activo?: Investment) {
     this.modalModo.set(modo);
     this.modalPaso.set(modo === 'create' ? 'search' : 'details');
-
-    console.log('activo', activo);
-    console.log('api_id', activo?.api_id);
     
     if (modo === 'create') {
       this.busqueda.set('');

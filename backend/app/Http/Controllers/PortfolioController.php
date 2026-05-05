@@ -14,7 +14,9 @@ class PortfolioController extends Controller
             ->get();
 
         $portfoliosData = $portfolios->map(function ($portfolio) {
-            $activosCount = $portfolio->investments->count();
+            $activosCount = $portfolio->investments
+            ->filter(fn($investment) => $investment->quantity > 0)
+            ->count();
             
             $valorTotal = $portfolio->investments->sum(function ($investment) {
                 return $investment->quantity * $investment->avg_buy_price; 

@@ -22,7 +22,6 @@ export class TradesComponent implements OnInit {
   nombreCartera = signal('Cargando...');
   cargando = signal(true);
 
-  // Estadísticas nuevas
   totalDepositado = signal(0);
   totalRetirado = signal(0);
   exposicionNeta = signal(0);
@@ -62,7 +61,6 @@ export class TradesComponent implements OnInit {
       next: (res: any) => {
         this.nombreCartera.set(res.portfolio_name);
         
-        // Guardamos las estadísticas
         if (res.stats) {
           this.totalDepositado.set(res.stats.total_depositado);
           this.totalRetirado.set(res.stats.total_retirado);
@@ -96,7 +94,7 @@ export class TradesComponent implements OnInit {
     switch (type) {
       case 'compra': return 'bg-green-500/10 text-green-500 border border-green-500/20';
       case 'venta': return 'bg-red-500/10 text-red-500 border border-red-500/20';
-      case 'nuevaPosicion': return 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
+      case 'nuevaPosicion': return 'bg-orange-500/10 text-orange-500 border border-orange-500/20';
       default: return 'bg-neutral-800 text-neutral-400 border border-neutral-700';
     }
   }

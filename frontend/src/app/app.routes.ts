@@ -24,6 +24,7 @@ import { SettingsComponent } from './pages/settings/settings.component';
 import { TradesComponent } from './pages/wallets/trades/trades.component';
 import { SymbolDetailComponent } from './pages/symbol-detail/symbol-detail.component';
 import { PublicLayoutComponent } from './layout/public-layout/public-layout.component';
+import { HomeComponent } from './pages/home/home.component';
 
 export const routes: Routes = [
     {
@@ -116,6 +117,10 @@ export const routes: Routes = [
         component: PublicLayoutComponent,
         children: [
             {
+                path: 'home',
+                component: HomeComponent
+            },
+            {
                 path: 'symbol/:symbol',
                 component: SymbolDetailComponent
             }
@@ -123,7 +128,7 @@ export const routes: Routes = [
     },
     {
         path: '',
-        redirectTo: 'auth/login',
+        redirectTo: 'public/home',
         pathMatch: 'full'
     },
     {

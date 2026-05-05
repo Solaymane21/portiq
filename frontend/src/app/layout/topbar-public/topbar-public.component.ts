@@ -123,10 +123,10 @@ export class TopbarPublicComponent {
     const b = 'text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0';
     if (l === 'Crypto') return b + ' bg-yellow-400/15 text-yellow-400';
     if (l === 'ETF') return b + ' bg-blue-400/15 text-blue-400';
-    return b + ' bg-orange-400/15 text-orange-400';
+    return b + ' bg-orange-500/15 text-orange-500';
   }
 
   goToPublic(): void {
-    this.router.navigate(['/public']);
+    this.router.navigate(['/public/home']);
   }
 }

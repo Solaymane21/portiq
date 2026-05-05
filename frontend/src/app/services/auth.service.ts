@@ -182,11 +182,11 @@ export class AuthService {
       next:  () => {
         this.removeUserData();
         this.favoritesService.clearCache();
-        this.router.navigate(['/public']);
+        this.router.navigate(['/public/home']);
       },
       error: () => {
         this.removeUserData();
-        this.router.navigate(['/public']);
+        this.router.navigate(['/public/home']);
       }
     });
   }

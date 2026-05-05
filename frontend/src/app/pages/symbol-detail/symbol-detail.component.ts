@@ -160,7 +160,7 @@ export class SymbolDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/public']);
+    this.router.navigate(['/public/home']);
   }
 
   getLogoUrl(symbol: string): string {

@@ -2,10 +2,69 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Portfolio;
 use Illuminate\Http\Request;
 
 class PortfolioController extends Controller
 {
+    public function publicRanking(Request $request)
+    {
+        $sort = (string) $request->query('sort', 'total_value');
+        $order = strtolower((string) $request->query('order', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $search = $request->query('q');
+
+        $allowedSorts = ['total_value', 'asset_count', 'name', 'owner_name', 'created_at', 'updated_at'];
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = 'total_value';
+        }
+
+        $portfolios = Portfolio::query()
+            ->where('is_public', true)
+            ->with(['user:id,name,avatar', 'investments'])
+            ->get();
+
+        $rows = $portfolios->map(function (Portfolio $portfolio) {
+            $activosCount = $portfolio->investments
+                ->filter(fn ($investment) => $investment->quantity > 0)
+                ->count();
+
+            $valorTotal = $portfolio->investments->sum(function ($investment) {
+                return $investment->quantity * $investment->avg_buy_price;
+            });
+
+            $user = $portfolio->user;
+
+            return [
+                'id' => $portfolio->id,
+                'name' => $portfolio->name,
+                'owner_name' => $user->name,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'avatar' => $user->avatar,
+                ],
+                'asset_count' => $activosCount,
+                'total_value' => round((float) $valorTotal, 2),
+                'created_at' => $portfolio->created_at,
+                'updated_at' => $portfolio->updated_at,
+            ];
+        });
+
+        if ($search !== null && $search !== '') {
+            $needle = mb_strtolower((string) $search);
+            $rows = $rows->filter(function (array $row) use ($needle) {
+                return str_contains(mb_strtolower($row['name']), $needle)
+                    || str_contains(mb_strtolower($row['owner_name']), $needle);
+            });
+        }
+
+        $sorted = $order === 'desc'
+            ? $rows->sortByDesc($sort)
+            : $rows->sortBy($sort);
+
+        return response()->json($sorted->values());
+    }
+
     public function index(Request $request)
     {
         $portfolios = $request->user()->portfolios()->with('investments')
@@ -14,7 +73,9 @@ class PortfolioController extends Controller
             ->get();
 
         $portfoliosData = $portfolios->map(function ($portfolio) {
-            $activosCount = $portfolio->investments->count();
+            $activosCount = $portfolio->investments
+            ->filter(fn($investment) => $investment->quantity > 0)
+            ->count();
             
             $valorTotal = $portfolio->investments->sum(function ($investment) {
                 return $investment->quantity * $investment->avg_buy_price; 

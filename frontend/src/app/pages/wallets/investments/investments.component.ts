@@ -33,6 +33,8 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
   ganancias = signal(0);
   porcentajeGanancias = signal(0);
   totalPosiciones = signal(0);
+  soloLectura = signal(false);
+  ownerName = signal<string | null>(null);
 
   // --- 3. CONFIGURACIÓN DE TABLA MATERIAL ---
   dataSource = new MatTableDataSource<Investment>([]);
@@ -40,12 +42,15 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
   sort = viewChild(MatSort);
   columnasDef = [
     { def: 'symbol', title: 'Activo', align: 'left' },
-    { def: 'weight', title: 'Peso', align: 'right' },
-    { def: 'return_7d', title: '7D retorno', align: 'right' },
-    { def: 'value', title: 'Valor', align: 'right' },
-    { def: 'quantity', title: 'Acciones', align: 'right' }
+    { def: 'weight', title: 'Peso', align: 'left' },
+    { def: 'return_7d', title: '7D retorno', align: 'left' },
+    { def: 'value', title: 'Valor', align: 'left' },
+    { def: 'quantity', title: 'Acciones', align: 'left' }
   ];
-  displayedColumns: string[] = [...this.columnasDef.map(c => c.def), 'opciones'];
+  columnasVisibles = computed(() => {
+    const base = this.columnasDef.map(c => c.def);
+    return this.soloLectura() ? base : [...base, 'opciones'];
+  });
 
   // --- 4. ESTADO DE MODALES Y BÚSQUEDA ---
   modalAbierto = signal(false);
@@ -67,6 +72,17 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
   inversionSeleccionada = signal<Investment | null>(null);
   buscandoPrecio = signal(false);
 
+  validarCantidadMaxima() {
+  if (this.modalModo() === 'sell' && this.inversionSeleccionada()) {
+    const maxQ = this.inversionSeleccionada()!.quantity;
+    const currentQ = this.posicionForm.get('quantity')?.value;
+    
+    if (currentQ > maxQ) {
+      this.posicionForm.patchValue({ quantity: maxQ });
+    }
+  }
+}
+
   // --- 5. FORMULARIOS Y SUSCRIPCIONES ---
   private searchSubject = new Subject<string>();
   private formSubscription?: Subscription;
@@ -78,7 +94,7 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
     image_url: [''],
     operated_at: ['', Validators.required],
     quantity: [null, [Validators.required, Validators.min(0.00000001)]],
-    price: [null, [Validators.required, Validators.min(0.01)]],
+    price: [null, Validators.required],
     api_id: [''] 
   });
 
@@ -110,16 +126,23 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     this.investmentService.getInvestments(id).subscribe({
       next: (response: any) => {
+        this.soloLectura.set(Boolean(response.read_only));
+        this.ownerName.set(response.owner_name ?? null);
         this.nombreCartera.set(response.portfolio_name);
         this.valorTotal.set(response.total_value);
-        this.totalPosiciones.set(response.investments.length);
+        
+        const inversionesActivas = response.investments.filter((inv: any) => inv.quantity > 0);
+        this.totalPosiciones.set(inversionesActivas.length);
+        
         this.ganancias.set(0);
         this.porcentajeGanancias.set(0);
-        this.dataSource.data = response.investments;
+        this.dataSource.data = inversionesActivas;
         this.cargando.set(false);
       },
       error: (err: any) => {
         console.error('Error cargando inversiones:', err);
+        this.soloLectura.set(false);
+        this.ownerName.set(null);
         this.cargando.set(false);
       }
     });
@@ -187,14 +210,23 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
 
   // --- 8. MANEJO DEL MODAL Y EVENTOS UI ---
   abrirModalNuevaPosicion() {
+    if (this.soloLectura()) {
+      return;
+    }
     this.prepararModal('create');
   }
 
   comprarActivo(activo: Investment) {
+    if (this.soloLectura()) {
+      return;
+    }
     this.prepararModal('buy', activo);
   }
 
   venderActivo(activo: Investment) {
+    if (this.soloLectura()) {
+      return;
+    }
     this.prepararModal('sell', activo);
   }
 
@@ -265,14 +297,17 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
 
   getCellClass(colDef: string, value: number | string | null | undefined): string {
     if (colDef === 'return_7d') {
-      return Number(value ?? 0) >= 0 ? '!text-green-500 font-medium' : '!text-red-500 font-medium';
+      return Number(value ?? 0) >= 0 ? '!text-green-500 font-ibm' : '!text-red-500 font-ibm';
     }
-    if (colDef === 'value') {
-      return '!text-white font-medium';
+    
+    if (colDef === 'weight' || colDef === 'value') {
+      return '!text-orange-500 font-medium font-ibm';
     }
-    if (colDef !== 'symbol') {
-      return '!text-neutral-400 font-ibm';
+    
+    if (colDef === 'symbol' || colDef === 'quantity') {
+      return '!text-white font-ibm';
     }
+    
     return '';
   }
 
@@ -392,10 +427,31 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
       name: activo?.name ?? (activo?.symbol ?? ''),
       asset_type: activo?.asset_type ?? 'crypto',
       image_url: activo?.image_url ?? '',
-      api_id: activo?.symbol ?? '',
+      api_id: activo?.api_id ?? '',
       operated_at: today,
       quantity: null,
       price: null
+    }, { emitEvent: false });
+
+    queueMicrotask(() => {
+      const apiId = this.posicionForm.get('api_id')?.value;
+      const assetType = this.posicionForm.get('asset_type')?.value;
+      const fecha = this.posicionForm.get('operated_at')?.value;
+
+      if (apiId && assetType && fecha) {
+        this.investmentService.getHistoricalPrice(apiId, assetType, fecha).subscribe({
+          next: (res: any) => {
+            if (res && res.price && res.price > 0) {
+              this.posicionForm.patchValue({ price: res.price }, { emitEvent: false });
+            } else {
+              this.posicionForm.patchValue({ price: null }, { emitEvent: false });
+            }
+          },
+          error: () => {
+            this.posicionForm.patchValue({ price: null }, { emitEvent: false });
+          }
+        });
+      }
     });
 
     this.modalAbierto.set(true);

@@ -12,12 +12,15 @@ export interface Investment {
   return_7d?: number;
   asset_type?: 'stock' | 'crypto' | string;
   name?: string;
+  api_id?: string;
 }
 
 export interface InvestmentsResponse {
   portfolio_name: string;
   total_value: number;
   investments: Investment[];
+  read_only?: boolean;
+  owner_name?: string | null;
 }
 
 export interface AssetSearchResult {

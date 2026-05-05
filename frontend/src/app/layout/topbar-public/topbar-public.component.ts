@@ -8,11 +8,13 @@ import { MarketService } from '../../services/market.service';
 
 interface SearchResult {
   symbol: string;
-  exchange:string;
-  instrument_name: string;
-  instrument_type: string;
-  country: string;
-  currency: string;
+  name: string;
+  asset_type: string;
+  image_url: string;
+  api_id: string;
+  exchange?: string;
+  country?: string;
+  currency?: string;
 }
 
 @Component({
@@ -22,18 +24,17 @@ interface SearchResult {
   styleUrl: './topbar-public.component.css'
 })
 
-
 export class TopbarPublicComponent {
-  private router = inject(Router)
-  private market = inject(MarketService)
-  private elRef = inject(ElementRef)
+  private router = inject(Router);
+  private market = inject(MarketService);
+  private elRef  = inject(ElementRef);
 
-  //Estado del buscador
-  query = signal('');
-  results = signal<SearchResult[]>([]);
-  isOpen = signal(false);
-  isLoading = signal(false);
+  query       = signal('');
+  results     = signal<SearchResult[]>([]);
+  isOpen      = signal(false);
+  isLoading   = signal(false);
   activeIndex = signal(-1);
+  showSearch  = false;
 
   private search$ = new Subject<string>();
 
@@ -46,17 +47,17 @@ export class TopbarPublicComponent {
           this.results.set([]);
           this.isOpen.set(false);
           this.isLoading.set(false);
-          return of({ data: [] });
+          return of([]);
         }
         this.isLoading.set(true);
         return this.market.search(q).pipe(
-          catchError(() => of({ data: [] }))
+          catchError(() => of([]))
         );
       }),
       takeUntilDestroyed()
     ).subscribe((res: any) => {
-      console.log('search response:', res);
-      const data = (res?.data ?? []).slice(0, 8);
+      const raw  = Array.isArray(res) ? res : (res?.data ?? []);
+      const data = raw.slice(0, 8);
       this.results.set(data);
       this.isLoading.set(false);
       this.isOpen.set(data.length > 0);
@@ -64,35 +65,26 @@ export class TopbarPublicComponent {
     });
   }
 
-  //Buscador
-  
-  //para movil
-  showSearch = false;
-
-  onInput(value: string):void{
-    console.log('onInput:', value);
-    this.query.set(value)
+  onInput(value: string): void {
+    this.query.set(value);
     this.search$.next(value);
   }
-  
+
   onKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape'){
-      this.clearSearch(); return; 
-      }
-    if (!this.isOpen())
-      return
-    const last = this.results().length - 1
-    if (event.key === 'ArrowDown'){
+    if (event.key === 'Escape') { this.clearSearch(); return; }
+    if (!this.isOpen()) return;
+    const last = this.results().length - 1;
+    if (event.key === 'ArrowDown'){ 
       event.preventDefault();
-      this.activeIndex.update(i => Math.min(i + 1, last));
+      this.activeIndex.update(i => Math.min(i + 1, last)); 
     }
-    if (event.key === 'ArrowUp'){
-      event.preventDefault();
-      this.activeIndex.update(i => Math.max(i - 1, 0));
+    if (event.key === 'ArrowUp'){ 
+      event.preventDefault(); 
+      this.activeIndex.update(i => Math.max(i - 1, 0)); 
     }
     if (event.key === 'Enter') {
-     const i = this.activeIndex();
-     if (i >= 0) this.goToSymbol(this.results()[i]);
+      const i = this.activeIndex();
+      if (i >= 0) this.goToSymbol(this.results()[i]);
     }
   }
 
@@ -115,11 +107,13 @@ export class TopbarPublicComponent {
     }
   }
 
-  // Helpers
   typeLabel(type: string): string {
     const map: Record<string, string> = {
-      'Common Stock': 'Stock', 'ETF': 'ETF',
-      'Digital Currency': 'Crypto', 'Cryptocurrency': 'Crypto',
+      'Common Stock': 'Stock',
+      'crypto': 'Crypto',
+      'Digital Currency': 'Crypto',
+      'Cryptocurrency': 'Crypto',
+      'ETF': 'ETF'
     };
     return map[type] ?? type;
   }
@@ -128,11 +122,11 @@ export class TopbarPublicComponent {
     const l = this.typeLabel(type);
     const b = 'text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0';
     if (l === 'Crypto') return b + ' bg-yellow-400/15 text-yellow-400';
-    if (l === 'ETF')    return b + ' bg-blue-400/15 text-blue-400';
+    if (l === 'ETF') return b + ' bg-blue-400/15 text-blue-400';
     return b + ' bg-orange-400/15 text-orange-400';
   }
 
-  goToPublic(): void{
-    this.router.navigate(['/public'])
+  goToPublic(): void {
+    this.router.navigate(['/public']);
   }
 }

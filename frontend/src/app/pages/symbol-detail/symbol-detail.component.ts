@@ -3,6 +3,8 @@ import { ActivatedRoute } from '@angular/router';
 import { DecimalPipe, Location } from '@angular/common';
 import { MarketService } from '../../services/market.service';
 import { NgApexchartsModule } from 'ng-apexcharts';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 interface SymbolInfo {
   symbol: string;
@@ -23,6 +25,9 @@ interface SymbolInfo {
 })
 export class SymbolDetailComponent implements OnInit {
 
+  
+  private http = inject(HttpClient);
+  private router = inject(Router);
   private route    = inject(ActivatedRoute);
   private location = inject(Location);
   private market   = inject(MarketService);
@@ -31,7 +36,7 @@ export class SymbolDetailComponent implements OnInit {
   info           = signal<SymbolInfo | null>(null);
   loadingInfo    = signal(true);
   loadingChart   = signal(true);
-  selectedPeriod = signal('1M');
+  selectedPeriod = signal('1D');
 
   readonly periods = ['1D', '1W', '1M', '1Y'];
 
@@ -39,36 +44,66 @@ export class SymbolDetailComponent implements OnInit {
   changeData = { value: 0, percent: 0, positive: true };
 
   ngOnInit(): void {
-    const sym = (this.route.snapshot.paramMap.get('symbol') ?? '').toUpperCase();
-    this.symbol.set(sym);
-    this.loadInfo(sym);
-    this.loadChart(sym, this.selectedPeriod());
+    this.route.params.subscribe(params => {
+      const sym = (this.route.snapshot.paramMap.get('symbol') ?? '').toUpperCase();
+      this.symbol.set(sym);
+      this.loadInfo(sym);
+      this.loadChart(sym, this.selectedPeriod());
+    });
   }
 
   loadInfo(symbol: string): void {
     this.loadingInfo.set(true);
-    this.market.getPrices(symbol, 'stock').subscribe({
-      next: (res) => {
-        const item = res?.results?.[0] ?? null;
-        this.info.set(item);
-        this.loadingInfo.set(false);
-      },
-      error: (err) => {
-        console.error('ERROR getPrices:', err);
-        this.loadingInfo.set(false);
-      }
-    });
+
+    if (this.market.isCrypto(symbol)) {
+      const coinId = this.market.coinGeckoId(
+        symbol.replace(/-USD$/i, '').toLowerCase()
+      );
+
+      this.http.get<any>(`https://api.coingecko.com/api/v3/coins/${coinId}`).subscribe({
+        next: (data) => {
+          this.info.set({
+            symbol: symbol,    
+            name: data.name,
+            type: 'CRYPTO',
+            price: data.market_data.current_price.usd,
+            currency: 'USD',
+            sector: data.categories?.[0] ?? null,
+            logo: data.image?.large ?? '',
+          });
+          this.loadingInfo.set(false);
+        },
+        error: () => this.loadingInfo.set(false),
+      });
+
+    } else {
+      this.market.getPrices(symbol, 'stock').subscribe({
+        next: (res) => {
+          const item = res?.results?.[0] ?? null;
+          this.info.set(item);
+          this.loadingInfo.set(false);
+        },
+        error: (err) => {
+          console.error('ERROR getPrices:', err);
+          this.loadingInfo.set(false);
+        }
+      });
+    }
   }
 
   loadChart(symbol: string, period: string): void {
     this.loadingChart.set(true);
-    this.market.getHistory(symbol, period).subscribe({
+
+    const assetType = this.market.isCrypto(symbol) ? 'crypto' : 'stock';
+    const chartSymbol = assetType === 'crypto' ? symbol.replace(/-USD$/i, '') : symbol;
+
+    this.market.getHistory(chartSymbol, period, assetType).subscribe({
       next: (res) => {
         const values = res?.values ?? res?.data ?? [];
         const prices = values.map((v: any) => +(v.y ?? 0));
         const first  = prices[0] ?? 0;
         const last   = prices[prices.length - 1] ?? 0;
-        const color  = last >= first ? '#10B981' : '#EF4444';
+        const color  = '#f97316';
 
         const val = +(last - first).toFixed(2);
         const pct = first !== 0 ? +((last - first) / first * 100).toFixed(2) : 0;
@@ -98,16 +133,16 @@ export class SymbolDetailComponent implements OnInit {
               formatter: (v: number) => v.toFixed(2)
             }
           },
-          stroke:     { curve: 'smooth', width: 2, colors: [color] },
+          stroke: { curve: 'smooth', width: 2, colors: [color] },
           fill: {
             type: 'gradient',
             colors: [color],
             gradient: { shadeIntensity: 1, opacityFrom: 0.25, opacityTo: 0 }
           },
-          grid:       { borderColor: '#1f2937', strokeDashArray: 3 },
-          tooltip:    { theme: 'dark', x: { show: true } },
+          grid: { borderColor: '#1f2937', strokeDashArray: 3 },
+          tooltip: { theme: 'dark', x: { show: true } },
           dataLabels: { enabled: false },
-          theme:      { mode: 'dark' }
+          theme: { mode: 'dark' }
         };
 
         this.loadingChart.set(false);
@@ -125,6 +160,17 @@ export class SymbolDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.location.back();
+    this.router.navigate(['/public']);
   }
+
+  getLogoUrl(symbol: string): string {
+    const clean = symbol.replace(/-USD$/i, '');
+    return `https://financialmodelingprep.com/image-stock/${clean}.png`;
+  }
+
+  onImgError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+  }
+
 }

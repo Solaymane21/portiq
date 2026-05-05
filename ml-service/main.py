@@ -195,9 +195,10 @@ def get_history(symbol: str, period: str = "1D", asset_type: str = "stock"):
     yf_symbol = f"{symbol.upper()}-USD" if asset_type == "crypto" else symbol.upper()
 
     period_map = {
-        "1D": ("5d",  "5m"),
+        "1D": ("1d",  "5m"),
+        "1W": ("5d",  "30m"),
         "1M": ("1mo", "1d"),
-        "1A": ("1y",  "1wk"),
+        "1Y": ("1y",  "1wk"),
     }
 
     yf_period, yf_interval = period_map.get(period, ("5d", "5m"))
@@ -232,9 +233,11 @@ def get_history(symbol: str, period: str = "1D", asset_type: str = "stock"):
             "period": period,
             "interval": yf_interval,
             "data": data
+            
         }
 
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+        

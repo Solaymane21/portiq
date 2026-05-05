@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Investment;
+use App\Models\Portfolio;
 use App\Models\Symbol;
 use App\Models\Trade;
 use Illuminate\Http\Request;
@@ -11,10 +12,14 @@ class InvestmentController extends Controller
 {
     public function index(Request $request, $portfolioId)
     {
-        $portfolio = $request->user()
-            ->portfolios()
-            ->with('investments.symbol')
-            ->findOrFail($portfolioId);
+        $portfolio = Portfolio::with(['investments.symbol', 'user'])
+            ->where('id', $portfolioId)
+            ->firstOrFail();
+
+        $user = $request->user();
+        if ((int) $portfolio->user_id !== (int) $user->id && ! $portfolio->is_public) {
+            abort(403, 'No autorizado');
+        }
 
         $investmentsData = [];
         $totalPortfolioValue = 0;
@@ -40,6 +45,7 @@ class InvestmentController extends Controller
                 'name' => $symbol->name,
                 'asset_type' => $symbol->asset_type,
                 'image_url' => $symbol->image_url,
+                'api_id' => $symbol->api_id,
                 'current_price' => $currentPrice,
                 'value' => $currentValue,
                 'weight' => 0,
@@ -54,10 +60,14 @@ class InvestmentController extends Controller
             unset($data);
         }
 
+        $readOnly = (int) $portfolio->user_id !== (int) $user->id;
+
         return response()->json([
             'portfolio_name' => $portfolio->name,
             'total_value' => (float) $totalPortfolioValue,
-            'investments' => $investmentsData
+            'investments' => $investmentsData,
+            'read_only' => $readOnly,
+            'owner_name' => $readOnly ? ($portfolio->user->name ?? null) : null,
         ]);
     }
 
@@ -69,7 +79,7 @@ class InvestmentController extends Controller
             'image_url' => 'nullable|string|max:2048',
             'asset_type' => 'required|string|in:stock,crypto',
             'quantity' => 'required|numeric|min:0.00000001',
-            'avg_buy_price' => 'required|numeric|min:0.01',
+            'avg_buy_price' => 'required|numeric',
             'operated_at' => 'nullable|date',
         ]);
 
@@ -143,7 +153,7 @@ class InvestmentController extends Controller
     {
         $request->validate([
             'quantity' => 'required|numeric|min:0.00000001',
-            'price_per_unit' => 'required|numeric|min:0.01',
+            'price_per_unit' => 'required|numeric',
             'operated_at' => 'nullable|date',
         ]);
 
@@ -179,7 +189,7 @@ class InvestmentController extends Controller
     {
         $request->validate([
             'quantity' => 'required|numeric|min:0.00000001',
-            'price_per_unit' => 'required|numeric|min:0.01',
+            'price_per_unit' => 'required|numeric',
             'operated_at' => 'nullable|date',
         ]);
 
@@ -203,9 +213,9 @@ class InvestmentController extends Controller
         ]);
 
         if ($nuevaCantidad <= 0) {
-            $investment->delete();
+            $investment->update(['quantity' => 0]); // ← CAMBIA A 0, NO BORRA
             return response()->json([
-                'message' => 'Venta registrada y posición cerrada.'
+                'message' => 'Venta registrada y posición cerrada (cantidad = 0).'
             ]);
         }
 

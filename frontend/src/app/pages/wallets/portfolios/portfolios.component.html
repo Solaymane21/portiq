@@ -4,7 +4,7 @@
     <div class="flex items-center gap-3">
       <h1 class="text-3xl font-ibm text-white">Carteras</h1>
 
-      <div class="flex items-center gap-1 bg-neutral-900 border border-neutral-800 rounded-md p-1">
+      <div class="flex items-center gap-1 bg-neutral-950 rounded-md p-1">
         <button
           (click)="cambiarVista('list')"
           class="p-1.5 rounded flex items-center justify-center"
@@ -28,8 +28,8 @@
     <!-- Botones de accion -->
     <div class="flex items-center gap-3">
       <button class="bg-white hover:bg-neutral-200/80 h-10 px-3 rounded-md text-black flex items-center justify-center gap-2">
-        <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
         </svg>
         <span class="whitespace-nowrap">Importar CSV</span>
       </button>
@@ -106,7 +106,13 @@
             <div
               class="flex flex-1 justify-between items-center text-sm"
               [class]="viewMode() === 'list' ? 'md:px-8 md:min-h-[44px]' : 'mt-4'">
-              <p class="text-white">{{ cartera.asset_count }} activos</p>
+              <p class="text-white">
+                @if (cartera.asset_count === 1) {
+                  1 activo
+                } @else {
+                  {{ cartera.asset_count }} activos
+                }
+              </p>
               <p class="text-white font-ibm font-medium text-lg">{{ cartera.total_value }}€</p>
             </div>
 

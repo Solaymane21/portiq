@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://portiq.sytes.net/api'
+  apiUrl: 'https://portiq.cat/api'
 };

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AssetSearchResult, InvestmentsResponse, UpsertPositionPayload, TradeActionPayload } from '../models/investment.model';
+import { AssetSearchResult, InvestmentsResponse, UpsertPositionPayload, TradeActionPayload, ImportPositionPayload } from '../models/investment.model';
 import { environment } from '../../environments/environment.prod';
 
 @Injectable({

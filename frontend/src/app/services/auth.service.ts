@@ -6,7 +6,7 @@ import { RedirectMsg } from '../models/redirectMsg.model';
 import { tap } from 'rxjs';
 import { InitialDataService } from './initial-data.service';
 import { FavoritesService } from './favorites.service';
-import { environment } from '../../environments/environment.prod';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'

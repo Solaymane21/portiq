@@ -1,5 +1,5 @@
 import { Injectable, signal, OnDestroy } from '@angular/core';
-import { environment } from '../../environments/environment.prod';
+import { environment } from '../../environments/environment';
 
 export interface PriceUpdate {
   symbol: string;

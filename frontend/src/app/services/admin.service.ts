@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AdminUsersResponse, User } from '../models/user.model';
 import { SubscriptionService } from './subscription.service';
-import { environment } from '../../environments/environment.prod';
+import { environment } from '../../environments/environment';
 
 @Injectable({providedIn: 'root'})
 

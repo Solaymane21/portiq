@@ -4,7 +4,7 @@ import { tap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 import { SearchResult } from '../models/search.model';
 import { NotificationsService } from './notifications.service';
-import { environment } from '../../environments/environment.prod';
+import { environment } from '../../environments/environment';
 
 export interface Favorite {
   id: number;

@@ -3,7 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { User } from '../models/user.model';
 import { AuthService } from './auth.service';
 import { NotificationsService } from './notifications.service';
-import { environment } from '../../environments/environment.prod';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'

@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { FavoritesService } from './favorites.service';
 import { map, Observable, tap } from 'rxjs';
+import { environment } from '../../environments/environment.prod';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,7 @@ export class InitialDataService {
   private http = inject(HttpClient);
   private favoritesService = inject(FavoritesService);
 
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = environment.apiUrl;
 
   ready = signal<boolean>(false);
 

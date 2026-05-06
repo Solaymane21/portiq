@@ -1,12 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment.prod';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PortfolioService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8000/api/portfolios';
+  private apiUrl = `${environment.apiUrl}/portfolios`;
 
   createPortfolio(data: { name: string, is_default: boolean, is_public: boolean }) {
     return this.http.post<any>(this.apiUrl, data);

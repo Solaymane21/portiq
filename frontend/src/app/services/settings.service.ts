@@ -3,6 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { User } from '../models/user.model';
 import { AuthService } from './auth.service';
 import { NotificationsService } from './notifications.service';
+import { environment } from '../../environments/environment.prod';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,7 @@ export class SettingsService {
   authService = inject(AuthService);
   notificationService = inject(NotificationsService)
 
-  apiUrl = 'http://localhost:8000/api';
+  apiUrl = environment.apiUrl;
 
   isLoading = signal<boolean>(false)
   username = signal<User['name']>('')

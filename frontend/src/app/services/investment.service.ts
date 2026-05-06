@@ -1,14 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AssetSearchResult, Investment, InvestmentsResponse, UpsertPositionPayload, TradeActionPayload } from '../models/investment.model';
+import { AssetSearchResult, InvestmentsResponse, UpsertPositionPayload, TradeActionPayload } from '../models/investment.model';
+import { environment } from '../../environments/environment.prod';
 
 @Injectable({
   providedIn: 'root'
 })
 export class InvestmentService {
   private http = inject(HttpClient);
-  private apiBase = 'http://localhost:8000/api';
+  private apiBase = environment.apiUrl;
 
   getInvestments(portfolioId: number): Observable<InvestmentsResponse> {
     return this.http.get<InvestmentsResponse>(`${this.apiBase}/portfolios/${portfolioId}/investments`);

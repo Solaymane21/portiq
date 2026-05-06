@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { NotificationsService } from './notifications.service';
 import { UserPreferences } from '../models/preferences.model';
+import { environment } from '../../environments/environment.prod';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,7 @@ import { UserPreferences } from '../models/preferences.model';
 export class PreferencesService {
   http = inject(HttpClient);
   notification = inject(NotificationsService);
-  apiUrl = 'http://localhost:8000/api';
+  apiUrl = environment.apiUrl;
 
   currency = signal<'EUR' | 'USD'>('EUR');
   theme    = signal<'dark' | 'light'>('dark');

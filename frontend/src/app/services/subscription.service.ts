@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { NotificationsService } from './notifications.service';
+import { environment } from '../../environments/environment.prod';
 
 export interface SubscriptionStatus {
   is_subscribed: boolean;
@@ -17,7 +18,7 @@ export class SubscriptionService {
 
   http = inject(HttpClient);
   notification = inject(NotificationsService);
-  apiUrl = 'http://localhost:8000/api';
+  apiUrl = environment.apiUrl;
 
   isLoading = signal(false);
   isCancelling = signal(false);

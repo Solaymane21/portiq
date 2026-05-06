@@ -6,6 +6,7 @@ import { RedirectMsg } from '../models/redirectMsg.model';
 import { tap } from 'rxjs';
 import { InitialDataService } from './initial-data.service';
 import { FavoritesService } from './favorites.service';
+import { environment } from '../../environments/environment.prod';
 
 @Injectable({
   providedIn: 'root'
@@ -24,7 +25,7 @@ export class AuthService {
   );
 
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = environment.apiUrl;
   private router = inject(Router);
   private initialDataService = inject(InitialDataService)
   private favoritesService = inject(FavoritesService)

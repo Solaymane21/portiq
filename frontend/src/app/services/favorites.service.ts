@@ -4,6 +4,7 @@ import { tap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 import { SearchResult } from '../models/search.model';
 import { NotificationsService } from './notifications.service';
+import { environment } from '../../environments/environment.prod';
 
 export interface Favorite {
   id: number;
@@ -19,7 +20,7 @@ export interface Favorite {
 export class FavoritesService {
 
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = environment.apiUrl;
   private notificationService = inject(NotificationsService);
 
   private readonly CACHE_KEY = 'portiq_favorites';

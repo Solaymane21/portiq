@@ -3,11 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AdminUsersResponse, User } from '../models/user.model';
 import { SubscriptionService } from './subscription.service';
+import { environment } from '../../environments/environment.prod';
 
 @Injectable({providedIn: 'root'})
 
 export class AdminService{
-    private apiUrl = 'http://localhost:8000/api/admin/users';
+    private apiUrl = `${environment.apiUrl}/admin/users`;
 
     http = inject(HttpClient)
     subscriptionService = inject(SubscriptionService)

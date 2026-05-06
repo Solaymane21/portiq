@@ -3,6 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { HttpClient } from '@angular/common/http';
 import { catchError, map, of } from 'rxjs';
+import { environment } from '../../environments/environment.prod';
 
 export const authGuard: CanActivateFn = (route, state) => {
   const http = inject(HttpClient);
@@ -20,7 +21,7 @@ export const authGuard: CanActivateFn = (route, state) => {
     return false
   }
 
-  return http.get('http://localhost:8000/api/auth/validate-token').pipe(
+  return http.get(`${environment.apiUrl}/auth/validate-token`).pipe(
     map(() => {
       if (authService.currentUser()?.is_admin) {
         router.navigate(['/admin/dashboard'])

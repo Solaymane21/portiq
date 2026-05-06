@@ -19,6 +19,13 @@ export class InvestmentService {
     return this.http.post(`${this.apiBase}/portfolios/${portfolioId}/investments`, payload);
   }
 
+  importPositions(portfolioId: number, positions: ImportPositionPayload[]): Observable<{ message: string; count: number }> {
+    return this.http.post<{ message: string; count: number }>(
+      `${this.apiBase}/portfolios/${portfolioId}/investments/import`,
+      { positions }
+    );
+  }
+
   buyInvestment(portfolioId: number, investmentId: number, payload: TradeActionPayload): Observable<any> {
     return this.http.post(`${this.apiBase}/portfolios/${portfolioId}/investments/${investmentId}/buy`, payload);
   }

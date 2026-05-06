@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Portfolio;
-use Illuminate\Http\Request;
 use App\Models\Trade;
+use Illuminate\Http\Request;
 
 class TradeController extends Controller
 {
@@ -17,26 +17,23 @@ class TradeController extends Controller
             abort(403, 'No autorizado');
         }
 
-        $trades = Trade::whereHas('investment', function ($query) use ($portfolioId) {
-                $query->where('portfolio_id', $portfolioId);
-            })
+        $trades = Trade::whereHas('investment', fn ($q) => $q->where('portfolio_id', $portfolioId))
             ->with('investment.symbol')
             ->orderBy('operated_at', 'desc')
             ->orderBy('id', 'desc')
             ->get();
 
-        $totalDepositado = 0; // Compras y Nuevas Posiciones
-        $totalRetirado = 0;   // Ventas
+        $totalIn = 0;
+        $totalOut = 0;
 
-        $formattedTrades = $trades->map(function ($trade) use (&$totalDepositado, &$totalRetirado) {
+        $formattedTrades = $trades->map(function ($trade) use (&$totalIn, &$totalOut) {
             $symbol = $trade->investment->symbol ?? null;
             $totalValue = (float) ($trade->quantity * $trade->price_per_unit);
 
-            // Calculamos estadísticas
             if ($trade->type === 'venta') {
-                $totalRetirado += $totalValue;
+                $totalOut += $totalValue;
             } else {
-                $totalDepositado += $totalValue;
+                $totalIn += $totalValue;
             }
 
             return [
@@ -53,18 +50,15 @@ class TradeController extends Controller
             ];
         });
 
-        // La Exposición Neta es el dinero real que sigue "en juego"
-        $exposicionNeta = $totalDepositado - $totalRetirado;
-
         return response()->json([
             'portfolio_name' => $portfolio->name,
             'stats' => [
-                'total_depositado' => $totalDepositado,
-                'total_retirado' => $totalRetirado,
-                'exposicion_neta' => $exposicionNeta,
+                'total_depositado' => $totalIn,
+                'total_retirado' => $totalOut,
+                'exposicion_neta' => $totalIn - $totalOut,
                 'total_operaciones' => $trades->count(),
             ],
-            'trades' => $formattedTrades
+            'trades' => $formattedTrades,
         ]);
     }
 }

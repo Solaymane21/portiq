@@ -1,15 +1,24 @@
-import { Component, signal, computed, inject, OnInit, effect, viewChild, OnDestroy } from '@angular/core';
+import {
+  Component,
+  signal,
+  computed,
+  inject,
+  OnInit,
+  effect,
+  viewChild,
+  DestroyRef
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { InvestmentService } from '../../../services/investment.service';
-import { AssetSearchResult, Investment, InvestmentsResponse } from '../../../models/investment.model';
-
+import { AssetSearchResult, Investment } from '../../../models/investment.model';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-
-import { Subject, Subscription } from 'rxjs';
+import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, filter } from 'rxjs/operators';
+import { buildInvestmentsCsv } from '../wallets-csv';
 
 @Component({
   selector: 'app-investments',
@@ -18,14 +27,13 @@ import { debounceTime, distinctUntilChanged, switchMap, filter } from 'rxjs/oper
   templateUrl: './investments.component.html',
   styleUrl: './investments.component.css'
 })
-export class InvestmentsComponent implements OnInit, OnDestroy {
-  // --- 1. DEPENDENCIAS ---
+export class InvestmentsComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
   private investmentService = inject(InvestmentService);
+  private destroyRef = inject(DestroyRef);
 
-  // --- 2. ESTADO GENERAL Y MÉTRICAS (SIGNALS) ---
   portfolioId = signal<number | null>(null);
   cargando = signal(true);
   nombreCartera = signal('Cargando...');
@@ -36,10 +44,10 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
   soloLectura = signal(false);
   ownerName = signal<string | null>(null);
 
-  // --- 3. CONFIGURACIÓN DE TABLA MATERIAL ---
   dataSource = new MatTableDataSource<Investment>([]);
   paginator = viewChild(MatPaginator);
   sort = viewChild(MatSort);
+
   columnasDef = [
     { def: 'symbol', title: 'Activo', align: 'left' },
     { def: 'weight', title: 'Peso', align: 'left' },
@@ -47,12 +55,12 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
     { def: 'value', title: 'Valor', align: 'left' },
     { def: 'quantity', title: 'Acciones', align: 'left' }
   ];
+
   columnasVisibles = computed(() => {
-    const base = this.columnasDef.map(c => c.def);
+    const base = this.columnasDef.map((c) => c.def);
     return this.soloLectura() ? base : [...base, 'opciones'];
   });
 
-  // --- 4. ESTADO DE MODALES Y BÚSQUEDA ---
   modalAbierto = signal(false);
   guardando = signal(false);
   modalModo = signal<'create' | 'buy' | 'sell'>('create');
@@ -62,30 +70,17 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
   filtroTipo = signal<'all' | 'crypto' | 'stock'>('all');
   buscandoActivos = signal(false);
   resultadosBusquedaOriginales = signal<AssetSearchResult[]>([]);
-  
+
   resultadosFiltrados = computed(() => {
     if (this.filtroTipo() === 'all') return this.resultadosBusquedaOriginales();
-    return this.resultadosBusquedaOriginales().filter(a => a.asset_type === this.filtroTipo());
+    return this.resultadosBusquedaOriginales().filter((a) => a.asset_type === this.filtroTipo());
   });
 
-  activoSeleccionado = signal<any>(null);
+  activoSeleccionado = signal<AssetSearchResult | null>(null);
   inversionSeleccionada = signal<Investment | null>(null);
   buscandoPrecio = signal(false);
 
-  validarCantidadMaxima() {
-  if (this.modalModo() === 'sell' && this.inversionSeleccionada()) {
-    const maxQ = this.inversionSeleccionada()!.quantity;
-    const currentQ = this.posicionForm.get('quantity')?.value;
-    
-    if (currentQ > maxQ) {
-      this.posicionForm.patchValue({ quantity: maxQ });
-    }
-  }
-}
-
-  // --- 5. FORMULARIOS Y SUSCRIPCIONES ---
   private searchSubject = new Subject<string>();
-  private formSubscription?: Subscription;
 
   posicionForm: FormGroup = this.fb.group({
     ticker: ['', [Validators.required, Validators.maxLength(10)]],
@@ -95,10 +90,9 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
     operated_at: ['', Validators.required],
     quantity: [null, [Validators.required, Validators.min(0.00000001)]],
     price: [null, Validators.required],
-    api_id: [''] 
+    api_id: ['']
   });
 
-  // --- 6. CICLO DE VIDA ---
   constructor() {
     effect(() => {
       const pag = this.paginator();
@@ -109,43 +103,94 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.inicializarRuta();
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const id = params.get('id');
+      if (id) {
+        this.portfolioId.set(Number(id));
+        this.cargarInversiones();
+      }
+    });
+
     this.inicializarBuscador();
-    this.inicializarEscuchaDePrecioHistorico();
+    this.posicionForm
+      .get('operated_at')
+      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((fecha) => {
+        const apiId = this.posicionForm.get('api_id')?.value;
+        const assetType = this.posicionForm.get('asset_type')?.value;
+
+        if (fecha && apiId && assetType) {
+          this.buscandoPrecio.set(true);
+          this.investmentService.getHistoricalPrice(apiId, assetType, fecha).subscribe({
+            next: (res: { price?: number }) => {
+              if (res?.price && res.price > 0) {
+                this.posicionForm.patchValue({ price: res.price }, { emitEvent: false });
+              } else {
+                this.posicionForm.patchValue({ price: null }, { emitEvent: false });
+              }
+              this.buscandoPrecio.set(false);
+            },
+            error: () => {
+              this.posicionForm.patchValue({ price: null }, { emitEvent: false });
+              this.buscandoPrecio.set(false);
+            }
+          });
+        }
+      });
   }
 
-  ngOnDestroy() {
-    this.formSubscription?.unsubscribe();
+  validarCantidadMaxima() {
+    if (this.modalModo() === 'sell' && this.inversionSeleccionada()) {
+      const maxQ = this.inversionSeleccionada()!.quantity;
+      const currentQ = this.posicionForm.get('quantity')?.value;
+      if (currentQ > maxQ) {
+        this.posicionForm.patchValue({ quantity: maxQ });
+      }
+    }
   }
 
-  // --- 7. PETICIONES A LA API (LÓGICA PRINCIPAL) ---
   cargarInversiones() {
     const id = this.portfolioId();
     if (!id) return;
 
     this.cargando.set(true);
     this.investmentService.getInvestments(id).subscribe({
-      next: (response: any) => {
+      next: (response) => {
         this.soloLectura.set(Boolean(response.read_only));
         this.ownerName.set(response.owner_name ?? null);
         this.nombreCartera.set(response.portfolio_name);
         this.valorTotal.set(response.total_value);
-        
-        const inversionesActivas = response.investments.filter((inv: any) => inv.quantity > 0);
+
+        const inversionesActivas = response.investments.filter((inv) => inv.quantity > 0);
         this.totalPosiciones.set(inversionesActivas.length);
-        
         this.ganancias.set(0);
         this.porcentajeGanancias.set(0);
         this.dataSource.data = inversionesActivas;
         this.cargando.set(false);
       },
-      error: (err: any) => {
+      error: (err) => {
         console.error('Error cargando inversiones:', err);
         this.soloLectura.set(false);
         this.ownerName.set(null);
         this.cargando.set(false);
       }
     });
+  }
+
+  exportarCsv() {
+    const id = this.portfolioId();
+    if (!id || this.soloLectura()) return;
+
+    const name = this.nombreCartera();
+    const csv = buildInvestmentsCsv(name, this.dataSource.data);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safe = name.replace(/[^\w\-]+/g, '_').slice(0, 48) || 'cartera';
+    a.href = url;
+    a.download = `${safe}_${id}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   guardarPosicion() {
@@ -171,7 +216,7 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
           this.cerrarModal();
           this.cargarInversiones();
         },
-        error: (err: any) => {
+        error: (err) => {
           console.error('Error guardando posición:', err);
           this.guardando.set(false);
         }
@@ -191,9 +236,10 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
       operated_at: formValues.operated_at
     };
 
-    const request$ = this.modalModo() === 'buy'
-      ? this.investmentService.buyInvestment(this.portfolioId()!, inversion.id, tradePayload)
-      : this.investmentService.sellInvestment(this.portfolioId()!, inversion.id, tradePayload);
+    const request$ =
+      this.modalModo() === 'buy'
+        ? this.investmentService.buyInvestment(this.portfolioId()!, inversion.id, tradePayload)
+        : this.investmentService.sellInvestment(this.portfolioId()!, inversion.id, tradePayload);
 
     request$.subscribe({
       next: () => {
@@ -201,32 +247,25 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
         this.cerrarModal();
         this.cargarInversiones();
       },
-      error: (err: any) => {
+      error: (err) => {
         console.error('Error procesando operación:', err);
         this.guardando.set(false);
       }
     });
   }
 
-  // --- 8. MANEJO DEL MODAL Y EVENTOS UI ---
   abrirModalNuevaPosicion() {
-    if (this.soloLectura()) {
-      return;
-    }
+    if (this.soloLectura()) return;
     this.prepararModal('create');
   }
 
   comprarActivo(activo: Investment) {
-    if (this.soloLectura()) {
-      return;
-    }
+    if (this.soloLectura()) return;
     this.prepararModal('buy', activo);
   }
 
   venderActivo(activo: Investment) {
-    if (this.soloLectura()) {
-      return;
-    }
+    if (this.soloLectura()) return;
     this.prepararModal('sell', activo);
   }
 
@@ -252,7 +291,7 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
     this.filtroTipo.set(tipo);
   }
 
-  seleccionarActivo(activo: any) {
+  seleccionarActivo(activo: AssetSearchResult) {
     this.activoSeleccionado.set(activo);
     this.modalPaso.set('details');
 
@@ -261,7 +300,7 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
       name: activo.name,
       asset_type: activo.asset_type,
       image_url: activo.image_url ?? '',
-      api_id: activo.api_id 
+      api_id: activo.api_id
     });
 
     const currentFecha = this.posicionForm.get('operated_at')?.value;
@@ -270,7 +309,6 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // --- 9. NAVEGACIÓN ---
   irAWallets() {
     this.router.navigate(['/app/wallets']);
   }
@@ -282,7 +320,6 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // --- 10. FUNCIONES ÚTILES PARA EL HTML (PIPES/FORMATTERS) ---
   getInitial(value: string | null | undefined): string {
     return value ? value.charAt(0).toUpperCase() : '';
   }
@@ -299,15 +336,12 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
     if (colDef === 'return_7d') {
       return Number(value ?? 0) >= 0 ? '!text-green-500 font-ibm' : '!text-red-500 font-ibm';
     }
-    
     if (colDef === 'weight' || colDef === 'value') {
       return '!text-orange-500 font-medium font-ibm';
     }
-    
     if (colDef === 'symbol' || colDef === 'quantity') {
       return '!text-white font-ibm';
     }
-    
     return '';
   }
 
@@ -324,114 +358,73 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
     return 'Vender';
   }
 
-  // --- 11. MÉTODOS PRIVADOS DE INICIALIZACIÓN ---
-  private inicializarRuta() {
-    this.route.parent?.paramMap.subscribe(params => {
-      const id = params.get('id');
-      if (id) {
-        this.portfolioId.set(Number(id));
-        this.cargarInversiones();
-      }
-    });
-
-    if (!this.portfolioId()) {
-      this.route.paramMap.subscribe(params => {
-        const id = params.get('id');
-        if (id) {
-          this.portfolioId.set(Number(id));
-          this.cargarInversiones();
-        }
-      });
-    }
-  }
-
   private inicializarBuscador() {
-    this.searchSubject.pipe(
-      debounceTime(250), 
-      distinctUntilChanged(),
-      filter(query => {
-        if (query.trim().length < 2) {
+    this.searchSubject
+      .pipe(
+        debounceTime(250),
+        distinctUntilChanged(),
+        filter((query) => {
+          if (query.trim().length < 2) {
+            this.resultadosBusquedaOriginales.set([]);
+            this.buscandoActivos.set(false);
+            return false;
+          }
+          return true;
+        }),
+        switchMap((query) => {
+          this.buscandoActivos.set(true);
+          return this.investmentService.searchAssets(query);
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (results) => {
+          this.resultadosBusquedaOriginales.set(results);
+          this.buscandoActivos.set(false);
+        },
+        error: (err) => {
+          console.error('Error buscando activos:', err);
           this.resultadosBusquedaOriginales.set([]);
           this.buscandoActivos.set(false);
-          return false;
-        }
-        return true;
-      }),
-      switchMap(query => {
-        this.buscandoActivos.set(true);
-        return this.investmentService.searchAssets(query);
-      })
-    ).subscribe({
-      next: (results: any) => {
-        this.resultadosBusquedaOriginales.set(results);
-        this.buscandoActivos.set(false);
-      },
-      error: (err: any) => {
-        console.error('Error buscando activos:', err);
-        this.resultadosBusquedaOriginales.set([]);
-        this.buscandoActivos.set(false);
-      }
-    });
-  }
-
-  private inicializarEscuchaDePrecioHistorico() {
-  this.formSubscription = this.posicionForm.get('operated_at')?.valueChanges.subscribe(fecha => {
-    const apiId = this.posicionForm.get('api_id')?.value;
-    const assetType = this.posicionForm.get('asset_type')?.value;
-
-    if (fecha && apiId && assetType) {
-      this.buscandoPrecio.set(true);
-      
-      this.investmentService.getHistoricalPrice(apiId, assetType, fecha).subscribe({
-        next: (res: any) => {
-          if (res && res.price && res.price > 0) {
-            this.posicionForm.patchValue({ price: res.price }, { emitEvent: false });
-          } else {
-            this.posicionForm.patchValue({ price: null }, { emitEvent: false });
-          }
-          this.buscandoPrecio.set(false);
-        },
-        error: (err: any) => {
-          console.warn('El servidor no pudo obtener el precio de apertura:', err);
-          this.posicionForm.patchValue({ price: null }, { emitEvent: false });
-          this.buscandoPrecio.set(false);
         }
       });
-    }
-  });
-}
+  }
 
   private prepararModal(modo: 'create' | 'buy' | 'sell', activo?: Investment) {
     this.modalModo.set(modo);
     this.modalPaso.set(modo === 'create' ? 'search' : 'details');
-    
+
     if (modo === 'create') {
       this.busqueda.set('');
       this.resultadosBusquedaOriginales.set([]);
       this.activoSeleccionado.set(null);
       this.inversionSeleccionada.set(null);
-      this.filtroTipo.set('all'); 
+      this.filtroTipo.set('all');
     } else if (activo) {
       this.inversionSeleccionada.set(activo);
       this.activoSeleccionado.set({
         symbol: activo.symbol,
         name: activo.name ?? activo.symbol,
         image_url: activo.image_url ?? null,
-        asset_type: activo.asset_type ?? 'crypto'
+        asset_type: (activo.asset_type ?? 'crypto') as 'stock' | 'crypto',
+        api_id: activo.api_id
       });
     }
 
     const today = new Date().toISOString().split('T')[0];
-    this.posicionForm.reset({
-      ticker: activo?.symbol ?? '',
-      name: activo?.name ?? (activo?.symbol ?? ''),
-      asset_type: activo?.asset_type ?? 'crypto',
-      image_url: activo?.image_url ?? '',
-      api_id: activo?.api_id ?? '',
-      operated_at: today,
-      quantity: null,
-      price: null
-    }, { emitEvent: false });
+    this.posicionForm.reset(
+      {
+        ticker: activo?.symbol ?? '',
+        name: activo?.name ?? (activo?.symbol ?? ''),
+        asset_type: activo?.asset_type ?? 'crypto',
+        image_url: activo?.image_url ?? '',
+        api_id: activo?.api_id ?? '',
+        operated_at: today,
+        quantity: null,
+        price: null
+      },
+      { emitEvent: false }
+    );
 
     queueMicrotask(() => {
       const apiId = this.posicionForm.get('api_id')?.value;
@@ -440,8 +433,8 @@ export class InvestmentsComponent implements OnInit, OnDestroy {
 
       if (apiId && assetType && fecha) {
         this.investmentService.getHistoricalPrice(apiId, assetType, fecha).subscribe({
-          next: (res: any) => {
-            if (res && res.price && res.price > 0) {
+          next: (res: { price?: number }) => {
+            if (res?.price && res.price > 0) {
               this.posicionForm.patchValue({ price: res.price }, { emitEvent: false });
             } else {
               this.posicionForm.patchValue({ price: null }, { emitEvent: false });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Portfolio;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class PortfolioController extends Controller
 {
@@ -23,32 +24,7 @@ class PortfolioController extends Controller
             ->with(['user:id,name,avatar', 'investments'])
             ->get();
 
-        $rows = $portfolios->map(function (Portfolio $portfolio) {
-            $activosCount = $portfolio->investments
-                ->filter(fn ($investment) => $investment->quantity > 0)
-                ->count();
-
-            $valorTotal = $portfolio->investments->sum(function ($investment) {
-                return $investment->quantity * $investment->avg_buy_price;
-            });
-
-            $user = $portfolio->user;
-
-            return [
-                'id' => $portfolio->id,
-                'name' => $portfolio->name,
-                'owner_name' => $user->name,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'avatar' => $user->avatar,
-                ],
-                'asset_count' => $activosCount,
-                'total_value' => round((float) $valorTotal, 2),
-                'created_at' => $portfolio->created_at,
-                'updated_at' => $portfolio->updated_at,
-            ];
-        });
+        $rows = $portfolios->map(fn (Portfolio $p) => $this->publicRankingRow($p));
 
         if ($search !== null && $search !== '') {
             $needle = mb_strtolower((string) $search);
@@ -67,33 +43,15 @@ class PortfolioController extends Controller
 
     public function index(Request $request)
     {
-        $portfolios = $request->user()->portfolios()->with('investments')
+        $portfolios = $request->user()->portfolios()
+            ->with('investments')
             ->orderByDesc('is_default')
             ->orderBy('created_at')
             ->get();
 
-        $portfoliosData = $portfolios->map(function ($portfolio) {
-            $activosCount = $portfolio->investments
-            ->filter(fn($investment) => $investment->quantity > 0)
-            ->count();
-            
-            $valorTotal = $portfolio->investments->sum(function ($investment) {
-                return $investment->quantity * $investment->avg_buy_price; 
-            });
+        $data = $portfolios->map(fn (Portfolio $p) => $this->portfolioSummary($p, true));
 
-            return [
-                'id' => $portfolio->id,
-                'name' => $portfolio->name,
-                'is_default' => (bool) $portfolio->is_default,
-                'is_public' => (bool) $portfolio->is_public,
-                'asset_count' => $activosCount,
-                'total_value' => round($valorTotal, 2),
-                'created_at' => $portfolio->created_at,
-                'updated_at' => $portfolio->updated_at
-            ];
-        }); 
-
-        return response()->json($portfoliosData);
+        return response()->json($data);
     }
 
     public function store(Request $request)
@@ -112,26 +70,17 @@ class PortfolioController extends Controller
 
         return response()->json([
             'message' => 'Cartera creada.',
-            'portfolio' => [
-                'id' => $portfolio->id,
-                'name' => $portfolio->name,
-                'is_default' => (bool) $portfolio->is_default,
-                'is_public' => (bool) $portfolio->is_public,
-                'asset_count' => 0,
-                'total_value' => 0,
-                'created_at' => $portfolio->created_at,
-                'updated_at' => $portfolio->updated_at
-            ]
+            'portfolio' => $this->portfolioSummary($portfolio, false),
         ], 201);
     }
 
-    public function update(Request $request, $id) 
+    public function update(Request $request, $id)
     {
         $portfolio = $request->user()->portfolios()->with('investments')->findOrFail($id);
-        
+
         $isDefault = $request->is_default ?? false;
 
-        if ($isDefault && !$portfolio->is_default) {
+        if ($isDefault && ! $portfolio->is_default) {
             $request->user()->portfolios()
                 ->where('id', '!=', $portfolio->id)
                 ->update(['is_default' => false]);
@@ -143,23 +92,11 @@ class PortfolioController extends Controller
             'is_public' => $request->is_public ?? false,
         ]);
 
-        $activosCount = $portfolio->investments->count();
-        $valorTotal = $portfolio->investments->sum(function ($investment) {
-            return $investment->quantity * $investment->avg_buy_price; 
-        });
+        $portfolio->load('investments');
 
         return response()->json([
             'message' => 'Cartera actualizada.',
-            'portfolio' => [
-                'id' => $portfolio->id,
-                'name' => $portfolio->name,
-                'is_default' => (bool) $portfolio->is_default,
-                'is_public' => (bool) $portfolio->is_public,
-                'asset_count' => $activosCount,
-                'total_value' => round($valorTotal, 2),
-                'created_at' => $portfolio->created_at,
-                'updated_at' => $portfolio->updated_at
-            ]
+            'portfolio' => $this->portfolioSummary($portfolio, true),
         ]);
     }
 
@@ -168,11 +105,68 @@ class PortfolioController extends Controller
         $portfolio = $request->user()->portfolios()->findOrFail($id);
 
         $portfolio->investments()->delete();
-        
         $portfolio->delete();
 
         return response()->json([
-            'message' => 'Cartera eliminada.'
+            'message' => 'Cartera eliminada.',
         ]);
+    }
+
+    private function activeInvestments(Collection $investments): Collection
+    {
+        return $investments->filter(fn ($inv) => (float) $inv->quantity > 0);
+    }
+
+    private function portfolioValue(Collection $investments): float
+    {
+        return (float) $investments->sum(fn ($inv) => (float) $inv->quantity * (float) $inv->avg_buy_price);
+    }
+
+    /** Resumen para listados del usuario (misma forma en index, store y update). */
+    private function portfolioSummary(Portfolio $portfolio, bool $includeMetrics): array
+    {
+        $investments = $portfolio->investments ?? collect();
+        $active = $this->activeInvestments($investments);
+
+        $row = [
+            'id' => $portfolio->id,
+            'name' => $portfolio->name,
+            'is_default' => (bool) $portfolio->is_default,
+            'is_public' => (bool) $portfolio->is_public,
+            'created_at' => $portfolio->created_at,
+            'updated_at' => $portfolio->updated_at,
+        ];
+
+        if ($includeMetrics) {
+            $row['asset_count'] = $active->count();
+            $row['total_value'] = round($this->portfolioValue($investments), 2);
+        } else {
+            $row['asset_count'] = 0;
+            $row['total_value'] = 0;
+        }
+
+        return $row;
+    }
+
+    private function publicRankingRow(Portfolio $portfolio): array
+    {
+        $user = $portfolio->user;
+        $investments = $portfolio->investments ?? collect();
+        $active = $this->activeInvestments($investments);
+
+        return [
+            'id' => $portfolio->id,
+            'name' => $portfolio->name,
+            'owner_name' => $user->name,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'avatar' => $user->avatar,
+            ],
+            'asset_count' => $active->count(),
+            'total_value' => round($this->portfolioValue($investments), 2),
+            'created_at' => $portfolio->created_at,
+            'updated_at' => $portfolio->updated_at,
+        ];
     }
 }

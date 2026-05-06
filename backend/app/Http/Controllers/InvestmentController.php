@@ -7,6 +7,8 @@ use App\Models\Portfolio;
 use App\Models\Symbol;
 use App\Models\Trade;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class InvestmentController extends Controller
 {
@@ -26,12 +28,11 @@ class InvestmentController extends Controller
 
         foreach ($portfolio->investments as $investment) {
             $symbol = $investment->symbol;
-
-            if (!$symbol) {
+            if (! $symbol) {
                 continue;
             }
 
-            $currentPrice = (float) $investment->avg_buy_price; 
+            $currentPrice = (float) $investment->avg_buy_price;
             $currentValue = (float) $investment->quantity * $currentPrice;
             $totalPortfolioValue += $currentValue;
 
@@ -49,7 +50,7 @@ class InvestmentController extends Controller
                 'current_price' => $currentPrice,
                 'value' => $currentValue,
                 'weight' => 0,
-                'return_7d' => 0, 
+                'return_7d' => 0,
             ];
         }
 
@@ -73,7 +74,7 @@ class InvestmentController extends Controller
 
     public function store(Request $request, $portfolioId)
     {
-        $request->validate([
+        $data = $request->validate([
             'symbol' => 'required|string|max:20',
             'name' => 'nullable|string|max:255',
             'image_url' => 'nullable|string|max:2048',
@@ -84,61 +85,62 @@ class InvestmentController extends Controller
         ]);
 
         $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
-        $symbolTicker = strtoupper($request->symbol);
 
-        $symbol = Symbol::firstOrCreate(
-            ['symbol' => $symbolTicker],
-            [
-                'name' => $request->name ?: $symbolTicker,
-                'image_url' => $request->image_url,
-                'asset_type' => $request->asset_type,
-                'current_price' => $request->avg_buy_price,
-                'is_active' => true,
-            ]
-        );
-
-        $investment = Investment::where('portfolio_id', $portfolio->id)
-            ->where('symbol_id', $symbol->id)
-            ->first();
-
-        if ($investment) {
-            $totalCostAntes = $investment->quantity * $investment->avg_buy_price;
-            $costoNuevaOperacion = $request->quantity * $request->avg_buy_price;
-
-            $nuevaCantidad = $investment->quantity + $request->quantity;
-            $nuevoPrecioMedio = ($totalCostAntes + $costoNuevaOperacion) / $nuevaCantidad;
-
-            $investment->update([
-                'quantity' => $nuevaCantidad,
-                'avg_buy_price' => $nuevoPrecioMedio
-            ]);
-            $tipoTrade = 'compra';
-        } else {
-            $investment = $portfolio->investments()->create([
-                'symbol_id' => $symbol->id,
-                'quantity' => $request->quantity,
-                'avg_buy_price' => $request->avg_buy_price,
-            ]);
-            $tipoTrade = 'nuevaPosicion';
-        }
-
-        Trade::create([
-            'investment_id' => $investment->id,
-            'quantity' => $request->quantity,
-            'price_per_unit' => $request->avg_buy_price,
-            'type' => $tipoTrade,
-            'operated_at' => $request->operated_at ?? now(),
+        $investment = $this->applyBuyLot($portfolio, strtoupper($data['symbol']), [
+            'name' => $data['name'] ?? null,
+            'image_url' => $data['image_url'] ?? null,
+            'asset_type' => $data['asset_type'],
+            'quantity' => (float) $data['quantity'],
+            'avg_buy_price' => (float) $data['avg_buy_price'],
+            'operated_at' => $data['operated_at'] ?? null,
         ]);
 
         return response()->json([
             'message' => 'Posición guardada con éxito',
-            'investment' => $investment
+            'investment' => $investment,
         ], 201);
+    }
+
+    /**
+     * Importa varias posiciones en una sola petición (transacción única).
+     */
+    public function importPositions(Request $request, $portfolioId)
+    {
+        $validated = $request->validate([
+            'positions' => 'required|array|min:1|max:500',
+            'positions.*.symbol' => 'required|string|max:20',
+            'positions.*.name' => 'nullable|string|max:255',
+            'positions.*.image_url' => 'nullable|string|max:2048',
+            'positions.*.asset_type' => 'required|string|in:stock,crypto',
+            'positions.*.quantity' => 'required|numeric|min:0.00000001',
+            'positions.*.avg_buy_price' => 'required|numeric',
+            'positions.*.operated_at' => 'nullable|date',
+        ]);
+
+        $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
+
+        DB::transaction(function () use ($portfolio, $validated) {
+            foreach ($validated['positions'] as $row) {
+                $this->applyBuyLot($portfolio, strtoupper($row['symbol']), [
+                    'name' => $row['name'] ?? null,
+                    'image_url' => $row['image_url'] ?? null,
+                    'asset_type' => $row['asset_type'],
+                    'quantity' => (float) $row['quantity'],
+                    'avg_buy_price' => (float) $row['avg_buy_price'],
+                    'operated_at' => $row['operated_at'] ?? null,
+                ]);
+            }
+        });
+
+        return response()->json([
+            'message' => 'Importación completada.',
+            'count' => count($validated['positions']),
+        ]);
     }
 
     public function update(Request $request, $portfolioId, $investmentId)
     {
-        //BUY y SELL hacen su funcion
+        // Las compras/ventas usan buy() y sell().
     }
 
     public function destroy(Request $request, $portfolioId, $investmentId)
@@ -146,12 +148,13 @@ class InvestmentController extends Controller
         $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
         $investment = $portfolio->investments()->findOrFail($investmentId);
         $investment->delete();
+
         return response()->json(['message' => 'Posición eliminada correctamente.']);
     }
 
     public function buy(Request $request, $portfolioId, $investmentId)
     {
-        $request->validate([
+        $data = $request->validate([
             'quantity' => 'required|numeric|min:0.00000001',
             'price_per_unit' => 'required|numeric',
             'operated_at' => 'nullable|date',
@@ -161,9 +164,9 @@ class InvestmentController extends Controller
         $investment = $portfolio->investments()->findOrFail($investmentId);
 
         $totalCostAntes = $investment->quantity * $investment->avg_buy_price;
-        $costoNuevaCompra = $request->quantity * $request->price_per_unit;
+        $costoNuevaCompra = $data['quantity'] * $data['price_per_unit'];
 
-        $nuevaCantidad = $investment->quantity + $request->quantity;
+        $nuevaCantidad = $investment->quantity + $data['quantity'];
         $nuevoPrecioMedio = ($totalCostAntes + $costoNuevaCompra) / $nuevaCantidad;
 
         $investment->update([
@@ -173,10 +176,10 @@ class InvestmentController extends Controller
 
         Trade::create([
             'investment_id' => $investment->id,
-            'quantity' => $request->quantity,
-            'price_per_unit' => $request->price_per_unit,
+            'quantity' => $data['quantity'],
+            'price_per_unit' => $data['price_per_unit'],
             'type' => 'compra',
-            'operated_at' => $request->operated_at ?? now(),
+            'operated_at' => $this->parseOperatedAt($data['operated_at'] ?? null),
         ]);
 
         return response()->json([
@@ -187,7 +190,7 @@ class InvestmentController extends Controller
 
     public function sell(Request $request, $portfolioId, $investmentId)
     {
-        $request->validate([
+        $data = $request->validate([
             'quantity' => 'required|numeric|min:0.00000001',
             'price_per_unit' => 'required|numeric',
             'operated_at' => 'nullable|date',
@@ -196,26 +199,27 @@ class InvestmentController extends Controller
         $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
         $investment = $portfolio->investments()->findOrFail($investmentId);
 
-        if ($request->quantity > $investment->quantity) {
+        if ($data['quantity'] > $investment->quantity) {
             return response()->json([
-                'message' => 'No puedes vender más cantidad de la que tienes.'
+                'message' => 'No puedes vender más cantidad de la que tienes.',
             ], 422);
         }
 
-        $nuevaCantidad = $investment->quantity - $request->quantity;
+        $nuevaCantidad = $investment->quantity - $data['quantity'];
 
         Trade::create([
             'investment_id' => $investment->id,
-            'quantity' => $request->quantity,
-            'price_per_unit' => $request->price_per_unit,
+            'quantity' => $data['quantity'],
+            'price_per_unit' => $data['price_per_unit'],
             'type' => 'venta',
-            'operated_at' => $request->operated_at ?? now(),
+            'operated_at' => $this->parseOperatedAt($data['operated_at'] ?? null),
         ]);
 
         if ($nuevaCantidad <= 0) {
-            $investment->update(['quantity' => 0]); // ← CAMBIA A 0, NO BORRA
+            $investment->update(['quantity' => 0]);
+
             return response()->json([
-                'message' => 'Venta registrada y posición cerrada (cantidad = 0).'
+                'message' => 'Venta registrada y posición cerrada (cantidad = 0).',
             ]);
         }
 
@@ -227,5 +231,66 @@ class InvestmentController extends Controller
             'message' => 'Venta registrada correctamente.',
             'investment' => $investment->fresh(),
         ]);
+    }
+
+    /**
+     * Alta o media de posición + registro de trade (misma lógica que store).
+     */
+    private function applyBuyLot(Portfolio $portfolio, string $symbolTicker, array $fields): Investment
+    {
+        $symbol = Symbol::firstOrCreate(
+            ['symbol' => $symbolTicker],
+            [
+                'name' => $fields['name'] ?: $symbolTicker,
+                'image_url' => $fields['image_url'] ?? null,
+                'asset_type' => $fields['asset_type'],
+            ]
+        );
+
+        $investment = Investment::where('portfolio_id', $portfolio->id)
+            ->where('symbol_id', $symbol->id)
+            ->first();
+
+        $qty = $fields['quantity'];
+        $price = $fields['avg_buy_price'];
+
+        if ($investment) {
+            $totalCostAntes = $investment->quantity * $investment->avg_buy_price;
+            $costoNuevaOperacion = $qty * $price;
+            $nuevaCantidad = $investment->quantity + $qty;
+            $nuevoPrecioMedio = ($totalCostAntes + $costoNuevaOperacion) / $nuevaCantidad;
+
+            $investment->update([
+                'quantity' => $nuevaCantidad,
+                'avg_buy_price' => $nuevoPrecioMedio,
+            ]);
+            $tipoTrade = 'compra';
+        } else {
+            $investment = $portfolio->investments()->create([
+                'symbol_id' => $symbol->id,
+                'quantity' => $qty,
+                'avg_buy_price' => $price,
+            ]);
+            $tipoTrade = 'nuevaPosicion';
+        }
+
+        Trade::create([
+            'investment_id' => $investment->id,
+            'quantity' => $qty,
+            'price_per_unit' => $price,
+            'type' => $tipoTrade,
+            'operated_at' => $this->parseOperatedAt($fields['operated_at'] ?? null),
+        ]);
+
+        return $investment->fresh();
+    }
+
+    private function parseOperatedAt(?string $date): Carbon
+    {
+        if ($date === null || $date === '') {
+            return now();
+        }
+
+        return Carbon::parse($date);
     }
 }

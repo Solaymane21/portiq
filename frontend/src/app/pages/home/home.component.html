@@ -1,4 +1,4 @@
-<div class="h-[calc(100vh-4rem)] flex items-center">
+<div class="min-h-[auto] lg:h-[calc(100vh-4rem)] py-16 lg:py-0 flex items-center">
   <div class="max-w-7xl w-full mx-auto px-6 md:px-14">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
@@ -10,11 +10,7 @@
         <p class="text-neutral-400 text-lg mb-8 max-w-md">
           El tracker que gestiona todos tus activos desde un solo lugar. Datos reales, análisis ML y alertas personalizadas.
         </p>
-        <div class="flex gap-3">
-          <a routerLink="/auth/register"
-            class="px-6 py-3 bg-orange-500 hover:bg-orange-500/70 text-white rounded-xl transition-colors">
-            Empezar gratis
-          </a>
+        <div class="flex gap-3">          
           <a routerLink="/auth/login"
             class="px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl transition-colors border border-neutral-600">
             Iniciar sesión
@@ -85,11 +81,11 @@
   </div>
 </div>
 
-<section class="py-24 px-6 md:px-14 overflow-hidden">
+<section class="py-12 md:py-24 px-6 md:px-14 overflow-hidden">
     <div class="max-w-7xl mx-auto">
 
       <!-- Título -->
-      <div class="text-center mb-16">
+      <div class="text-center mb-8 md:mb-16">
         <p class="text-orange-500 text-sm font-semibold uppercase tracking-widest mb-3">Diseñado para todos los dispositivos</p>
         <h2 class="text-4xl md:text-5xl font-ibm font-black text-white leading-tight">
           Opera cuando quieras<br>
@@ -98,12 +94,11 @@
       </div>
 
       <!-- Mockup -->
-      <div class="flex justify-center py-0.5">
+      <div class="flex justify-center items-center h-[340px] sm:h-[480px] md:h-[560px] lg:h-[680px] overflow-hidden" >
 
         @if (selectedDevice === 'desktop') {
           <div class="w-full max-w-[860px]">
             <div class="bg-neutral-800 border border-neutral-700 rounded-2xl p-2 shadow-2xl shadow-black/60">
-              
               <div class="rounded-xl overflow-hidden">
                 <img src="images/desktop.png" alt="PortIQ en desktop" class="w-full h-auto object-cover"/>
               </div>
@@ -111,18 +106,8 @@
           </div>
         }
 
-        @if (selectedDevice === 'tablet') {
-          <div class="w-full max-w-[600px]">
-            <div class="bg-neutral-800 border border-neutral-700 rounded-[1.5rem] p-2 shadow-xl shadow-black/50">
-              <div class="rounded-[1.2rem] overflow-hidden">
-                <img src="images/tablet.png" alt="PortIQ en tablet" class="w-full h-auto object-cover"/>
-              </div>
-            </div>
-          </div>
-        }
-
         @if (selectedDevice === 'mobile') {
-          <div class="w-[320px]">
+          <div class="w-[280px] sm:w-[320px]">
             <div class="bg-neutral-800 border border-neutral-700 rounded-[2rem] p-2 shadow-xl shadow-black/50">
               <div class="rounded-[1.7rem] overflow-hidden">
                 <img src="images/mobile.png" alt="PortIQ en móvil" class="w-full h-auto object-cover"/>

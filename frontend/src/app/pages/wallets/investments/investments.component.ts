@@ -1,13 +1,4 @@
-import {
-  Component,
-  signal,
-  computed,
-  inject,
-  OnInit,
-  effect,
-  viewChild,
-  DestroyRef
-} from '@angular/core';
+import {Component, signal, computed, inject, OnInit, effect, viewChild, DestroyRef} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -47,6 +38,7 @@ export class InvestmentsComponent implements OnInit {
   dataSource = new MatTableDataSource<Investment>([]);
   paginator = viewChild(MatPaginator);
   sort = viewChild(MatSort);
+  
 
   columnasDef = [
     { def: 'symbol', title: 'Activo', align: 'left' },
@@ -300,7 +292,7 @@ export class InvestmentsComponent implements OnInit {
       name: activo.name,
       asset_type: activo.asset_type,
       image_url: activo.image_url ?? '',
-      api_id: activo.api_id
+      api_id: activo.symbol
     });
 
     const currentFecha = this.posicionForm.get('operated_at')?.value;
@@ -407,7 +399,7 @@ export class InvestmentsComponent implements OnInit {
         name: activo.name ?? activo.symbol,
         image_url: activo.image_url ?? null,
         asset_type: (activo.asset_type ?? 'crypto') as 'stock' | 'crypto',
-        api_id: activo.api_id
+        api_id: activo.symbol
       });
     }
 
@@ -418,7 +410,7 @@ export class InvestmentsComponent implements OnInit {
         name: activo?.name ?? (activo?.symbol ?? ''),
         asset_type: activo?.asset_type ?? 'crypto',
         image_url: activo?.image_url ?? '',
-        api_id: activo?.api_id ?? '',
+        api_id: activo?.symbol ?? '',
         operated_at: today,
         quantity: null,
         price: null
@@ -432,6 +424,7 @@ export class InvestmentsComponent implements OnInit {
       const fecha = this.posicionForm.get('operated_at')?.value;
 
       if (apiId && assetType && fecha) {
+        this.buscandoPrecio.set(true)
         this.investmentService.getHistoricalPrice(apiId, assetType, fecha).subscribe({
           next: (res: { price?: number }) => {
             if (res?.price && res.price > 0) {
@@ -439,9 +432,11 @@ export class InvestmentsComponent implements OnInit {
             } else {
               this.posicionForm.patchValue({ price: null }, { emitEvent: false });
             }
+            this.buscandoPrecio.set(false);
           },
           error: () => {
             this.posicionForm.patchValue({ price: null }, { emitEvent: false });
+            this.buscandoPrecio.set(false);
           }
         });
       }

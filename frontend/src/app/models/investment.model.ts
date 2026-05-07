@@ -5,14 +5,16 @@ export interface Investment {
   quantity: number;
   avg_buy_price: number;
   symbol: string;
-  image_url?: string | null;
-  current_price?: number;
-  value?: number;
-  weight?: number;
+  name: string;
+  asset_type: 'stock' | 'crypto';
+  image_url: string | null;
+  api_id: string;
+  current_price: number;
+  value: number;
+  weight: number;
+  pl: number;
+  pl_percentage: number;
   return_7d?: number;
-  asset_type?: 'stock' | 'crypto' | string;
-  name?: string;
-  api_id?: string;
 }
 
 export interface InvestmentsResponse {

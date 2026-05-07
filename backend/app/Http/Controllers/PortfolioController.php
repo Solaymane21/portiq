@@ -122,7 +122,6 @@ class PortfolioController extends Controller
         return (float) $investments->sum(fn ($inv) => (float) $inv->quantity * (float) $inv->avg_buy_price);
     }
 
-    /** Resumen para listados del usuario (misma forma en index, store y update). */
     private function portfolioSummary(Portfolio $portfolio, bool $includeMetrics): array
     {
         $investments = $portfolio->investments ?? collect();

@@ -6,70 +6,109 @@ use App\Models\Symbol;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class AssetSearchController extends Controller
 {
-    private function getTwelveDataWithRotation($url, $params) 
-    {
-        $key1 = env('TWELVEDATA_API_KEY_1');
-        $key2 = env('TWELVEDATA_API_KEY_2');
-
-        $params['apikey'] = $key1;
-        $response = Http::get($url, $params);
-
-        if ($response->status() == 429 || (isset($response->json()['code']) && $response->json()['code'] == 429)) {
-            Log::warning('Límite de Twelve Data superado en KEY_1. Cambiando a KEY_2.');
-            
-            $params['apikey'] = $key2;
-            $response = Http::get($url, $params);
-        }
-
-        return $response;
-    }
+    private const MAX_LOCAL_RESULTS = 8;
+    private const MIN_LOCAL_TO_RETURN = 4;
+    private const MAX_EXTERNAL_RESULTS = 4;
+    private const CACHE_TTL = 300;
 
     public function search(Request $request)
     {
         $request->validate([
             'q' => 'required|string|min:2|max:50',
         ]);
-
-        $query = $request->q;
-
-        $local = Symbol::where('symbol', 'ilike', "%{$query}%")
-            ->orWhere('name', 'ilike', "%{$query}%")
-            ->limit(8)
-            ->get()
-            ->map(fn($s) => [
-                'symbol'     => $s->symbol,
-                'name'       => $s->name,
-                'api_id'     => $s->api_id,
-                'image_url'  => $s->image_url,
-                'asset_type' => $s->asset_type,
-                'source'     => 'local',
-            ])
-            ->toArray();
-
-        if (count($local) >= 4) {
-            return response()->json($local);
+        
+        $cacheKey = 'asset_search_' . md5($request->q);
+        if ($cached = Cache::get($cacheKey)) {
+            return response()->json($cached);
         }
 
-        $externalResults = [];
-        $localSymbols = array_column($local, 'symbol');
+        $query = strtoupper(trim($request->q));
+        $results = $this->performSearch($query);
 
-        // CoinGecko para crypto
+        Cache::put($cacheKey, $results, self::CACHE_TTL);
+        
+        return response()->json($results);
+    }
+
+    private function performSearch(string $query): array
+    {
+        $exactMatch = Symbol::where('symbol', $query)->get();
+        if ($exactMatch->isNotEmpty()) {
+            return $this->convertToArray($exactMatch);
+        }
+
+        $partialLocal = $this->searchPartialInDatabase($query);
+        if (count($partialLocal) >= self::MIN_LOCAL_TO_RETURN) {
+            return $partialLocal;
+        }
+
+        $localSymbols = array_column($partialLocal, 'symbol');
+        $externalResults = [];
+        
+        $this->searchInCoinGecko($query, $localSymbols, $externalResults);
+        $this->searchInTwelveData($query, $localSymbols, $externalResults);
+
+        return array_merge($partialLocal, array_slice($externalResults, 0, self::MAX_EXTERNAL_RESULTS));
+    }
+
+    /**
+     * Convierte modelos de DB a array JSON
+     */
+    private function convertToArray($symbols): array
+    {
+        $results = [];
+        foreach ($symbols as $symbol) {
+            $results[] = [
+                'symbol'     => $symbol->symbol,
+                'name'       => $symbol->name,
+                'api_id'     => $symbol->api_id,
+                'image_url'  => $symbol->image_url,
+                'asset_type' => $symbol->asset_type,
+                'source'     => 'local',
+            ];
+        }
+        return $results;
+    }
+
+    /**
+     * Busqueda parcial en nuestra base de datos
+     */
+    private function searchPartialInDatabase(string $query): array
+    {
+        $symbols = Symbol::where('symbol', 'ilike', "%{$query}%")
+            ->orWhere('name', 'ilike', "%{$query}%")
+            ->limit(self::MAX_LOCAL_RESULTS)
+            ->get();
+
+        return $this->convertToArray($symbols);
+    }
+
+    /**
+     * Busca CRYPTO en CoinGecko API
+     */
+    private function searchInCoinGecko(string $query, array $localSymbols, array &$externalResults): void
+    {
         try {
-            $cgResponse = Http::get('https://api.coingecko.com/api/v3/search', [
+            $response = Http::timeout(5)->get('https://api.coingecko.com/api/v3/search', [
                 'query' => $query
             ]);
 
-            if ($cgResponse->successful()) {
-                $coins = array_slice($cgResponse->json('coins', []), 0, 4);
+            if ($response->successful()) {
+                $coins = $response->json('coins', []);
+                $coins = array_slice($coins, 0, self::MAX_EXTERNAL_RESULTS);
+
                 foreach ($coins as $coin) {
-                    $sym = strtoupper($coin['symbol']);
-                    if (!in_array($sym, $localSymbols)) {
+                    $symbol = strtoupper($coin['symbol']);
+                    
+                    if (!in_array($symbol, $localSymbols) && 
+                        count($externalResults) < self::MAX_EXTERNAL_RESULTS) {
+                        
                         $externalResults[] = [
-                            'symbol'     => $sym,
+                            'symbol'     => $symbol,
                             'name'       => $coin['name'],
                             'api_id'     => $coin['api_symbol'],
                             'image_url'  => $coin['large'] ?? $coin['thumb'] ?? null,
@@ -80,41 +119,51 @@ class AssetSearchController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error CoinGecko search: ' . $e->getMessage());
+            Log::error('Error CoinGecko search [' . $query . ']: ' . $e->getMessage());
         }
+    }
 
-        // Twelve Data para acciones
+    /**
+     * Busca ACCIONES en TwelveData API
+     */
+    private function searchInTwelveData(string $query, array $localSymbols, array &$externalResults): void
+    {
         try {
-            $tdResponse = Http::get('https://api.twelvedata.com/symbol_search', [
+            $response = Http::timeout(5)->get('https://api.twelvedata.com/symbol_search', [
                 'symbol'     => $query,
                 'outputsize' => 10,
             ]);
 
-            if ($tdResponse->successful() && isset($tdResponse->json()['data'])) {
+            if ($response->successful() && isset($response->json()['data'])) {
                 $addedSymbols = [];
-                foreach ($tdResponse->json()['data'] as $stock) {
-                    $sym = strtoupper($stock['symbol']);
-                    if (!in_array($sym, $localSymbols) && !in_array($sym, $addedSymbols)) {
+
+                foreach ($response->json()['data'] as $stock) {
+                    $symbol = strtoupper($stock['symbol']);
+                    
+                    if (!in_array($symbol, $localSymbols) &&
+                        !in_array($symbol, $addedSymbols) &&
+                        count($externalResults) < self::MAX_EXTERNAL_RESULTS) {
+                        
                         $externalResults[] = [
-                            'symbol'     => $sym,
+                            'symbol'     => $symbol,
                             'name'       => $stock['instrument_name'],
                             'api_id'     => $stock['symbol'],
                             'image_url'  => null,
                             'asset_type' => 'stock',
                             'source'     => 'api',
                         ];
-                        $addedSymbols[] = $sym;
+                        $addedSymbols[] = $symbol;
                     }
-                    if (count($externalResults) >= 4) break;
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error Twelve Data search: ' . $e->getMessage());
+            Log::error('Error TwelveData search [' . $query . ']: ' . $e->getMessage());
         }
-
-        return response()->json(array_merge($local, $externalResults));
     }
 
+    /**
+     * Obtiene precio historico
+     */
     public function history(Request $request)
     {
         $request->validate([
@@ -123,74 +172,24 @@ class AssetSearchController extends Controller
             'date' => 'required|date_format:Y-m-d'
         ]);
 
-        $apiId = $request->api_id;
-        $assetType = $request->asset_type;
-        $date = Carbon::parse($request->date);
-
+        $pythonApi = env('PYTHON_API_URL', 'http://127.0.0.1:8001');
+        
         try {
-            if ($assetType === 'crypto') {
-                $cgDate = $date->format('d-m-Y');
-                $response = Http::get("https://api.coingecko.com/api/v3/coins/{$apiId}/history", [
-                    'date' => $cgDate
+            $response = Http::timeout(10)->get("{$pythonApi}/historical-price/{$request->api_id}", [
+                'date' => $request->date,
+                'asset_type' => $request->asset_type,
+                'convert_to_eur' => 'true'
+            ]);
+
+            if ($response->successful() && isset($response->json()['price'])) {
+                return response()->json([
+                    'price' => (float) $response->json()['price']
                 ]);
-
-                if ($response->successful()) {
-                    $data = $response->json();
-                    
-                    if (isset($data['market_data']['current_price']['eur'])) {
-                        return response()->json([
-                            'price' => (float) $data['market_data']['current_price']['eur']
-                        ]);
-                    }
-                }
-            } else {
-                $targetDate = $date->format('Y-m-d');
-                
-                $response = $this->getTwelveDataWithRotation("https://api.twelvedata.com/time_series", [
-                    'symbol' => $apiId,
-                    'interval' => '1day',
-                    'outputsize' => 5,
-                ]);
-
-                if ($response->successful() && isset($response->json()['values'])) {
-                    $values = $response->json()['values'];
-                    $precioOriginal = null;
-                    
-                    foreach ($values as $day) {
-                        if (str_starts_with($day['datetime'], $targetDate)) {
-                            $precioOriginal = (float) $day['open'];
-                            break;
-                        }
-                    }
-
-                    if ($precioOriginal === null && !empty($values)) {
-                        $precioOriginal = (float) $values[0]['open'];
-                    }
-
-                    if ($precioOriginal !== null) {
-
-                        $exchangeResponse = $this->getTwelveDataWithRotation("https://api.twelvedata.com/currency_conversion", [
-                            'symbol' => 'USD/EUR',
-                            'amount' => $precioOriginal,
-                        ]);
-
-                        if ($exchangeResponse->successful() && isset($exchangeResponse->json()['amount'])) {
-                            return response()->json([
-                                'price' => (float) $exchangeResponse->json()['amount']
-                            ]);
-                        }
-
-                        return response()->json([
-                            'price' => $precioOriginal
-                        ]);
-                    }
-                }
             }
-
+            
             return response()->json(['price' => null]);
-
         } catch (\Exception $e) {
-            Log::error('Error fetching historical price: ' . $e->getMessage());
+            Log::error('Error FastAPI [' . $request->api_id . ']: ' . $e->getMessage());
             return response()->json(['price' => null]);
         }
     }

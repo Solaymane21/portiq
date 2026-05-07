@@ -44,7 +44,6 @@ function parseNumber(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** Lee un CSV de posiciones (cabecera obligatoria). */
 export function parsePositionsCsv(text: string): { rows: ImportPositionRow[]; error?: string } {
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   if (lines.length < 2) {
@@ -149,7 +148,6 @@ function escapeCsvCell(v: string | number): string {
   return s;
 }
 
-/** Genera CSV de posiciones activas (UTF-8 con BOM para Excel). */
 export function buildInvestmentsCsv(portfolioName: string, rows: Investment[]): string {
   const header = [
     'portfolio_name',

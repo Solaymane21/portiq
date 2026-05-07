@@ -2,6 +2,8 @@ import yfinance as yf
 import re
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime, timedelta
+import pandas as pd
 
 app = FastAPI()
 
@@ -182,6 +184,81 @@ def portfolio_value(positions: str):
             "positions":   len(results),
             "results":     results
     }
+
+"""
+Precio histórico para una fecha exacta
+"""
+@app.get("/historical-price/{symbol}")
+def get_historical_price(symbol: str, date: str, asset_type: str = "stock", convert_to_eur: bool = True):
+    if not re.match(r'^[A-Za-z0-9.\-]{1,10}$', symbol):
+        raise HTTPException(status_code=422, detail="Símbolo inválido")
+
+    yf_symbol = f"{symbol.upper()}-USD" if asset_type == "crypto" else symbol.upper()
+
+    try:
+        target_date = datetime.strptime(date, "%Y-%m-%d")
+        start_date = target_date - timedelta(days=5)
+        end_date = target_date + timedelta(days=1)
+
+        # 1. Obtenemos el precio del activo
+        df = yf.download(
+            yf_symbol,
+            start=start_date.strftime("%Y-%m-%d"),
+            end=end_date.strftime("%Y-%m-%d"),
+            progress=False
+        )
+
+        if df.empty:
+            raise HTTPException(status_code=404, detail="Sin datos para esta fecha")
+
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+
+        df_filtered = df[df.index.strftime('%Y-%m-%d') <= target_date.strftime('%Y-%m-%d')]
+        
+        if df_filtered.empty:
+            raise HTTPException(status_code=404, detail="Sin datos cercanos a esa fecha")
+
+        price = float(df_filtered['Close'].iloc[-1])
+        currency = "USD"
+
+        # 2. Conversión a EUR (reemplaza a TwelveData)
+        if convert_to_eur:
+            # Descargamos el histórico del par Euro/Dólar
+            fx_df = yf.download(
+                "EURUSD=X",
+                start=start_date.strftime("%Y-%m-%d"),
+                end=end_date.strftime("%Y-%m-%d"),
+                progress=False
+            )
+            
+            if not fx_df.empty:
+                if isinstance(fx_df.columns, pd.MultiIndex):
+                    fx_df.columns = fx_df.columns.get_level_values(0)
+                
+                fx_filtered = fx_df[fx_df.index.strftime('%Y-%m-%d') <= target_date.strftime('%Y-%m-%d')]
+                
+                if not fx_filtered.empty:
+                    exchange_rate = float(fx_filtered['Close'].iloc[-1])
+                    # Fórmula: Precio (USD) / Tasa de cambio (EUR/USD) = Precio (EUR)
+                    price = price / exchange_rate
+                    currency = "EUR"
+
+        return {
+            "symbol": symbol.upper(),
+            "requested_date": date,
+            "price": round(price, 4),
+            "currency": currency
+        }
+
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Formato de fecha inválido. Usa YYYY-MM-DD")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 """
 Historial de precios para gráfica
 """

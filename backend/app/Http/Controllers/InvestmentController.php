@@ -9,102 +9,87 @@ use App\Models\Trade;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class InvestmentController extends Controller
 {
-    public function index(Request $request, $portfolioId)
+    private const PYTHON_API_URL = 'http://127.0.0.1:8001';
+    private const CACHE_TTL = 60;
+
+    /**
+     * Portfolio completo con precios reales desde tu Python API
+     */
+    public function index(Request $request, $portfolioId): \Illuminate\Http\JsonResponse
     {
         $portfolio = Portfolio::with(['investments.symbol', 'user'])
             ->where('id', $portfolioId)
             ->firstOrFail();
 
-        $user = $request->user();
-        if ((int) $portfolio->user_id !== (int) $user->id && ! $portfolio->is_public) {
-            abort(403, 'No autorizado');
-        }
+        $this->authorizePortfolioAccess($portfolio, $request->user());
 
-        $investmentsData = [];
-        $totalPortfolioValue = 0;
+        $readOnly = $portfolio->user_id !== $request->user()->id;
+        $cacheKey = "portfolio_{$portfolioId}_investments";
 
-        foreach ($portfolio->investments as $investment) {
-            $symbol = $investment->symbol;
-            if (! $symbol) {
-                continue;
+        if ($readOnly) {
+            $cached = Cache::get($cacheKey);
+            if ($cached) {
+                return response()->json($cached);
             }
-
-            $currentPrice = (float) $investment->avg_buy_price;
-            $currentValue = (float) $investment->quantity * $currentPrice;
-            $totalPortfolioValue += $currentValue;
-
-            $investmentsData[] = [
-                'id' => $investment->id,
-                'portfolio_id' => $investment->portfolio_id,
-                'symbol_id' => $investment->symbol_id,
-                'quantity' => (float) $investment->quantity,
-                'avg_buy_price' => (float) $investment->avg_buy_price,
-                'symbol' => $symbol->symbol,
-                'name' => $symbol->name,
-                'asset_type' => $symbol->asset_type,
-                'image_url' => $symbol->image_url,
-                'api_id' => $symbol->api_id,
-                'current_price' => $currentPrice,
-                'value' => $currentValue,
-                'weight' => 0,
-                'return_7d' => 0,
-            ];
         }
 
-        if ($totalPortfolioValue > 0) {
-            foreach ($investmentsData as &$data) {
-                $data['weight'] = round(($data['value'] / $totalPortfolioValue) * 100, 2);
-            }
-            unset($data);
+        $investmentsData = $this->buildInvestmentsWithRealPrices($portfolio);
+        $totalValue = $this->calculateTotalValue($investmentsData);
+
+        if ($totalValue > 0) {
+            $this->calculateWeights($investmentsData, $totalValue);
         }
 
-        $readOnly = (int) $portfolio->user_id !== (int) $user->id;
-
-        return response()->json([
+        $response = [
             'portfolio_name' => $portfolio->name,
-            'total_value' => (float) $totalPortfolioValue,
+            'total_value' => round($totalValue, 2),
             'investments' => $investmentsData,
             'read_only' => $readOnly,
-            'owner_name' => $readOnly ? ($portfolio->user->name ?? null) : null,
-        ]);
+            'owner_name' => $readOnly ? $portfolio->user?->name : null,
+        ];
+
+        Cache::put($cacheKey, $response, self::CACHE_TTL);
+
+        return response()->json($response);
     }
 
-    public function store(Request $request, $portfolioId)
+    /**
+     * Nueva posicion
+     */
+    public function store(Request $request, $portfolioId): \Illuminate\Http\JsonResponse
     {
-        $data = $request->validate([
+        $validated = $request->validate([
             'symbol' => 'required|string|max:20',
             'name' => 'nullable|string|max:255',
             'image_url' => 'nullable|string|max:2048',
             'asset_type' => 'required|string|in:stock,crypto',
             'quantity' => 'required|numeric|min:0.00000001',
-            'avg_buy_price' => 'required|numeric',
+            'avg_buy_price' => 'required|numeric|min:0',
             'operated_at' => 'nullable|date',
         ]);
 
         $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
 
-        $investment = $this->applyBuyLot($portfolio, strtoupper($data['symbol']), [
-            'name' => $data['name'] ?? null,
-            'image_url' => $data['image_url'] ?? null,
-            'asset_type' => $data['asset_type'],
-            'quantity' => (float) $data['quantity'],
-            'avg_buy_price' => (float) $data['avg_buy_price'],
-            'operated_at' => $data['operated_at'] ?? null,
-        ]);
+        $investment = $this->applyBuyLot($portfolio, strtoupper($validated['symbol']), $validated);
+
+        Cache::forget("portfolio_{$portfolioId}_investments");
 
         return response()->json([
             'message' => 'Posición guardada con éxito',
-            'investment' => $investment,
+            'investment' => $investment->load('symbol'),
         ], 201);
     }
 
     /**
-     * Importa varias posiciones en una sola petición (transacción única).
+     * Importacion masiva optimizada
      */
-    public function importPositions(Request $request, $portfolioId)
+    public function importPositions(Request $request, $portfolioId): \Illuminate\Http\JsonResponse
     {
         $validated = $request->validate([
             'positions' => 'required|array|min:1|max:500',
@@ -113,24 +98,17 @@ class InvestmentController extends Controller
             'positions.*.image_url' => 'nullable|string|max:2048',
             'positions.*.asset_type' => 'required|string|in:stock,crypto',
             'positions.*.quantity' => 'required|numeric|min:0.00000001',
-            'positions.*.avg_buy_price' => 'required|numeric',
+            'positions.*.avg_buy_price' => 'required|numeric|min:0',
             'positions.*.operated_at' => 'nullable|date',
         ]);
 
         $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
 
         DB::transaction(function () use ($portfolio, $validated) {
-            foreach ($validated['positions'] as $row) {
-                $this->applyBuyLot($portfolio, strtoupper($row['symbol']), [
-                    'name' => $row['name'] ?? null,
-                    'image_url' => $row['image_url'] ?? null,
-                    'asset_type' => $row['asset_type'],
-                    'quantity' => (float) $row['quantity'],
-                    'avg_buy_price' => (float) $row['avg_buy_price'],
-                    'operated_at' => $row['operated_at'] ?? null,
-                ]);
-            }
+            $this->bulkApplyBuyLots($portfolio, $validated['positions']);
         });
+
+        Cache::forget("portfolio_{$portfolioId}_investments");
 
         return response()->json([
             'message' => 'Importación completada.',
@@ -138,110 +116,252 @@ class InvestmentController extends Controller
         ]);
     }
 
-    public function update(Request $request, $portfolioId, $investmentId)
+    public function update(Request $request, $portfolioId, $investmentId): \Illuminate\Http\JsonResponse
     {
-        // Las compras/ventas usan buy() y sell().
+        return response()->json(['message' => 'Usa buy() o sell()'], 501);
     }
 
-    public function destroy(Request $request, $portfolioId, $investmentId)
+    /**
+     * Eliminar posicion
+     */
+    public function destroy(Request $request, $portfolioId, $investmentId): \Illuminate\Http\JsonResponse
     {
         $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
         $investment = $portfolio->investments()->findOrFail($investmentId);
-        $investment->delete();
 
-        return response()->json(['message' => 'Posición eliminada correctamente.']);
-    }
-
-    public function buy(Request $request, $portfolioId, $investmentId)
-    {
-        $data = $request->validate([
-            'quantity' => 'required|numeric|min:0.00000001',
-            'price_per_unit' => 'required|numeric',
-            'operated_at' => 'nullable|date',
-        ]);
-
-        $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
-        $investment = $portfolio->investments()->findOrFail($investmentId);
-
-        $totalCostAntes = $investment->quantity * $investment->avg_buy_price;
-        $costoNuevaCompra = $data['quantity'] * $data['price_per_unit'];
-
-        $nuevaCantidad = $investment->quantity + $data['quantity'];
-        $nuevoPrecioMedio = ($totalCostAntes + $costoNuevaCompra) / $nuevaCantidad;
-
-        $investment->update([
-            'quantity' => $nuevaCantidad,
-            'avg_buy_price' => $nuevoPrecioMedio,
-        ]);
-
-        Trade::create([
-            'investment_id' => $investment->id,
-            'quantity' => $data['quantity'],
-            'price_per_unit' => $data['price_per_unit'],
-            'type' => 'compra',
-            'operated_at' => $this->parseOperatedAt($data['operated_at'] ?? null),
-        ]);
-
-        return response()->json([
-            'message' => 'Compra registrada correctamente.',
-            'investment' => $investment->fresh(),
-        ]);
-    }
-
-    public function sell(Request $request, $portfolioId, $investmentId)
-    {
-        $data = $request->validate([
-            'quantity' => 'required|numeric|min:0.00000001',
-            'price_per_unit' => 'required|numeric',
-            'operated_at' => 'nullable|date',
-        ]);
-
-        $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
-        $investment = $portfolio->investments()->findOrFail($investmentId);
-
-        if ($data['quantity'] > $investment->quantity) {
+        if ($investment->trades()->exists()) {
             return response()->json([
-                'message' => 'No puedes vender más cantidad de la que tienes.',
+                'message' => 'No puedes eliminar posición con trades. Usa sell().',
             ], 422);
         }
 
-        $nuevaCantidad = $investment->quantity - $data['quantity'];
+        $investment->delete();
+        Cache::forget("portfolio_{$portfolioId}_investments");
+
+        return response()->json(['message' => 'Posición eliminada.']);
+    }
+
+    /**
+     * Compra adicional
+     */
+    public function buy(Request $request, $portfolioId, $investmentId): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'quantity' => 'required|numeric|min:0.00000001',
+            'price_per_unit' => 'required|numeric|min:0.01',
+            'operated_at' => 'nullable|date',
+        ]);
+
+        $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
+        $investment = $portfolio->investments()->findOrFail($investmentId);
+
+        $adjustment = $this->calculateBuyAdjustment($investment, $validated);
+
+        $investment->update([
+            'quantity' => $adjustment['quantity'],
+            'avg_buy_price' => $adjustment['avgBuyPrice'],
+        ]);
 
         Trade::create([
             'investment_id' => $investment->id,
-            'quantity' => $data['quantity'],
-            'price_per_unit' => $data['price_per_unit'],
-            'type' => 'venta',
-            'operated_at' => $this->parseOperatedAt($data['operated_at'] ?? null),
+            'quantity' => $validated['quantity'],
+            'price_per_unit' => $validated['price_per_unit'],
+            'type' => 'compra',
+            'operated_at' => $this->parseOperatedAt($validated['operated_at']),
         ]);
 
-        if ($nuevaCantidad <= 0) {
-            $investment->update(['quantity' => 0]);
-
-            return response()->json([
-                'message' => 'Venta registrada y posición cerrada (cantidad = 0).',
-            ]);
-        }
-
-        $investment->update([
-            'quantity' => $nuevaCantidad,
-        ]);
+        Cache::forget("portfolio_{$portfolioId}_investments");
 
         return response()->json([
-            'message' => 'Venta registrada correctamente.',
-            'investment' => $investment->fresh(),
+            'message' => 'Compra registrada.',
+            'investment' => $investment->fresh(['symbol']),
         ]);
     }
 
     /**
-     * Alta o media de posición + registro de trade (misma lógica que store).
+     * Venta
+     */
+    public function sell(Request $request, $portfolioId, $investmentId): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'quantity' => 'required|numeric|min:0.00000001',
+            'price_per_unit' => 'required|numeric|min:0.01',
+            'operated_at' => 'nullable|date',
+        ]);
+
+        $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
+        $investment = $portfolio->investments()->findOrFail($investmentId);
+
+        if ($validated['quantity'] > $investment->quantity) {
+            return response()->json([
+                'message' => 'Cantidad insuficiente.',
+                'current_quantity' => $investment->quantity,
+                'requested' => $validated['quantity'],
+            ], 422);
+        }
+
+        $newQuantity = $investment->quantity - $validated['quantity'];
+
+        Trade::create([
+            'investment_id' => $investment->id,
+            'quantity' => $validated['quantity'],
+            'price_per_unit' => $validated['price_per_unit'],
+            'type' => 'venta',
+            'operated_at' => $this->parseOperatedAt($validated['operated_at']),
+        ]);
+
+        if ($newQuantity <= 0) {
+            $investment->update(['quantity' => 0]);
+        } else {
+            $investment->update(['quantity' => $newQuantity]);
+        }
+
+        Cache::forget("portfolio_{$portfolioId}_investments");
+
+        return response()->json([
+            'message' => 'Venta registrada.',
+            'investment' => $investment->fresh(['symbol']),
+        ]);
+    }
+
+    // ==================== METODOS PRIVADOS ====================
+
+    private function authorizePortfolioAccess(Portfolio $portfolio, $user): void
+    {
+        if ($portfolio->user_id !== $user->id && !$portfolio->is_public) {
+            abort(403, 'Sin acceso al portafolio');
+        }
+    }
+
+    /**
+     * Integracion FastAPI
+     */
+    private function buildInvestmentsWithRealPrices(Portfolio $portfolio): array
+    {
+        $symbols = $portfolio->investments
+            ->filter(fn($inv) => $inv->symbol)
+            ->pluck('symbol')
+            ->map(fn($s) => [
+                'api_id' => $s->api_id,
+                'asset_type' => $s->asset_type,
+                'symbol' => $s->symbol,
+            ])
+            ->toArray();
+
+        if (empty($symbols)) {
+            return [];
+        }
+
+        $apiIds = array_column($symbols, 'api_id');
+        $prices = $this->getPricesFromPythonAPI($apiIds);
+
+        return $portfolio->investments->map(function ($investment) use ($prices) {
+            if (!$investment->symbol) {
+                return null;
+            }
+
+            $currentPrice = $prices[$investment->symbol->api_id] ?? $investment->avg_buy_price;
+            $currentPrice = max($currentPrice, 0.00000001); // Evitar 0
+
+            $currentValue = $investment->quantity * $currentPrice;
+            $buyValue = $investment->quantity * $investment->avg_buy_price;
+            $pl = $currentValue - $buyValue;
+            $plPct = $buyValue > 0 ? round(($pl / $buyValue) * 100, 2) : 0;
+
+            return [
+                'id' => $investment->id,
+                'symbol_id' => $investment->symbol_id,
+                'quantity' => $investment->quantity,
+                'avg_buy_price' => round($investment->avg_buy_price, 8),
+                'symbol' => $investment->symbol->symbol,
+                'name' => $investment->symbol->name,
+                'asset_type' => $investment->symbol->asset_type,
+                'image_url' => $investment->symbol->image_url,
+                'api_id' => $investment->symbol->api_id,
+                'current_price' => round($currentPrice, 8),
+                'value' => round($currentValue, 2),
+                'pl' => round($pl, 2),
+                'pl_percentage' => $plPct,
+                'weight' => 0,
+            ];
+        })->filter()->values()->toArray();
+    }
+
+    /**
+     * Llamada a tu FastAPI /prices endpoint
+     */
+    private function getPricesFromPythonAPI(array $apiIds): array
+    {
+        $symbolsStr = implode(',', $apiIds);
+        $cacheKey = 'prices_' . md5($symbolsStr);
+
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($symbolsStr) {
+            try {
+                $response = Http::timeout(10)->get(self::PYTHON_API_URL . '/prices', [
+                    'symbols' => $symbolsStr,
+                    'asset_types' => 'stock,crypto',
+                ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $prices = [];
+
+                    foreach ($data['results'] ?? [] as $result) {
+                        if (isset($result['price']) && is_numeric($result['price'])) {
+                            $prices[$result['symbol']] = (float) $result['price'];
+                        }
+                    }
+
+                    return $prices;
+                }
+            } catch (\Exception $e) {
+                Log::error('Error Python API precios: ' . $e->getMessage());
+            }
+
+            return [];
+        });
+    }
+
+    /**
+     * Importacion masiva optimizada
+     */
+    private function bulkApplyBuyLots(Portfolio $portfolio, array $positions): void
+    {
+        $tickers = array_map(fn($p) => strtoupper($p['symbol']), $positions);
+        $symbols = Symbol::whereIn('symbol', $tickers)
+            ->get()
+            ->keyBy('symbol');
+
+        foreach ($positions as $position) {
+            $ticker = strtoupper($position['symbol']);
+
+            if (!isset($symbols[$ticker])) {
+                $symbol = Symbol::firstOrCreate(
+                    ['symbol' => $ticker],
+                    [
+                        'name' => $position['name'] ?? $ticker,
+                        'image_url' => $position['image_url'] ?? null,
+                        'asset_type' => $position['asset_type'],
+                    ]
+                );
+                $symbols[$ticker] = $symbol;
+            } else {
+                $symbol = $symbols[$ticker];
+            }
+
+            $this->applyBuyLot($portfolio, $ticker, $position);
+        }
+    }
+
+    /**
+     * Logica reutilizable para nuevas compras
      */
     private function applyBuyLot(Portfolio $portfolio, string $symbolTicker, array $fields): Investment
     {
         $symbol = Symbol::firstOrCreate(
             ['symbol' => $symbolTicker],
             [
-                'name' => $fields['name'] ?: $symbolTicker,
+                'name' => $fields['name'] ?? $symbolTicker,
                 'image_url' => $fields['image_url'] ?? null,
                 'asset_type' => $fields['asset_type'],
             ]
@@ -251,46 +371,69 @@ class InvestmentController extends Controller
             ->where('symbol_id', $symbol->id)
             ->first();
 
-        $qty = $fields['quantity'];
-        $price = $fields['avg_buy_price'];
+        $quantity = (float) $fields['quantity'];
+        $price = (float) $fields['avg_buy_price'];
 
         if ($investment) {
-            $totalCostAntes = $investment->quantity * $investment->avg_buy_price;
-            $costoNuevaOperacion = $qty * $price;
-            $nuevaCantidad = $investment->quantity + $qty;
-            $nuevoPrecioMedio = ($totalCostAntes + $costoNuevaOperacion) / $nuevaCantidad;
+            // Actualizar existente
+            $adjustment = $this->calculateBuyAdjustment($investment, [
+                'quantity' => $quantity,
+                'price_per_unit' => $price,
+            ]);
 
             $investment->update([
-                'quantity' => $nuevaCantidad,
-                'avg_buy_price' => $nuevoPrecioMedio,
+                'quantity' => $adjustment['quantity'],
+                'avg_buy_price' => $adjustment['avgBuyPrice'],
             ]);
-            $tipoTrade = 'compra';
+            $tradeType = 'compra';
         } else {
+            // Nueva posición
             $investment = $portfolio->investments()->create([
                 'symbol_id' => $symbol->id,
-                'quantity' => $qty,
+                'quantity' => $quantity,
                 'avg_buy_price' => $price,
             ]);
-            $tipoTrade = 'nuevaPosicion';
+            $tradeType = 'nuevaPosicion';
         }
 
         Trade::create([
             'investment_id' => $investment->id,
-            'quantity' => $qty,
+            'quantity' => $quantity,
             'price_per_unit' => $price,
-            'type' => $tipoTrade,
+            'type' => $tradeType,
             'operated_at' => $this->parseOperatedAt($fields['operated_at'] ?? null),
         ]);
 
-        return $investment->fresh();
+        return $investment;
+    }
+
+    private function calculateBuyAdjustment(Investment $investment, array $operation): array
+    {
+        $totalCostBefore = $investment->quantity * $investment->avg_buy_price;
+        $newCost = $operation['quantity'] * $operation['price_per_unit'];
+        $newQuantity = $investment->quantity + $operation['quantity'];
+        $newAvgPrice = ($totalCostBefore + $newCost) / $newQuantity;
+
+        return [
+            'quantity' => $newQuantity,
+            'avgBuyPrice' => $newAvgPrice,
+        ];
+    }
+
+    private function calculateTotalValue(array $investmentsData): float
+    {
+        return array_sum(array_column($investmentsData, 'value'));
+    }
+
+    private function calculateWeights(array &$investmentsData, float $totalValue): void
+    {
+        foreach ($investmentsData as &$data) {
+            $data['weight'] = round(($data['value'] / $totalValue) * 100, 2);
+        }
     }
 
     private function parseOperatedAt(?string $date): Carbon
     {
-        if ($date === null || $date === '') {
-            return now();
-        }
-
-        return Carbon::parse($date);
+        return $date ? Carbon::parse($date) : now();
     }
 }

@@ -21,6 +21,7 @@ export interface PortfolioDashboard {
   totalValueUSD: number;
   totalPositions: number;
   profitLoss: number;
+  assetType?: string;
   allocation: PortfolioAllocation[];
   symbol: string;
   positions: PortfolioPosition[];

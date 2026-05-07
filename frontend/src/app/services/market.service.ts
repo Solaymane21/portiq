@@ -11,10 +11,10 @@ export class MarketService {
   private http = inject(HttpClient)
 
   // Historial de precios
-  getHistory(symbol: string, period: string, assetType: string = 'stock'): Observable<any> {
-    return this.http.get(`${this.apiUrl}/history/${symbol}`, {
-      params: { period, asset_type: assetType }
-    });
+  getHistory(symbol: string, period: string, assetType: string = 'stock') {
+    return this.http.get<any>(
+      `${this.apiUrl}/history/${symbol}?period=${period}&asset_type=${assetType}`
+    );
   }
 
   // Precios en tiempo real

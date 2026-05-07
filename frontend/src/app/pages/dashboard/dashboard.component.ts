@@ -156,15 +156,13 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       next: (response: any) => {
         console.log('Response API:', response); 
         const investments = response.investments.filter((inv: any) => inv.quantity > 0);
-
+        
         const idx = this.portfolios.findIndex(p => p.id === portfolioId);
         if (idx !== -1) {
 
           const primerActivo = investments[0];
           const esCrypto = primerActivo?.asset_type === 'crypto';
-          const symbolParaChart = esCrypto
-            ? `${primerActivo?.symbol}/USD`
-            : (primerActivo?.symbol ?? 'AAPL');
+          const symbolParaChart = primerActivo?.symbol ?? 'AAPL';
 
           this.portfolios[idx] = {
             ...this.portfolios[idx],
@@ -173,6 +171,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
             totalPositions: investments.length,
             profitLoss: response.stats?.ganancias ?? 0,
             symbol: symbolParaChart,
+            assetType: primerActivo?.asset_type ?? 'stock',
             allocation: this.buildAllocation(investments, response.total_value),
             positions: investments.map((inv: any) => ({
               ticker: inv.symbol,
@@ -302,8 +301,9 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
     if (!this.currentPortfolio) return;
     this.isLoading = true;
     const symbol = this.currentPortfolio.symbol;
+    const assetType = this.currentPortfolio.assetType ?? 'stock';  
 
-    this.marketService.getHistory(symbol, period).subscribe({
+    this.marketService.getHistory(symbol, period, assetType).subscribe({
       next: (response) => {
         this.buildAreaChart(response.data, period);
         this.isLoading = false;

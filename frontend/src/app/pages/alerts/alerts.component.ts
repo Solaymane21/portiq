@@ -1,33 +1,25 @@
-import { Component, signal, HostListener } from '@angular/core';
+import { Component, signal, inject, OnInit, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe, DecimalPipe, NgClass } from '@angular/common';
+import { DatePipe, DecimalPipe  } from '@angular/common';
 import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
-
-interface Alert {
-  id: number;
-  symbol: string;
-  name: string;
-  target_price: number;
-  condition: 'above' | 'below';
-  is_active: boolean;
-  created_at: Date;
-}
-
-interface SymbolResult {
-  symbol: string;
-  name: string;
-}
+import { AlertsService, Alert, SymbolResult } from '../../services/alerts.service';
 
 @Component({
   selector: 'app-alerts',
   standalone: true,
-  imports: [FormsModule, DatePipe, CdkMenuTrigger, CdkMenu, CdkMenuItem],
+  imports: [FormsModule, DatePipe, CdkMenuTrigger, CdkMenu, CdkMenuItem, DecimalPipe],
   templateUrl: './alerts.component.html',
-  styleUrl: './alerts.component.css'
 })
-export class AlertsComponent {
+
+export class AlertsComponent implements OnInit {
+  private alertsService = inject(AlertsService);
+
+  alerts = signal<Alert[]>([]);
+  isLoading = signal(false);
+  isCreating = signal(false);
+
   showModal = signal(false);
   searchQuery = '';
   searchResults = signal<SymbolResult[]>([]);
@@ -35,41 +27,29 @@ export class AlertsComponent {
   condition = signal<'above' | 'below'>('above');
   targetPrice: number | null = null;
 
-  alerts = signal<Alert[]>([
-    { id: 1, symbol: 'BTC', name: 'Bitcoin', target_price: 70000, condition: 'above', is_active: true, created_at: new Date('2025-04-01') },
-    { id: 2, symbol: 'AAPL', name: 'Apple Inc.', target_price: 180, condition: 'below', is_active: false, created_at: new Date('2025-03-15') },
-  ]);
-
   private searchSubject = new Subject<string>();
 
-  constructor() {
+  ngOnInit(): void {
+    this.loadAlerts();
+
     this.searchSubject.pipe(
-      debounceTime(250),
-      distinctUntilChanged()
-    ).subscribe(query => this.fetchResults(query));
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(query => this.alertsService.searchSymbols(query))
+    ).subscribe(results => this.searchResults.set(results));
+  }
+
+  loadAlerts(): void {
+    this.isLoading.set(true);
+    this.alertsService.getAlerts().subscribe({
+      next: (data) => { this.alerts.set(data); this.isLoading.set(false); },
+      error: () => this.isLoading.set(false),
+    });
   }
 
   onSearch(query: string): void {
     if (query.length < 2) { this.searchResults.set([]); return; }
     this.searchSubject.next(query);
-  }
-
-  private fetchResults(query: string): void {
-    // sustituir por llamada real a MarketService
-    const mock: SymbolResult[] = [
-      { symbol: 'BTC', name: 'Bitcoin' },
-      { symbol: 'ETH', name: 'Ethereum' },
-      { symbol: 'AAPL', name: 'Apple Inc.' },
-      { symbol: 'NVDA', name: 'NVIDIA Corporation' },
-      { symbol: 'SPY', name: 'SPDR S&P 500 ETF' },
-    ];
-
-    this.searchResults.set(
-      mock.filter(r =>
-        r.name.toLowerCase().includes(query.toLowerCase()) ||
-        r.symbol.toLowerCase().includes(query.toLowerCase())
-      )
-    );
   }
 
   selectSymbol(result: SymbolResult): void {
@@ -78,31 +58,39 @@ export class AlertsComponent {
     this.searchResults.set([]);
   }
 
+  createAlert(): void {
+    const sym = this.selectedSymbol();
+    if (!sym || !this.targetPrice) return;
+
+    this.isCreating.set(true);
+    this.alertsService.createAlert({
+      symbol:       sym.symbol,
+      name:         sym.name,
+      asset_type:   sym.asset_type,
+      api_id:       sym.api_id,
+      image_url:    sym.image_url,
+      target_price: this.targetPrice,
+      condition:    this.condition(),
+    }).subscribe({
+      next: (alert) => {
+        this.alerts.update(prev => [alert, ...prev]);
+        this.closeModal();
+        this.isCreating.set(false);
+      },
+      error: () => this.isCreating.set(false),
+    });
+  }
+
   toggleAlert(alert: Alert): void {
-    this.alerts.update(alerts =>
-      alerts.map(a => a.id === alert.id ? { ...a, is_active: !a.is_active } : a)
-    );
+    this.alertsService.updateAlert(alert.id, { is_active: !alert.is_active }).subscribe(updated => {
+      this.alerts.update(prev => prev.map(a => a.id === updated.id ? updated : a));
+    });
   }
 
   deleteAlert(id: number): void {
-    this.alerts.update(alerts => alerts.filter(a => a.id !== id));
-  }
-
-  createAlert(): void {
-    if (!this.selectedSymbol() || !this.targetPrice) return;
-
-    const newAlert: Alert = {
-      id: Date.now(),
-      symbol: this.selectedSymbol()!.symbol,
-      name: this.selectedSymbol()!.name,
-      target_price: this.targetPrice!,
-      condition: this.condition(),
-      is_active: true,
-      created_at: new Date()
-    };
-
-    this.alerts.update(alerts => [...alerts, newAlert]);
-    this.closeModal();
+    this.alertsService.deleteAlert(id).subscribe(() => {
+      this.alerts.update(prev => prev.filter(a => a.id !== id));
+    });
   }
 
   closeModal(): void {

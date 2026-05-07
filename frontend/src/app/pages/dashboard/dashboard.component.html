@@ -9,133 +9,135 @@
       (blur)="collapsed.set(false)"
     >
       @for (p of portfolios; track p.id) {
-        <option [ngValue]="p.id" class="text-neutral-300" cdkMenu>{{ p.name }}</option>
+        <option [ngValue]="p.id" class="text-neutral-300">{{ p.name }}</option>
       }
     </select>
 
     <span class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-orange-500">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                    </svg>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+      </svg>
     </span>
   </div>
 </div>
 
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5 mb-5">
-  <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-    <p class="mb-3">Valor total €</p>
-    <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
-      {{ currentPortfolio.totalValue | number: "1.0-0" }}€
-    </p>
+@if (currentPortfolio) {
+
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5 mb-5">
+    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3">Valor total €</p>
+      <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
+        {{ currentPortfolio.totalValue | number: "1.0-0" }}€
+      </p>
+    </div>
+    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3">Valor total $</p>
+      <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
+        ${{ currentPortfolio.totalValueUSD | number: "1.0-0" }}
+      </p>
+    </div>
+    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3">Ganancias/Perdidas</p>
+      <p
+        class="text-3xl font-ibm font-bold text-center"
+        [class.text-green-500]="currentPortfolio.profitLoss > 0"
+        [class.text-red-500]="currentPortfolio.profitLoss < 0"
+      >
+        {{ currentPortfolio.profitLoss | number: "1.0-0" }}€
+      </p>
+    </div>
+    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3">Total de Posiciones</p>
+      <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
+        {{ currentPortfolio.totalPositions }}
+      </p>
+    </div>
   </div>
-  <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-    <p class="mb-3">Valor total $</p>
-    <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
-      ${{ currentPortfolio.totalValueUSD | number: "1.0-0" }}
-    </p>
-  </div>
-  <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-    <p class="mb-3">Ganancias/Perdidas</p>
-    <p
-      class="text-3xl font-ibm font-bold text-center"
-      [class.text-green-500]="currentPortfolio.profitLoss > 0"
-      [class.text-red-500]="currentPortfolio.profitLoss < 0"
+
+  <!-- Area -->
+  <div class="grid grid-cols-3 gap-4 mt-5 mb-5">
+    <div
+      class="col-span-3 lg:col-span-2 bg-neutral-950 border border-neutral-600 rounded-2xl p-5 flex flex-col"
     >
-      {{ currentPortfolio.profitLoss | number: "1.0-0" }}€
-    </p>
-  </div>
-  <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-    <p class="mb-3">Total de Posiciones</p>
-    <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
-      {{ currentPortfolio.totalPositions }}
-    </p>
-  </div>
-</div>
-
-<!-- Area -->
-<div class="grid grid-cols-3 gap-4 mt-5 mb-5">
-  <div
-    class="col-span-3 lg:col-span-2 bg-neutral-950 border border-neutral-600 rounded-2xl p-5 flex flex-col"
-  >
-    <div class="flex justify-end gap-1 mb-2">
-      @for (p of periods; track p) {
-        <button
-          (click)="setPeriod(p)"
-          class="px-2.5 py-0.5 rounded-md  transition-colors"
-          [class.bg-orange-600]="p === selectedPeriod"
-          [class.text-white]="p === selectedPeriod"
-          [class.text-neutral-400]="p !== selectedPeriod"
-        >
-          {{ p }}
-        </button>
-      }
-    </div>
-
-    @if (isLoading) {
-      <div class="flex-1 flex items-center justify-center">
-        <div
-          class="w-6 h-6 border-2 border-orange-800 border-t-transparent rounded-full animate-spin"
-        ></div>
+      <div class="flex justify-end gap-1 mb-2">
+        @for (p of periods; track p) {
+          <button
+            (click)="setPeriod(p)"
+            class="px-2.5 py-0.5 rounded-md  transition-colors"
+            [class.bg-orange-600]="p === selectedPeriod"
+            [class.text-white]="p === selectedPeriod"
+            [class.text-neutral-400]="p !== selectedPeriod"
+          >
+            {{ p }}
+          </button>
+        }
       </div>
-    } @else if (areaOptions) {
-      <apx-chart
-        [series]="areaOptions.series"
-        [chart]="areaOptions.chart"
-        [colors]="areaOptions.colors"
-        [stroke]="areaOptions.stroke"
-        [fill]="areaOptions.fill"
-        [grid]="areaOptions.grid"
-        [xaxis]="areaOptions.xaxis"
-        [yaxis]="areaOptions.yaxis"
-        [tooltip]="areaOptions.tooltip"
-        [dataLabels]="areaOptions.dataLabels"
-        [markers]="areaOptions.markers"
-      >
-      </apx-chart>
-    }
-  </div>
 
-  <!-- Donut -->
-  <div
-    class="col-span-3 lg:col-span-1 bg-neutral-950 border border-neutral-600 rounded-2xl p-5"
-  >
-    <div class="justify-center donut-chart">
-      <apx-chart
-        [series]="donutOptions.series"
-        [chart]="donutOptions.chart"
-        [labels]="donutOptions.labels"
-        [colors]="donutOptions.colors"
-        [plotOptions]="donutOptions.plotOptions"
-        [legend]="donutOptions.legend"
-        [dataLabels]="donutOptions.dataLabels"
-      >
-      </apx-chart>
-    </div>
-
-    <div class="flex flex-col gap-2 mt-3">
-      @for (item of currentPortfolio.allocation; track item.label) {
-        <div class="flex items-center justify-between px-2">
-            <div class="flex items-center gap-2">
-              <span
-                class="w-2.5 h-2.5 rounded-sm inline-block"
-                [class]="item.colorClass"
-              ></span>
-              <span>{{ item.label }}</span>
-            </div>
-            <span class="text-l" [class]="item.textClass"
-                >{{ item.percent }}%</span
-              >
+      @if (isLoading) {
+        <div class="flex-1 flex items-center justify-center">
+          <div
+            class="w-6 h-6 border-2 border-orange-800 border-t-transparent rounded-full animate-spin"
+          ></div>
         </div>
+      } @else if (areaOptions) {
+        <apx-chart
+          [series]="areaOptions.series"
+          [chart]="areaOptions.chart"
+          [colors]="areaOptions.colors"
+          [stroke]="areaOptions.stroke"
+          [fill]="areaOptions.fill"
+          [grid]="areaOptions.grid"
+          [xaxis]="areaOptions.xaxis"
+          [yaxis]="areaOptions.yaxis"
+          [tooltip]="areaOptions.tooltip"
+          [dataLabels]="areaOptions.dataLabels"
+          [markers]="areaOptions.markers"
+        >
+        </apx-chart>
       }
     </div>
+
+    <!-- Donut -->
+    <div
+      class="col-span-3 lg:col-span-1 bg-neutral-950 border border-neutral-600 rounded-2xl p-5"
+    >
+      <div class="justify-center donut-chart">
+        @if (donutOptions) {
+          <apx-chart
+            [series]="donutOptions.series"
+            [chart]="donutOptions.chart"
+            [labels]="donutOptions.labels"
+            [colors]="donutOptions.colors"
+            [plotOptions]="donutOptions.plotOptions"
+            [legend]="donutOptions.legend"
+            [dataLabels]="donutOptions.dataLabels"
+          >
+          </apx-chart>
+        }
+      </div>
+
+      <div class="flex flex-col gap-2 mt-3">
+        @for (item of currentPortfolio.allocation; track item.label) {
+          <div class="flex items-center justify-between px-2">
+              <div class="flex items-center gap-2">
+                <span
+                  class="w-2.5 h-2.5 rounded-sm inline-block"
+                  [class]="item.colorClass"
+                ></span>
+                <span>{{ item.label }}</span>
+              </div>
+              <span class="text-l" [class]="item.textClass">{{ item.percent }}%</span>
+          </div>
+        }
+      </div>
+    </div>
   </div>
-</div>
 
-<!-- Tabla -->
-<div class="col-span-2 bg-neutral-950 border border-neutral-600 rounded-2xl p-5 overflow-y-auto">
-  <p class="mb-3">Mis posiciones</p>
+  <!-- Tabla -->
+  <div class="col-span-2 bg-neutral-950 border border-neutral-600 rounded-2xl p-5 overflow-y-auto">
+    <p class="mb-3">Mis posiciones</p>
 
-      <table mat-table [dataSource]="dataSource" matSort class="w-full bg-transparent">
+    <table mat-table [dataSource]="dataSource" matSort class="w-full bg-transparent">
 
       <ng-container matColumnDef="ticker">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
@@ -195,3 +197,9 @@
       class="bg-transparent text-white">
     </mat-paginator>
   </div>
+
+} @else {
+  <div class="flex items-center justify-center h-64">
+    <div class="w-6 h-6 border-2 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+}

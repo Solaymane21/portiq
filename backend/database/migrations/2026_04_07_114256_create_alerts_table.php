@@ -14,7 +14,9 @@ return new class extends Migration
             $table->foreignId('symbol_id')->constrained('symbols')->onDelete('cascade');
             $table->decimal('target_price', 20, 8);
             $table->boolean('is_active')->default(true);
+            $table->boolean('triggered')->default(false);
             $table->string('condition');
+            $table->timestamp('triggered_at')->nullable(); 
             $table->timestamp('created_at')->nullable();
         });
     }

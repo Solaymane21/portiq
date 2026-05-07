@@ -14,6 +14,8 @@ use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\AlertController;
+
 
 Route::prefix('auth')->group(function() {
     Route::post('/reset-code', [EmailController::class, 'sendForgotPasswordCode']);
@@ -71,12 +73,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/preferences', [PreferencesController::class, 'show']);
     Route::patch('/preferences', [PreferencesController::class, 'update']);
 
+    //Alerts
+    Route::get('/alerts',          [AlertController::class, 'index']);
+    Route::post('/alerts',         [AlertController::class, 'store']);
+    Route::put('/alerts/{alert}',[AlertController::class, 'update']);
+    Route::delete('/alerts/{alert}',[AlertController::class, 'destroy']);
+
     // Favorites
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/favorites', [FavoriteController::class, 'store']);
     Route::delete('/favorites/{symbolId}', [FavoriteController::class, 'destroy']);
 });
 
+//Prices
 Route::get('/search/{symbol}', [MarketController::class, 'search']);
 Route::get('/prices', [MarketController::class, 'prices']);
 Route::get('/portfolio/value', [MarketController::class, 'portfolioValue']);
@@ -89,3 +98,6 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function() {
     Route::post('/users/{user}/subscription/cancel', [AdminController::class, 'cancelUserSubscription']);
     Route::post('/users/{user}/subscription/resume', [AdminController::class, 'resumeUserSubscription']);
 });
+
+
+    

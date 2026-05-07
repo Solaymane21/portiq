@@ -22,7 +22,7 @@ export class PortfolioService {
   }
 
   getPortfolios() {
-    return this.http.get(this.apiUrl);
+  return this.http.get<any[]>(this.apiUrl);
   }
 
   getPublicRanking(sort: string, order: string, q?: string) {

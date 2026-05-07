@@ -3,44 +3,49 @@ import { DecimalPipe } from '@angular/common';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { MarketService } from '../../services/market.service';
 import { PortfolioDashboard, PortfolioPosition } from '../../models/portfolioDashboard.model';
-import { PORTFOLIOS_MOCK } from './dashboard.mock';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
 import { FormsModule } from '@angular/forms';
-import {CdkMenu, CdkMenuItem, CdkMenuTrigger} from '@angular/cdk/menu';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationsService } from '../../services/notifications.service';
+import { PortfolioService } from '../../services/portfolio.service';
+import { InvestmentService } from '../../services/investment.service';
 
 
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [NgApexchartsModule, FormsModule, DecimalPipe, MatTableModule, MatPaginatorModule, MatSortModule, CdkMenu],
+  imports: [NgApexchartsModule, FormsModule, DecimalPipe, MatTableModule, MatPaginatorModule, MatSortModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent implements OnInit, AfterViewInit  {
 
+
   route = inject(ActivatedRoute);
   router = inject(Router);
   authService = inject(AuthService);
   notificationService = inject(NotificationsService);
+  portfolioService = inject(PortfolioService);
+  investmentService = inject(InvestmentService);
+
 
   //Tabla
   displayedColumns = ['ticker', 'name', 'price', 'change'];
   dataSource = new MatTableDataSource<PortfolioPosition>([]);
 
-  portfolio =signal(0);
+
+  portfolio = signal(0);
 
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  ngAfterViewInit(): void {
 
+  ngAfterViewInit(): void {
     setTimeout(()=>{
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
@@ -61,18 +66,17 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
     });
   }
 
-  // Carteras
-  portfolios: PortfolioDashboard[] = PORTFOLIOS_MOCK;
-  selectedPortfolioId: number = 1;
 
-  get currentPortfolio(): PortfolioDashboard {
+  // Carteras
+  portfolios: PortfolioDashboard[] = [];
+  selectedPortfolioId: number = 0;
+  isLoadingPortfolios = true;
+
+
+  get currentPortfolio(): PortfolioDashboard | undefined {
     return this.portfolios.find(p => p.id === this.selectedPortfolioId) ?? this.portfolios[0];
   }
 
-
-  get profitLoss(): number {
-    return this.currentPortfolio.profitLoss;
-  }
 
   // Chart
   selectedPeriod = '1D';
@@ -85,48 +89,151 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   marketService = inject(MarketService);
   collapsed = signal(false)
 
-  ngOnInit(): void {
-    this.buildDonutChart();
-    this.loadChart(this.selectedPeriod);
-    this.dataSource.data = this.currentPortfolio.positions
 
-    // mostrar notificacion si el usuario se ha suscrito
+  ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       if (params['subscribed'] === '1') {
-
-        // Limpia la URL inmediatamente
         this.router.navigate([], {
           relativeTo: this.route,
           queryParams: {},
           replaceUrl: true
         });
-
-        // Consulta el estado de la suscripcion en la API
         this.authService.refreshUser().subscribe(user => {
-          // Solo notifica si realmente es premium
           if (user.suscription_type === 'premium') {
             this.notificationService.success('¡Bienvenido a PortIQ Pro!');
           }
         });
       }
     });
+
+
+    this.portfolioService.getPortfolios().subscribe({
+      next: (carteras: any[]) => {
+        this.isLoadingPortfolios = false;
+
+        const defaultCarteras = carteras.find(c => c.is_default) ?? carteras[0];
+        if (!defaultCarteras) return;
+
+        this.selectedPortfolioId = defaultCarteras.id;
+
+        this.portfolios = carteras.map(c => ({
+          id: c.id,
+          name: c.name,
+          is_default: c.is_default,
+          totalValue: 0,
+          totalValueUSD: 0,
+          totalPositions: c.activos_count ?? 0,
+          profitLoss: 0,
+          symbol: 'AAPL',
+          allocation: [],
+          positions: []
+        }));
+
+        this.cargarInvestmentsDashboard(this.selectedPortfolioId);
+      },
+      error: (err) => {
+        console.error('Error cargando carteras', err);
+        this.isLoadingPortfolios = false;
+      }
+    });
   }
+
 
   onPortfolioChange(portfolioId: number): void {
     this.selectedPortfolioId = +portfolioId;
     this.areaOptions = null;
-    this.buildDonutChart();
-    this.loadChart(this.selectedPeriod);
-    this.dataSource.data = this.currentPortfolio.positions;
+    this.donutOptions = null;
+    this.dataSource.data = [];
+    this.cargarInvestmentsDashboard(this.selectedPortfolioId);
+  }
+
+
+  private cargarInvestmentsDashboard(portfolioId: number): void {
+    this.isLoading = true;
+    this.areaOptions = null;
+
+    this.investmentService.getInvestments(portfolioId).subscribe({
+      next: (response: any) => {
+        console.log('Response API:', response); 
+        const investments = response.investments.filter((inv: any) => inv.quantity > 0);
+
+        const idx = this.portfolios.findIndex(p => p.id === portfolioId);
+        if (idx !== -1) {
+
+          const primerActivo = investments[0];
+          const esCrypto = primerActivo?.asset_type === 'crypto';
+          const symbolParaChart = esCrypto
+            ? `${primerActivo?.symbol}/USD`
+            : (primerActivo?.symbol ?? 'AAPL');
+
+          this.portfolios[idx] = {
+            ...this.portfolios[idx],
+            totalValue: response.total_value ?? 0,
+            totalValueUSD: (response.total_value ?? 0) * 1.085,
+            totalPositions: investments.length,
+            profitLoss: response.stats?.ganancias ?? 0,
+            symbol: symbolParaChart,
+            allocation: this.buildAllocation(investments, response.total_value),
+            positions: investments.map((inv: any) => ({
+              ticker: inv.symbol,
+              name: inv.name ?? inv.symbol,
+              price: '$' + Number(inv.current_price ?? 0).toFixed(2),
+              change: (inv.return_7d >= 0 ? '+' : '') + Number(inv.return_7d ?? 0).toFixed(2) + '%',
+              positive: (inv.return_7d ?? 0) >= 0
+            }))
+          };
+
+          this.portfolios = [...this.portfolios];
+        }
+
+        
+        this.dataSource.data = this.currentPortfolio?.positions ?? [];
+        this.dataSource.sort = this.sort;
+        this.dataSource.paginator = this.paginator;
+        this.buildDonutChart();
+        this.loadChart(this.selectedPeriod);
+      },
+      error: () => {
+        this.isLoading = false;
+        this.buildDonutChart();
+        this.loadChart(this.selectedPeriod);
+      }
+    });
+  }
+
+
+  private buildAllocation(investments: any[], totalValue: number): any[] {
+    if (!investments.length || !totalValue) return [];
+
+    const grupos: Record<string, number> = {};
+    investments.forEach((inv: any) => {
+      const tipo = inv.asset_type ?? 'Otros';
+      grupos[tipo] = (grupos[tipo] ?? 0) + (inv.value ?? 0);
+    });
+
+    const colores: Record<string, { color: string; colorClass: string; textClass: string }> = {
+      'crypto': { color: '#92400e', colorClass: 'bg-orange-800', textClass: 'text-neutral-400' },
+      'stock':  { color: '#EA580C', colorClass: 'bg-orange-500', textClass: 'text-[#EA580C]' },
+      'Otros':  { color: '#2563EB', colorClass: 'bg-blue-600',   textClass: 'text-blue-400' }
+    };
+
+    return Object.entries(grupos).map(([tipo, valor]) => ({
+      label: tipo === 'crypto' ? 'Criptomonedas' : tipo === 'stock' ? 'Acciones' : tipo,
+      percent: Math.round((valor / totalValue) * 100),
+      color: colores[tipo]?.color ?? '#EA580C',
+      colorClass: colores[tipo]?.colorClass ?? 'bg-orange-500',
+      textClass: colores[tipo]?.textClass ?? 'text-[#EA580C]'
+    }));
   }
 
 
   // Donut
   private buildDonutChart(): void {
-
+    if (!this.currentPortfolio) return;
     this.donutOptions = null;
 
-     setTimeout(() => {
+    setTimeout(() => {
+      if (!this.currentPortfolio) return;
       const alloc = this.currentPortfolio.allocation;
       const total = this.currentPortfolio.totalValue;
 
@@ -175,7 +282,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
                   fontWeight: 500,
                   color: '#fff',
                   formatter: () => ''
-                  }
+                }
               }
             }
           }
@@ -192,9 +299,9 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
 
 
   private loadChart(period: string): void {
+    if (!this.currentPortfolio) return;
     this.isLoading = true;
     const symbol = this.currentPortfolio.symbol;
-
 
     this.marketService.getHistory(symbol, period).subscribe({
       next: (response) => {
@@ -209,13 +316,11 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   }
 
 
-  //Area chart
   private buildAreaChart(data: { x: number; y: number }[], period: string): void {
     const tooltipFormat = period === '1D' ? 'HH:mm' : 'dd MMM yyyy';
 
-
     this.areaOptions = {
-      series: [{ name: this.currentPortfolio.name, data }],
+      series: [{ name: this.currentPortfolio?.name ?? '', data }],
       chart: {
         type: 'area',
         height: 250,
@@ -260,7 +365,4 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       }
     };
   }
-
-
 }
-

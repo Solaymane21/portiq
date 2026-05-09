@@ -1,6 +1,7 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { RouterLink } from "@angular/router";
+import { SubscriptionService } from '../../services/subscription.service';
 
 @Component({
   selector: 'app-topbar',
@@ -9,19 +10,20 @@ import { RouterLink } from "@angular/router";
   styleUrl: './topbar.component.css'
 })
 export class TopbarComponent implements OnInit {
-  authService = inject(AuthService)
-  avatar: string = "https://api.dicebear.com/9.x/fun-emoji/svg?seed=q"
+  private authService = inject(AuthService);
+
   user = this.authService.currentUser;
+  isPremium = signal<boolean>(false);
+
+  // computed se recalcula automáticamente cuando currentUser cambia
+  avatar = computed(() =>
+    this.user()?.avatar ?? 'https://api.dicebear.com/9.x/fun-emoji/svg?seed=q'
+  );
 
   ngOnInit(): void {
-    const data = this.authService.getUserInfo()
-
-    if(data) {
-      const user = JSON.parse(data)
-      if(user.avatar) {
-        this.avatar = user.avatar
-      }
-    }
+    this.authService.isPremium().subscribe(value => {
+      this.isPremium.set(value);
+    });
   }
 
 }

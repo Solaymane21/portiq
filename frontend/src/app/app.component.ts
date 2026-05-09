@@ -10,12 +10,14 @@ import { InitialDataService } from './services/initial-data.service';
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-  title = 'frontend';
+  title = 'PortIQ';
 
   private authService = inject(AuthService);
   private initialDataService = inject(InitialDataService);
 
   ngOnInit(): void {
+    this.authService.refreshUser().subscribe();
+
     if (this.authService.currentUser() && !this.initialDataService.ready()) {
       this.initialDataService.run().subscribe();
     }

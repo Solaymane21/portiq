@@ -20,9 +20,7 @@ export class AuthService {
   msgError = signal<string>('');
   redirectMsg = signal<RedirectMsg>({ msg: '', type: 'info' });
   resetToken = signal<string>('');
-  currentUser = signal<User | null>(
-    JSON.parse(localStorage.getItem('portiqUser') ?? 'null')
-  );
+  currentUser = signal<User | null>(null);
 
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
@@ -235,39 +233,43 @@ export class AuthService {
   // guarda token y datos del usuario en localstorage y actualiza el signal
   saveUserData(res: any) {
     localStorage.setItem('token', res.token);
-    localStorage.setItem('portiqUser', JSON.stringify(res.user));
     this.currentUser.set(res.user);
   }
 
   // elimina token y datos del usuario de localstorage y limpia el signal
   removeUserData() {
     localStorage.removeItem('token');
-    localStorage.removeItem('portiqUser');
     this.currentUser.set(null);
-  }
-
-  // devuelve los datos del usuario desde localstorage
-  getUserInfo() {
-    return localStorage.getItem('portiqUser');
   }
 
   // actualiza los datos del usuario en localstorage y en el signal
   updateLocalUser(user: any) {
-    localStorage.setItem('portiqUser', JSON.stringify(user));
     this.currentUser.set(user);
   }
 
   // refresca los datos del usuario desde el api y actualiza el signal
   refreshUser() {
     return this.http.get<User>(`${this.apiUrl}/user`).pipe(
-      tap(user => this.currentUser.set(user))
+      tap(user => this.currentUser.set(user)),
+      catchError(() => {
+        this.currentUser.set(null);
+        return of(null);
+      })
     );
   }
 
   isAdmin() {
+    return this.http.get<{ is_admin: boolean }>(`${this.apiUrl}/user`).pipe(
+      map(user => user.is_admin === true),
+      catchError(() => of(false))
+    );
+  }
+
+  isPremium() {
     return this.http.get(`${this.apiUrl}/user`).pipe(
-      map((user: any) => user.email === 'portiqinfo@gmail.com'),
+      map((user: any) => user.suscription_type === 'premium'),
       catchError(() => of(false))
     )
   }
+
 }

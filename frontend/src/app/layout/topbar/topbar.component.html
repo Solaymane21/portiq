@@ -13,7 +13,7 @@
         </div>
         <div class="flex flex-row items-center gap-5">
             <div>
-                @if (user()?.suscription_type === 'premium') {
+                @if (isPremium()) {
                     <span class="badge-premium rounded-full py-1 px-3 border border-orange-500">
                         <span class="font-ibm text font-extrabold ">Pro</span>
                     </span>
@@ -30,7 +30,7 @@
                 </svg>
             </div>
             <div class="w-10 h-10 rounded-full overflow-hidden">
-                <img src="{{ avatar }}" alt="Avatar del usuario"
+                <img src="{{ avatar() }}" alt="Avatar del usuario"
                     class="w-full h-full object-cover"
                     referrerpolicy="no-referrer">
             </div>

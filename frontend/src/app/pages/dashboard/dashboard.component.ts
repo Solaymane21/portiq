@@ -24,22 +24,17 @@ import { InvestmentService } from '../../services/investment.service';
 })
 export class DashboardComponent implements OnInit, AfterViewInit  {
 
-
-  route = inject(ActivatedRoute);
-  router = inject(Router);
-  authService = inject(AuthService);
-  notificationService = inject(NotificationsService);
-  portfolioService = inject(PortfolioService);
-  investmentService = inject(InvestmentService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private authService = inject(AuthService);
+  private notificationService = inject(NotificationsService);
+  private portfolioService = inject(PortfolioService);
+  private investmentService = inject(InvestmentService);
 
 
   //Tabla
   displayedColumns = ['ticker', 'name', 'price', 'change'];
   dataSource = new MatTableDataSource<PortfolioPosition>([]);
-
-
-  portfolio = signal(0);
-
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -99,7 +94,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
           replaceUrl: true
         });
         this.authService.refreshUser().subscribe(user => {
-          if (user.suscription_type === 'premium') {
+          if (user?.suscription_type === 'premium') {
             this.notificationService.success('¡Bienvenido a PortIQ Pro!');
           }
         });

@@ -19,11 +19,12 @@ class PreferencesController extends Controller
         $request->validate([
             'currency' => 'in:EUR,USD',
             'theme'    => 'in:dark,light',
+            'color_theme' => 'sometimes|in:orange,lime,teal,sky,indigo,violet,rose'
         ]);
 
         $preferences = $request->user()->preferences()->updateOrCreate(
             ['user_id' => $request->user()->id],
-            $request->only(['currency', 'theme'])
+            $request->only(['currency', 'theme', 'color_theme'])
         );
 
         return response()->json($preferences);

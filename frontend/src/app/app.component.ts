@@ -21,5 +21,7 @@ export class AppComponent {
     if (this.authService.currentUser() && !this.initialDataService.ready()) {
       this.initialDataService.run().subscribe();
     }
+
+    document.documentElement.setAttribute('data-color', 'rose');
   }
 }

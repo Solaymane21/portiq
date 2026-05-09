@@ -1,20 +1,20 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnDestroy, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SettingsService } from '../../services/settings.service';
 import { SubscriptionService } from '../../services/subscription.service';
-import { A11yModule } from "@angular/cdk/a11y";
-import { PreferencesService } from '../../services/preferences.service';
+import { ColorTheme, PreferencesService } from '../../services/preferences.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [ReactiveFormsModule, MatProgressSpinnerModule, A11yModule],
+  imports: [ReactiveFormsModule, MatProgressSpinnerModule, NgClass],
   templateUrl: './settings.component.html',
 })
-export class SettingsComponent {
+export class SettingsComponent implements OnDestroy {
   authService = inject(AuthService);
   settingsService = inject(SettingsService);
   subscriptionService = inject(SubscriptionService);
@@ -41,6 +41,9 @@ export class SettingsComponent {
   showResumeModal = signal(false);
 
   isSameName = signal<boolean>(false)
+
+  colors = this.preferencesService.colors
+  private originalColor!: ColorTheme;
 
   renewalDate(): string {
     const status = this.subscriptionService.status();
@@ -69,6 +72,8 @@ export class SettingsComponent {
         this.activeSection.set('suscripcion');
       }
     });
+
+    this.originalColor = this.preferencesService.colorTheme();
   }
 
   profileForm = new FormGroup({
@@ -160,6 +165,7 @@ export class SettingsComponent {
   }
 
   savePreferences() {
+    this.originalColor = this.preferencesService.colorTheme();
     this.preferencesService.save();
   }
 
@@ -176,6 +182,13 @@ export class SettingsComponent {
 
   upgradePremium() {
     this.subscriptionService.checkout();
+  }
+
+  ngOnDestroy() {
+    const current = this.preferencesService.colorTheme();
+    if (current !== this.originalColor) {
+      this.preferencesService.applyColor(this.originalColor); // restaura si no guardó
+    }
   }
   
 }

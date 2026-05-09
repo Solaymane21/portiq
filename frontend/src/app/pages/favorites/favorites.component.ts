@@ -10,6 +10,7 @@ import { NgClass } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NotificationsService } from '../../services/notifications.service';
+import { PreferencesService } from '../../services/preferences.service';
 
 @Component({
   selector: 'app-favorites',
@@ -22,6 +23,7 @@ export class FavoritesComponent implements OnInit {
 
   marketService = inject(MarketService);
   favoritesService = inject(FavoritesService);
+  preferencesService = inject(PreferencesService);
   searchSubject = new Subject<string>();
   destroyRef = inject(DestroyRef);
   notificationService = inject(NotificationsService)
@@ -46,6 +48,19 @@ export class FavoritesComponent implements OnInit {
     crypto: 'Criptomonedas',
     etf: 'ETF'
   };
+
+  // color activo del tema
+  private get primaryColor(): string {
+    return this.preferencesService.colorHex();
+  }
+
+  constructor() {
+    // cuando cambia el color, reconstruye todas las sparklines
+    effect(() => {
+      this.preferencesService.colorTheme();
+      this.rebuildAllSparklines();
+    });
+  }
 
   ngOnInit(): void {
     this.favoritesService.load().subscribe(favs => {
@@ -147,7 +162,7 @@ export class FavoritesComponent implements OnInit {
         background: 'transparent'
       },
       stroke: { curve: 'smooth' as const, width: 3 },
-      colors: ['#f97316'],
+      colors: [this.primaryColor],
       fill: {
         type: 'gradient',
         gradient: { shade: 'dark', type: 'vertical', opacityFrom: 0.35, opacityTo: 0.02 }
@@ -168,6 +183,15 @@ export class FavoritesComponent implements OnInit {
       },
       yaxis: { labels: { show: false } }
     };
+  }
+
+  private rebuildAllSparklines(): void {
+    this.sparklines.forEach((sparkline, symbolId) => {
+      this.sparklines.set(symbolId, {
+        ...sparkline,
+        colors: [this.primaryColor]
+      });
+    });
   }
 
   onSearch(query: string): void {

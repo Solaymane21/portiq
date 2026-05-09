@@ -9,9 +9,9 @@ class InitialDataController extends Controller
 {
     public function index(Request $request)
     {
-        $userId = $request->user()->id;
+        $user = $request->user();
 
-        $favorites = Favorite::where('user_id', $userId)
+        $favorites = Favorite::where('user_id', $user->id)
             ->with('symbol')
             ->get()
             ->map(fn($f) => [
@@ -26,8 +26,21 @@ class InitialDataController extends Controller
             ->values()
             ->toArray();
 
+        $preferences = $user->preferences
+            ? [
+                'currency'    => $user->preferences->currency,
+                'theme'       => $user->preferences->theme,
+                'color_theme' => $user->preferences->color_theme,
+            ]
+            : [
+                'currency'    => 'EUR',
+                'theme'       => 'dark',
+                'color_theme' => 'orange',
+            ];
+
         return response()->json([
-            'favorites' => $favorites
+            'favorites'   => $favorites,
+            'preferences' => $preferences,
         ]);
     }
 }

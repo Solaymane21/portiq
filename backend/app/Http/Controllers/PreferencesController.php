@@ -19,7 +19,7 @@ class PreferencesController extends Controller
         $request->validate([
             'currency' => 'in:EUR,USD',
             'theme'    => 'in:dark,light',
-            'color_theme' => 'sometimes|in:orange,lime,teal,sky,indigo,violet,rose'
+            'color_theme' => 'sometimes|in:orange,lime,teal,sky,indigo,violet,rose,red'
         ]);
 
         $preferences = $request->user()->preferences()->updateOrCreate(

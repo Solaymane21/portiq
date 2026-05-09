@@ -200,3 +200,20 @@ mat-spinner circle { stroke: #fff !important; }
 [data-color="rose"] .hover\:bg-orange-500\/80:hover { background-color: rgb(244 63 94 / 0.8) !important; }
 [data-color="rose"] .active-link { background-color: rgb(244 63 94 / 0.15) !important; }
 [data-color="rose"] .active-link svg { stroke: #f43f5e !important; }
+
+/* RED */
+[data-color="red"] .text-orange-500,
+[data-color="red"] .text-orange-600 { color: #ef4444 !important; }
+[data-color="red"] .bg-orange-500,
+[data-color="red"] .bg-orange-600 { background-color: #ef4444 !important; }
+[data-color="red"] .bg-orange-500\/80 { background-color: rgb(239 68 68 / 0.8) !important; }
+[data-color="red"] .bg-orange-500\/15 { background-color: rgb(239 68 68 / 0.15) !important; }
+[data-color="red"] .border-orange-500,
+[data-color="red"] .border-orange-600,
+[data-color="red"] .border-orange-800 { border-color: #ef4444 !important; }
+[data-color="red"] .stroke-orange-500,
+[data-color="red"] .stroke-orange-600 { stroke: #ef4444 !important; }
+[data-color="red"] .focus\:border-orange-500:focus { border-color: #ef4444 !important; }
+[data-color="red"] .hover\:bg-orange-500\/80:hover { background-color: rgb(239 68 68 / 0.8) !important; }
+[data-color="red"] .active-link { background-color: rgb(239 68 68 / 0.15) !important; }
+[data-color="red"] .active-link svg { stroke: #ef4444 !important; }

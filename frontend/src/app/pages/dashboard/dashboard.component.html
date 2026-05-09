@@ -13,7 +13,7 @@
       }
     </select>
 
-    <span class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-orange-500">
+    <span class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" [style.color]="preferencesService.colorHex()">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
       </svg>
@@ -64,7 +64,7 @@
           <button
             (click)="setPeriod(p)"
             class="px-2.5 py-0.5 rounded-md  transition-colors"
-            [class.bg-orange-600]="p === selectedPeriod"
+            [style.background-color]="p === selectedPeriod"
             [class.text-white]="p === selectedPeriod"
             [class.text-neutral-400]="p !== selectedPeriod"
           >
@@ -76,7 +76,9 @@
       @if (isLoading) {
         <div class="flex-1 flex items-center justify-center">
           <div
-            class="w-6 h-6 border-2 border-orange-800 border-t-transparent rounded-full animate-spin"
+            class="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+            [style.border-color]="preferencesService.colorHex()"
+            style="border-top-color: transparent"
           ></div>
         </div>
       } @else if (areaOptions) {
@@ -121,12 +123,11 @@
           <div class="flex items-center justify-between px-2">
               <div class="flex items-center gap-2">
                 <span
-                  class="w-2.5 h-2.5 rounded-sm inline-block"
-                  [class]="item.colorClass"
+                  class="w-2.5 h-2.5 rounded-sm inline-block" [style.background-color]="item.color"
                 ></span>
                 <span>{{ item.label }}</span>
               </div>
-              <span class="text-l" [class]="item.textClass">{{ item.percent }}%</span>
+              <span class="text-l" [class]="item.color">{{ item.percent }}%</span>
           </div>
         }
       </div>

@@ -16,12 +16,12 @@ export class AppComponent {
   private initialDataService = inject(InitialDataService);
 
   ngOnInit(): void {
-    this.authService.refreshUser().subscribe();
-
-    if (this.authService.currentUser() && !this.initialDataService.ready()) {
-      this.initialDataService.run().subscribe();
-    }
-
-    document.documentElement.setAttribute('data-color', 'rose');
+    this.authService.refreshUser().subscribe({
+      next: (user) => {
+        if (user && !this.initialDataService.ready()) {
+          this.initialDataService.run().subscribe();
+        }
+      }
+    });
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewChild, AfterViewInit, signal } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, AfterViewInit, signal, effect } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { MarketService } from '../../services/market.service';
@@ -12,6 +12,7 @@ import { AuthService } from '../../services/auth.service';
 import { NotificationsService } from '../../services/notifications.service';
 import { PortfolioService } from '../../services/portfolio.service';
 import { InvestmentService } from '../../services/investment.service';
+import { PreferencesService } from '../../services/preferences.service';
 
 
 
@@ -30,7 +31,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   private notificationService = inject(NotificationsService);
   private portfolioService = inject(PortfolioService);
   private investmentService = inject(InvestmentService);
-
+  preferencesService  = inject(PreferencesService);
 
   //Tabla
   displayedColumns = ['ticker', 'name', 'price', 'change'];
@@ -84,6 +85,28 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   marketService = inject(MarketService);
   collapsed = signal(false)
 
+  private get primaryColor(): string {
+    return this.preferencesService.colorHex();
+  }
+
+  constructor() {
+    // cuando cambia el color, reconstruye ambas gráficas
+    effect(() => {
+      this.preferencesService.colorTheme();
+      if (this.currentPortfolio) {
+        this.buildDonutChart();
+        this.rebuildAreaColor();
+      }
+    });
+  }
+
+  private rebuildAreaColor(): void {
+    if (!this.areaOptions) return;
+    this.areaOptions = {
+      ...this.areaOptions,
+      colors: [this.primaryColor]
+    };
+  }
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
@@ -205,18 +228,22 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       grupos[tipo] = (grupos[tipo] ?? 0) + (inv.value ?? 0);
     });
 
-    const colores: Record<string, { color: string; colorClass: string; textClass: string }> = {
-      'crypto': { color: '#92400e', colorClass: 'bg-orange-800', textClass: 'text-neutral-400' },
-      'stock':  { color: '#EA580C', colorClass: 'bg-orange-500', textClass: 'text-[#EA580C]' },
-      'Otros':  { color: '#2563EB', colorClass: 'bg-blue-600',   textClass: 'text-blue-400' }
+    const primary = this.primaryColor;
+
+    const colores: Record<string, string> = {
+      'stock':  primary,                    // 100% opacidad
+      'crypto': primary + 'cc',            // 80%
+      'etf':    primary + '80',            // 50%
+      'Otros':  primary + '4d',            // 30%
     };
 
     return Object.entries(grupos).map(([tipo, valor]) => ({
-      label: tipo === 'crypto' ? 'Criptomonedas' : tipo === 'stock' ? 'Acciones' : tipo,
+      label:   tipo === 'crypto' ? 'Criptomonedas'
+            : tipo === 'stock'  ? 'Acciones'
+            : tipo === 'etf'    ? 'ETFs'
+            : tipo,
       percent: Math.round((valor / totalValue) * 100),
-      color: colores[tipo]?.color ?? '#EA580C',
-      colorClass: colores[tipo]?.colorClass ?? 'bg-orange-500',
-      textClass: colores[tipo]?.textClass ?? 'text-[#EA580C]'
+      color:   colores[tipo] ?? primary,
     }));
   }
 
@@ -230,6 +257,12 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       if (!this.currentPortfolio) return;
       const alloc = this.currentPortfolio.allocation;
       const total = this.currentPortfolio.totalValue;
+      const primary = this.primaryColor;
+
+      const colors = alloc.map((_, i) => {
+        const opacities = ['', '99', '55', '2a'];
+        return primary + (opacities[i] ?? '2a');
+      });
 
       this.donutOptions = {
         series: alloc.map(i => i.percent),
@@ -240,7 +273,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
           toolbar: { show: false }
         },
         labels: alloc.map(i => i.label),
-        colors: alloc.map(i => i.color),
+        colors,
         stroke: { width: 0 },
         legend: { show: false },
         dataLabels: { enabled: false },
@@ -270,12 +303,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
                   formatter: (val: string) => val + '%'
                 },
                 total: {
-                  show: true,
-                  label: total.toLocaleString('es-ES') + '€',
-                  fontSize: '32px',
-                  fontWeight: 500,
-                  color: '#fff',
-                  formatter: () => ''
+                  show: false
                 }
               }
             }
@@ -326,7 +354,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       },
       markers: { size: 0, hover: { size: 5 } },
       dataLabels: { enabled: false },
-      colors: ['#EA580C'],
+      colors: [this.primaryColor],
       stroke: { curve: 'smooth', width: 2 },
       fill: {
         type: 'gradient',

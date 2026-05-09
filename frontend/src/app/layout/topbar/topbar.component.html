@@ -1,15 +1,24 @@
 <nav class="w-full bg-neutral-950 border-b border-neutral-600">
-    <div class="flex justify-end md:justify-between items-center h-16 mx-14">
-        <div class="hidden md:block relative flex-1 max-w-xs">
-            <input class="w-full bg-neutral-800 outline-none focus:outline-neutral-600 rounded-full px-3 py-1 text-neutral-300 placeholder:text-neutral-300" type="text"
-                placeholder="Busca una acción o crypto...">
-            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-300 cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+    <div class="flex justify-between items-center h-16 px-6 md:px-14">
+        <div class="relative flex-1 max-w-xs">
+            <button
+                type="button"
+                (click)="openAssetSearch()"
+                class="w-fit bg-neutral-800 rounded-full py-1.5 px-2
+                        flex items-center justify-between gap-5
+                        text-neutral-300 hover:opacity-80"
+                >
+                <span class="flex items-center gap-2 min-w-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5 shrink-0">
                     <path fill-rule="evenodd"
                         d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z"
                         clip-rule="evenodd" />
-                </svg>
-            </span>
+                    </svg>
+                </span>
+                <span class="hidden md:flex items-center gap-1 rounded-md border border-neutral-400 px-2 py-0.5 text-xs text-neutral-300">
+                    <span>Ctrl + k</span>
+                </span>
+            </button>
         </div>
         <div class="flex flex-row items-center gap-5">
             <div>
@@ -37,3 +46,81 @@
         </div>
     </div>
 </nav>
+
+@if (isAssetSearchOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center rounded">
+    <div
+      class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+      (click)="closeAssetSearch()">
+    </div>
+
+    <div
+      cdkTrapFocus
+      [cdkTrapFocusAutoCapture]="true"
+      role="dialog"
+      aria-modal="true"
+      class="relative w-full max-w-2xl rounded-2xl border border-neutral-700 bg-neutral-950 overflow-hidden mx-6"
+    >
+      <div class="flex items-center flex-row-reverse md:flex-row gap-3 border-b border-neutral-950 px-4 py-3">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5 text-neutral-300">
+          <path fill-rule="evenodd"
+            d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z"
+            clip-rule="evenodd" />
+        </svg>
+
+        <input
+          #assetSearchInput
+          type="text"
+          [(ngModel)]="assetQuery"
+          (input)="onAssetSearch()"
+          (keydown.escape)="closeAssetSearch()"
+          (keydown.arrowDown)="moveSelection(1)"
+          (keydown.arrowUp)="moveSelection(-1)"
+          (keydown.enter)="openSelectedAsset()"
+          placeholder="Escribe un ticker, nombre o crypto..."
+          class="w-full bg-neutral-950 outline-none text-white placeholder:text-neutral-300"
+        >
+
+        <span class="hidden md:block text-xs text-neutral-300">ESC</span>
+      </div>
+
+      <div class="max-h-[420px] overflow-y-auto p-2">
+        @if (isSearching()) {
+          <div class="px-3 py-6 text-sm text-neutral-300">Buscando activos...</div>
+        } @else {
+          @for (item of searchResults(); track item.symbol; let i = $index) {
+            <button
+              type="button"
+              (click)="selectAsset(item)"
+              class="w-full flex items-center justify-between rounded-xl px-3 py-3 text-left transition-colors"
+              [ngClass]="i === selectedIndex ? 'bg-neutral-800 text-white' : 'text-neutral-300 hover:bg-neutral-900'"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                @if (item.image_url) {
+                  <img [src]="item.image_url" [alt]="item.name" class="size-8 rounded-full object-cover">
+                } @else {
+                  <div class="size-8 rounded-full bg-neutral-800"></div>
+                }
+
+                <div class="min-w-0">
+                  <p class="truncate font-medium">{{ item.name }}</p>
+                  <p class="truncate text-xs text-neutral-500 uppercase">
+                    {{ item.symbol }} · {{ item.asset_type }}
+                  </p>
+                </div>
+              </div>
+
+              <span class="text-xs text-neutral-500">Enter</span>
+            </button>
+          }
+
+          @if (!isSearching() && searchResults().length === 0 && assetQuery.trim().length > 0) {
+            <div class="px-3 py-6 text-sm text-neutral-400">
+              No se encontraron activos.
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+}

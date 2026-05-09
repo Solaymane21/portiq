@@ -10,7 +10,7 @@
                 bg-neutral-950 border border-neutral-600
                 rounded-r-full
                 flex items-center justify-center
-                text-muted"
+                text-neutral-300"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5" [class.rotate-180]="collapsed()">
             <path fill-rule="evenodd" d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z" clip-rule="evenodd" />
@@ -28,7 +28,7 @@
         routerLinkActive="active-link"
         routerLink="/app/dashboard"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-orange-500/15"
+        class="group flex text-neutral-300 font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-semibold [&.active-link]:bg-orange-500/15"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -53,7 +53,7 @@
         routerLinkActive="active-link"
         routerLink="/app/wallets"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-orange-500/15"
+        class="group flex text-neutral-300 font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-semibold   [&.active-link]:bg-orange-500/15"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -78,7 +78,7 @@
         routerLinkActive="active-link"
         routerLink="/app/favorites"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-orange-500/15"
+        class="group flex text-neutral-300 font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-semibold   [&.active-link]:bg-orange-500/15"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -103,7 +103,7 @@
         routerLinkActive="active-link"
         routerLink="/app/investor-profile"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-orange-500/15"
+        class="group flex text-neutral-300 font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-semibold   [&.active-link]:bg-orange-500/15"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -128,7 +128,7 @@
         routerLinkActive="active-link"
         routerLink="/app/ranking"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-orange-500/15"
+        class="group flex text-neutral-300 font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-semibold   [&.active-link]:bg-orange-500/15"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -153,7 +153,7 @@
         routerLinkActive="active-link"
         routerLink="/app/alerts"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-orange-500/15"
+        class="group flex text-neutral-300 font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-semibold   [&.active-link]:bg-orange-500/15"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -180,7 +180,7 @@
         routerLinkActive="active-link"
         routerLink="/app/settings"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-orange-500/15"
+        class="group flex text-neutral-300 font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-semibold   [&.active-link]:bg-orange-500/15"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -210,7 +210,7 @@
         (click)="showLogoutModal.set(true)"
         routerLinkActive="active-link"
         [class.justify-center]="collapsed()"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-medium   [&.active-link]:bg-orange-500/15"
+        class="group flex text-neutral-300 font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl [&.active-link]:text-white [&.active-link]:font-semibold   [&.active-link]:bg-orange-500/15"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -234,11 +234,11 @@
     </div>
   </div>
 </aside>
+
 @if (showLogoutModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center rounded">
-    <!-- overlay oscuro -->
     <div
-      class="absolute inset-0 bg-black/50"
+      class="absolute inset-0 bg-black/50 backdrop-blur-sm"
       (click)="showLogoutModal.set(false)">
     </div>
 

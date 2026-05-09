@@ -3,73 +3,213 @@
          bg-neutral-950 border-t border-neutral-600
          flex items-center justify-around
          h-16"
-  style="padding-bottom: env(safe-area-inset-bottom)"
 >
-
-  <a routerLink="/app/dashboard" routerLinkActive="active-tab"
-     class="group flex flex-col items-center justify-center gap-1
-            flex-1 h-full text-muted
-            [&.active-tab]:text-white
-            rounded-xl transition-colors active:scale-95">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-         stroke-width="1.5" stroke="currentColor"
-         class="size-6 group-[.active-tab]:stroke-orange-500">
-      <path stroke-linecap="round" stroke-linejoin="round"
-            d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/>
+  <a
+    routerLink="/app/dashboard"
+    routerLinkActive="active-tab"
+    class="flex flex-col items-center justify-center gap-1
+           flex-1 h-full text-muted
+           rounded-xl active:scale-95"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="size-6"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"
+      />
     </svg>
-    <span class="text-[10px] font-medium">Dashboard</span>
+    <span class="text-xs font-medium text-neutral-300">Dashboard</span>
   </a>
 
-  <a routerLink="/app/wallets" routerLinkActive="active-tab"
-     class="group flex flex-col items-center justify-center gap-1
-            flex-1 h-full text-muted
-            [&.active-tab]:text-white
-            rounded-xl transition-colors active:scale-95">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-         stroke-width="1.5" stroke="currentColor"
-         class="size-6 group-[.active-tab]:stroke-orange-500">
-      <path stroke-linecap="round" stroke-linejoin="round"
-            d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3"/>
+  <a
+    routerLink="/app/wallets"
+    routerLinkActive="active-tab"
+    class="flex flex-col items-center justify-center gap-1
+           flex-1 h-full text-neutral-300
+           rounded-xl active:scale-95"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="size-6"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3"
+      />
     </svg>
-    <span class="text-[10px] font-medium">Carteras</span>
+    <span class="text-xs font-medium text-neutral-300">Carteras</span>
   </a>
 
-  <a routerLink="/app/favorites" routerLinkActive="active-tab"
-     class="group flex flex-col items-center justify-center gap-1
-            flex-1 h-full text-muted
-            [&.active-tab]:text-white
-            rounded-xl transition-colors active:scale-95">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-         stroke-width="1.5" stroke="currentColor"
-         class="size-6 group-[.active-tab]:stroke-orange-500">
-      <path stroke-linecap="round" stroke-linejoin="round"
-            d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"/>
+  <a
+    routerLink="/app/favorites"
+    routerLinkActive="active-tab"
+    class="flex flex-col items-center justify-center gap-1
+           flex-1 h-full text-muted
+           rounded-xl active:scale-95"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="size-6"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+      />
     </svg>
-    <span class="text-[10px] font-medium">Favoritos</span>
+    <span class="text-xs font-medium text-neutral-300">Favoritos</span>
   </a>
 
-  <a routerLink="/app/alerts" routerLinkActive="active-tab"
-     class="group flex flex-col items-center justify-center gap-1
-            flex-1 h-full text-muted
-            [&.active-tab]:text-white
-            rounded-xl transition-colors active:scale-95">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-         stroke-width="1.5" stroke="currentColor"
-         class="size-6 group-[.active-tab]:stroke-orange-500">
-      <path stroke-linecap="round" stroke-linejoin="round"
-            d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
+  <a
+    routerLink="/app/alerts"
+    routerLinkActive="active-tab"
+    class="flex flex-col items-center justify-center gap-1
+           flex-1 h-full text-muted
+           rounded-xl active:scale-95"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="size-6"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+      />
     </svg>
-    <span class="text-[10px] font-medium">Alertas</span>
+    <span class="text-xs font-medium text-neutral-300">Alertas</span>
   </a>
 
   <button
-    class="group flex flex-col items-center justify-center gap-1
-           flex-1 h-full text-muted
-           hover:text-white transition-colors active:scale-95">
+    type="button"
+    (click)="showMoreMenu.set(true)"
+    class="flex flex-col items-center justify-center gap-1
+          flex-1 h-full text-muted
+          hover:text-white active:scale-95"
+    aria-label="Abrir más opciones"
+    aria-haspopup="dialog"
+    [attr.aria-expanded]="showMoreMenu()"
+  >
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
       <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
     </svg>
-    <span class="text-[10px] font-medium">Más</span>
+    <span class="text-xs font-medium text-neutral-300">Más</span>
   </button>
-
 </nav>
+
+@if (showMoreMenu()) {
+  <div
+    class="md:hidden fixed inset-0 z-[60]"
+    aria-modal="true"
+    role="dialog"
+    aria-label="Más opciones"
+  >
+    <button
+      type="button"
+      class="absolute inset-0 bg-black/50 backdrop-blur-sm  "
+      (click)="showMoreMenu.set(false)"
+      aria-label="Cerrar menú"
+    ></button>
+
+    <div
+      class="absolute bottom-0 left-0 right-0
+             bg-neutral-950 border-t border-neutral-700
+             rounded-t-3xl px-4 pt-3 pb-6
+             animate-sheet-up"
+      style="padding-bottom: calc(env(safe-area-inset-bottom) + 1rem)"
+    >
+      <div class="w-12 h-1.5 rounded-full bg-neutral-700 mx-auto mb-4"></div>
+
+      <div class="flex items-center justify-end mb-4">
+        <button
+          type="button"
+          (click)="showMoreMenu.set(false)"
+          class="h-10 w-10 rounded-full flex items-center justify-center bg-neutral-900 text-neutral-300"
+          aria-label="Cerrar"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+            <path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <a
+          routerLink="/app/investor-profile"
+          (click)="showMoreMenu.set(false)"
+          class="flex items-center justify-between rounded-2xl border border-neutral-700 bg-neutral-900 px-4 py-4 text-neutral-300"
+        >
+          <span>Perfil inversor</span>
+          <span class="text-orange-500">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+              <path fill-rule="evenodd" d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z" clip-rule="evenodd" />
+            </svg>
+
+          </span>
+        </a>
+
+        <a
+          routerLink="/app/ranking"
+          (click)="showMoreMenu.set(false)"
+          class="flex items-center justify-between rounded-2xl border border-neutral-700 bg-neutral-900 px-4 py-4 text-neutral-300"
+        >
+          <span>Clasificación</span>
+          <span class="text-orange-500">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+              <path fill-rule="evenodd" d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z" clip-rule="evenodd" />
+            </svg>
+
+          </span>
+        </a>
+
+        <a
+          routerLink="/app/settings"
+          (click)="showMoreMenu.set(false)"
+          class="flex items-center justify-between rounded-2xl border border-neutral-700 bg-neutral-900 px-4 py-4 text-neutral-300"
+        >
+          <span>Configuración</span>
+          <span class="text-orange-500">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+              <path fill-rule="evenodd" d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z" clip-rule="evenodd" />
+            </svg>
+
+          </span>
+        </a>
+
+        <a
+          routerLink="/privacy-policy"
+          (click)="showMoreMenu.set(false)"
+          class="flex items-center justify-between rounded-2xl border border-neutral-700 bg-neutral-900 px-4 py-4 text-neutral-300"
+        >
+          <span>Política de privacidad</span>
+          <span class="text-orange-500">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+              <path fill-rule="evenodd" d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z" clip-rule="evenodd" />
+            </svg>
+
+          </span>
+        </a>
+      </div>
+    </div>
+  </div>
+}

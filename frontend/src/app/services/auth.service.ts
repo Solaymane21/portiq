@@ -3,7 +3,7 @@ import { User } from '../models/user.model';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { RedirectMsg } from '../models/redirectMsg.model';
-import { tap } from 'rxjs';
+import { catchError, map, of, tap } from 'rxjs';
 import { InitialDataService } from './initial-data.service';
 import { FavoritesService } from './favorites.service';
 import { environment } from '../../environments/environment';
@@ -262,5 +262,12 @@ export class AuthService {
     return this.http.get<User>(`${this.apiUrl}/user`).pipe(
       tap(user => this.currentUser.set(user))
     );
+  }
+
+  isAdmin() {
+    return this.http.get(`${this.apiUrl}/user`).pipe(
+      map((user: any) => user.email === 'portiqinfo@gmail.com'),
+      catchError(() => of(false))
+    )
   }
 }

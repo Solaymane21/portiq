@@ -417,7 +417,7 @@
           </div>
           <div>
             <p class="text-sm mb-3">Tema por defecto</p>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
               @for (color of colors; track color.value) {
                 <button
                   (click)="this.preferencesService.applyColor(color.value)"

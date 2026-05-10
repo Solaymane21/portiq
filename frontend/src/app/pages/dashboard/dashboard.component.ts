@@ -7,7 +7,7 @@ import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationsService } from '../../services/notifications.service';
 import { PortfolioService } from '../../services/portfolio.service';
@@ -19,7 +19,7 @@ import { PreferencesService } from '../../services/preferences.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [NgApexchartsModule, FormsModule, DecimalPipe, MatTableModule, MatPaginatorModule, MatSortModule],
+  imports: [NgApexchartsModule, FormsModule, DecimalPipe, MatTableModule, MatPaginatorModule, MatSortModule, RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
@@ -231,10 +231,9 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
     const primary = this.primaryColor;
 
     const colores: Record<string, string> = {
-      'stock':  primary,                    // 100% opacidad
-      'crypto': primary + 'cc',            // 80%
-      'etf':    primary + '80',            // 50%
-      'Otros':  primary + '4d',            // 30%
+      'stock':  primary,
+      'crypto': primary + '44',
+      'etf':    primary + '22'
     };
 
     return Object.entries(grupos).map(([tipo, valor]) => ({
@@ -260,7 +259,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       const primary = this.primaryColor;
 
       const colors = alloc.map((_, i) => {
-        const opacities = ['', '99', '55', '2a'];
+        const opacities = ['', '44', '22'];
         return primary + (opacities[i] ?? '2a');
       });
 

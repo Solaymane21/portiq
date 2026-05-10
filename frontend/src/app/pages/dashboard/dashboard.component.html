@@ -1,4 +1,4 @@
-<div class="flex justify-between">
+<div class="flex justify-between mb-6">
   <h1 class="text-3xl font-ibm">Dashboard</h1>
   <div class="relative w-fit">
     <select
@@ -26,20 +26,20 @@
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5 mb-5">
     <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
       <p class="mb-3">Valor total €</p>
-      <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
+      <p class="text-2xl md:text-3xl font-ibm font-bold text-neutral-100 text-center">
         {{ currentPortfolio.totalValue | number: "1.0-0" }}€
       </p>
     </div>
     <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
       <p class="mb-3">Valor total $</p>
-      <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
+      <p class="text-2xl md:text-3xl font-ibm font-bold text-neutral-100 text-center">
         ${{ currentPortfolio.totalValueUSD | number: "1.0-0" }}
       </p>
     </div>
     <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-      <p class="mb-3">Ganancias/Perdidas</p>
+      <p class="mb-3">Rendimiento</p>
       <p
-        class="text-3xl font-ibm font-bold text-center"
+        class="text-2xl md:text-3xl font-ibm font-bold text-center"
         [class.text-green-500]="currentPortfolio.profitLoss > 0"
         [class.text-red-500]="currentPortfolio.profitLoss < 0"
       >
@@ -48,7 +48,7 @@
     </div>
     <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
       <p class="mb-3">Total de Posiciones</p>
-      <p class="text-3xl font-ibm font-bold text-neutral-100 text-center">
+      <p class="text-2xl md:text-3xl font-ibm font-bold text-neutral-100 text-center">
         {{ currentPortfolio.totalPositions }}
       </p>
     </div>
@@ -63,8 +63,8 @@
         @for (p of periods; track p) {
           <button
             (click)="setPeriod(p)"
-            class="px-2.5 py-0.5 rounded-md  transition-colors"
-            [style.background-color]="p === selectedPeriod"
+            class="px-2.5 py-0.5 rounded-md transition-colors"
+            [style.background-color]="p === selectedPeriod ? preferencesService.colorHex() : '#262626'"
             [class.text-white]="p === selectedPeriod"
             [class.text-neutral-400]="p !== selectedPeriod"
           >
@@ -176,11 +176,11 @@
       <ng-container matColumnDef="change">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
             class="text-neutral-400 uppercase bg-transparent border-b">
-          Variación
+          Rendimiento
         </th>
         <td mat-cell *matCellDef="let pos"
             class=" border-b py-3"
-            [class.text-emerald-500]="pos.positive"
+            [class.text-green-500]="pos.positive"
             [class.text-red-500]="!pos.positive">
           {{ pos.change }}
         </td>
@@ -200,7 +200,77 @@
   </div>
 
 } @else {
-  <div class="flex items-center justify-center h-64">
-    <div class="w-6 h-6 border-2 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
-  </div>
+  <!-- Skeleton cuando está cargando carteras -->
+  @if (isLoadingPortfolios) {
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      @for (n of [1,2,3,4]; track n) {
+        <div class="bg-neutral-950 border border-neutral-800 rounded-2xl p-5">
+          <div class="h-4 w-20 bg-neutral-800 rounded animate-pulse mb-3"></div>
+          <div class="h-10 w-full bg-neutral-800 rounded-xl animate-pulse"></div>
+        </div>
+      }
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <!-- Gráfico area skeleton -->
+      <div class="lg:col-span-2 bg-neutral-950 border border-neutral-800 rounded-2xl p-5">
+        <div class="flex justify-end gap-2 mb-4">
+          @for (n of [1,2,3]; track n) {
+            <div class="h-8 w-12 bg-neutral-800 rounded animate-pulse"></div>
+          }
+        </div>
+        <div class="w-full h-64 bg-neutral-800 rounded-xl animate-pulse"></div>
+      </div>
+
+      <!-- Donut skeleton -->
+      <div class="bg-neutral-950 border border-neutral-800 rounded-2xl p-5">
+        <div class="w-full h-48 bg-neutral-800 rounded-xl animate-pulse mb-4"></div>
+        <div class="space-y-2">
+          @for (n of [1,2,3]; track n) {
+            <div class="flex justify-between">
+              <div class="flex items-center gap-2">
+                <div class="h-3 w-3 bg-neutral-800 rounded animate-pulse"></div>
+                <div class="h-4 w-20 bg-neutral-800 rounded animate-pulse"></div>
+              </div>
+              <div class="h-4 w-8 bg-neutral-800 rounded animate-pulse"></div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla skeleton -->
+    <div class="col-span-2 bg-neutral-950 border border-neutral-800 rounded-2xl p-5">
+      <div class="h-5 w-32 bg-neutral-800 rounded animate-pulse mb-4"></div>
+      
+      <!-- Headers -->
+      <div class="grid grid-cols-[80px_1fr_80px_80px] gap-4 mb-2 text-sm font-medium text-neutral-400">
+        @for (header of ['Ticker', 'Nombre', 'Precio', 'Rendimiento']; track header) {
+          <div class="h-8 bg-neutral-800 rounded animate-pulse"></div>
+        }
+      </div>
+
+      <!-- Rows -->
+      @for (n of [1,2,3]; track n) {
+        <div class="grid grid-cols-[80px_1fr_80px_80px] gap-4 py-3 border-b border-neutral-900 last:border-b-0">
+          <div class="h-10 bg-neutral-800 rounded animate-pulse"></div>
+          <div class="h-10 bg-neutral-800 rounded animate-pulse"></div>
+          <div class="h-10 bg-neutral-800 rounded animate-pulse"></div>
+          <div class="h-10 bg-neutral-800 rounded animate-pulse"></div>
+        </div>
+      }
+    </div>
+
+  <!-- Sin carteras -->
+  } @else {
+    <div class="col-span-full flex flex-col items-center justify-center py-20 text-center bg-neutral-950 border border-neutral-600 rounded-2xl">
+      <h2 class="text-2xl">No tienes carteras</h2>
+      <p class="text-neutral-400 mt-1">
+        Crea tu primera cartera para empezar a gestionar tus inversiones y ver tu dashboard.
+      </p>
+      <a routerLink="/app/wallets" class="mt-5 px-6 py-2 bg-orange-500 text-white rounded-xl font-medium hover:opacity-80 cursor-pointer">
+        Crear cartera
+      </a>
+    </div>
+  }
 }

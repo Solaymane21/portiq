@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface Alert {
@@ -45,7 +46,7 @@ export class AlertsService {
   }
 
   updateAlert(id: number, data: Partial<Pick<Alert, 'target_price' | 'condition' | 'is_active'>>): Observable<Alert> {
-    return this.http.put<Alert>(`${this.base}/${id}`, data);
+    return this.http.patch<Alert>(`${this.base}/${id}`, data);  // ← put → patch
   }
 
   deleteAlert(id: number): Observable<void> {
@@ -56,5 +57,13 @@ export class AlertsService {
     return this.http.get<SymbolResult[]>(`${environment.apiUrl}/assets/search`, {
       params: { q: query }
     });
+  }
+
+  getCurrentPrices(symbols: string, assetTypes: string): Observable<any[]> {
+    return this.http.get<any>(`${environment.apiUrl}/prices`, {
+      params: { symbols, asset_types: assetTypes }
+    }).pipe(
+      map(res => res.results ?? [])
+    );
   }
 }

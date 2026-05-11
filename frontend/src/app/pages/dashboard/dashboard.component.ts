@@ -81,6 +81,11 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   areaOptions: any = null;
   isLoading = false;
 
+  // treemap
+  treemapOptions: any = null;
+  private dashboardInvestments: any[] = [];
+  private dashboardTotalValue = 0;
+
 
   marketService = inject(MarketService);
   collapsed = signal(false)
@@ -96,6 +101,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       if (this.currentPortfolio) {
         this.buildDonutChart();
         this.rebuildAreaColor();
+        this.buildTreemap(this.dashboardInvestments, this.dashboardTotalValue);
       }
     });
   }
@@ -160,6 +166,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   onPortfolioChange(portfolioId: number): void {
     this.selectedPortfolioId = +portfolioId;
     this.areaOptions = null;
+    this.treemapOptions = null
     this.donutOptions = null;
     this.dataSource.data = [];
     this.cargarInvestmentsDashboard(this.selectedPortfolioId);
@@ -172,9 +179,11 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
 
     this.investmentService.getInvestments(portfolioId).subscribe({
       next: (response: any) => {
-        console.log('Response API:', response); 
+        console.log('Response API:', response);
         const investments = response.investments.filter((inv: any) => inv.quantity > 0);
-        
+        this.dashboardInvestments = investments;
+        this.dashboardTotalValue = response.total_value ?? 0;
+
         const idx = this.portfolios.findIndex(p => p.id === portfolioId);
         if (idx !== -1) {
 
@@ -203,11 +212,12 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
           this.portfolios = [...this.portfolios];
         }
 
-        
+
         this.dataSource.data = this.currentPortfolio?.positions ?? [];
         this.dataSource.sort = this.sort;
         this.dataSource.paginator = this.paginator;
         this.buildDonutChart();
+        this.buildTreemap(this.dashboardInvestments, this.dashboardTotalValue);
         this.loadChart(this.selectedPeriod);
       },
       error: () => {
@@ -232,8 +242,8 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
 
     const colores: Record<string, string> = {
       'stock':  primary,
-      'crypto': primary + '44',
-      'etf':    primary + '22'
+      'crypto': primary + '80',
+      'etf':    primary + '60'
     };
 
     return Object.entries(grupos).map(([tipo, valor]) => ({
@@ -259,7 +269,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       const primary = this.primaryColor;
 
       const colors = alloc.map((_, i) => {
-        const opacities = ['', '44', '22'];
+        const opacities = ['', '80', '60'];
         return primary + (opacities[i] ?? '2a');
       });
 
@@ -297,7 +307,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
                   show: true,
                   fontSize: '16px',
                   fontWeight: 700,
-                  color: '#e2e8f0',
+                  color: '#fff',
                   offsetY: 4,
                   formatter: (val: string) => val + '%'
                 },
@@ -323,7 +333,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
     if (!this.currentPortfolio) return;
     this.isLoading = true;
     const symbol = this.currentPortfolio.symbol;
-    const assetType = this.currentPortfolio.assetType ?? 'stock';  
+    const assetType = this.currentPortfolio.assetType ?? 'stock';
 
     this.marketService.getHistory(symbol, period, assetType).subscribe({
       next: (response) => {
@@ -384,6 +394,119 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
         shared: true,
         intersect: false,
         x: { format: tooltipFormat }
+      }
+    };
+  }
+
+  private buildTreemap(investments: any[], totalValue: number): void {
+    if (!investments.length || !totalValue) {
+      this.treemapOptions = null;
+      return;
+    }
+
+    const baseHex = this.primaryColor;
+
+    const hexToRgba = (hex: string, alpha: number) => {
+      const clean = hex.replace('#', '');
+      const r = parseInt(clean.slice(0, 2), 16);
+      const g = parseInt(clean.slice(2, 4), 16);
+      const b = parseInt(clean.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+
+    const getAlphaByWeight = (weight: number) => {
+      if (weight <= 5) return 0.15;
+      if (weight <= 10) return 0.30;
+      if (weight <= 15) return 0.50;
+      if (weight <= 20) return 0.70;
+      if (weight <= 25) return 0.85;
+      return 1;
+    };
+
+    const treemapData = investments
+      .filter((inv: any) => (inv.value ?? 0) > 0)
+      .map((inv: any) => {
+        const weight = ((inv.value ?? 0) / totalValue) * 100;
+        const alpha = getAlphaByWeight(weight);
+        const symbol = inv.symbol ?? inv.name ?? 'Activo';
+
+        return {
+          x: symbol,
+          y: Number(weight.toFixed(2)),
+          fillColor: hexToRgba(baseHex, alpha),
+          meta: symbol
+        };
+      });
+
+    this.treemapOptions = {
+      series: [{ data: treemapData }],
+      chart: {
+        type: 'treemap',
+        height: 320,
+        background: 'transparent',
+        toolbar: { show: false },
+        events: {
+          dataPointMouseEnter: (event: any) => {
+            event.target.style.cursor = 'pointer';
+          },
+          dataPointSelection: (_event: any, _chartContext: any, config: any) => {
+            const item = treemapData[config.dataPointIndex];
+            if (item?.meta) {
+              this.router.navigate(['/public/symbol', item.meta]);
+            }
+          }
+        }
+      },
+      xaxis: {
+        show: false,
+        labels: { show: false },
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+      },
+      yaxis: {
+        show: false,
+        labels: { show: false }
+      },
+      plotOptions: {
+        treemap: {
+          distributed: false,
+          enableShades: false,
+          useFillColorAsStroke: false
+        }
+      },
+      stroke: {
+        show: false,
+        width: 0,
+        colors: ['transparent']
+      },
+      dataLabels: {
+        enabled: true,
+        style: {
+          fontSize: '11px',
+          fontWeight: 600,
+          colors: ['#ffffff']
+        },
+        formatter: (text: string, opts: any) => {
+          const item = opts.w.config.series[opts.seriesIndex].data[opts.dataPointIndex];
+          return `${text}\n${Number(item.y).toFixed(1)}%`;
+        }
+      },
+      legend: {
+        show: false
+      },
+      tooltip: {
+        theme: 'dark',
+        custom: (opts: any) => {
+          const item = opts.w.config.series[opts.seriesIndex].data[opts.dataPointIndex];
+          return `
+            <div class="p-3 bg-neutral-900 border border-neutral-700 rounded-lg shadow-lg min-w-[180px]">
+              <div class="font-bold text-white text-sm mb-1">${item.x}</div>
+              <div class="text-neutral-300 text-xs">
+                Peso: <span class="font-mono">${Number(item.y).toFixed(2)}%</span>
+              </div>
+            </div>
+          `;
+        }
       }
     };
   }

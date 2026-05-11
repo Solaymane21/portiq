@@ -2,7 +2,7 @@
   <h1 class="text-3xl font-ibm">Alertas</h1>
   <button
     type="button"
-    (click)="showModal.set(true)"
+    (click)="openCreateModal()"
     class="bg-orange-500 hover:bg-orange-500/80 p-2 rounded-md text-white flex items-center justify-center gap-2"
   >
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
@@ -19,7 +19,7 @@
 } @else if (alerts().length === 0) {
   <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-10 text-center">
     <p class="text-2xl">No tienes alertas configuradas</p>
-    <p class="text-neutral-400 mt-1">Pulsa "Nueva alerta" para crear tú primera alerta</p>
+    <p class="text-neutral-400 mt-1">Pulsa "Nueva alerta" para crear tu primera alerta</p>
   </div>
 } @else {
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4"
@@ -31,7 +31,10 @@
       <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-5 flex flex-col gap-4">
 
         <!-- Header -->
-        <div class="flex items-center justify-between font-ibm">
+        <div
+          class="flex items-center justify-between font-ibm"
+          [class.opacity-50]="!alert.is_active"
+        >
           <div class="flex items-center gap-2">
             <p class="font-medium text-neutral-100">{{ alert.name }}</p>
             <p class="text-sm text-neutral-400">({{ alert.symbol }})</p>
@@ -45,7 +48,8 @@
                 cdkMenu
               >
                 <button
-                  class="w-full flex items-center gap-2 px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white"
+                  (click)="openEditModal(alert)"
+                  class="w-full flex items-center gap-2 px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-700 hover:text-white"
                   cdkMenuItem
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-4 text-neutral-400">
@@ -58,7 +62,7 @@
 
                 <button
                   (click)="deleteAlert(alert.id)"
-                  class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-neutral-800"
+                  class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-neutral-700"
                   cdkMenuItem
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-4">
@@ -71,39 +75,35 @@
           </div>
         </div>
 
-        <!-- Condición -->
+        <!-- Condicion -->
         <div class="bg-neutral-800 flex flex-col gap-3 rounded-md px-4 py-3">
           <div>
             <p class="text-neutral-400">Condición</p>
-            <p>Precio {{ alert.condition === 'above' ? 'por encima de' : 'por debajo de' }} <span class="font-ibm">{{ alert.target_price | number:'1.2-2' }}€</span></p>
+            <p>Precio {{ alert.condition === 'above' ? 'por encima de' : 'por debajo de' }}
+              <span class="font-ibm">{{ alert.target_price | number:'1.2-2' }}€</span>
+            </p>
           </div>
           <div class="flex justify-between">
+            <p class="text-neutral-400">Actual</p>
             <p class="text-neutral-400">Objetivo</p>
-            <p class="text-neutral-400">Estado</p>
           </div>
           <div class="flex justify-between items-center">
-            <p class="font-ibm">{{ alert.target_price | number:'1.2-2'}}€</p>
+            <p class="font-ibm">
+              {{ currentPrices()[alert.symbol] ? (currentPrices()[alert.symbol] | number:'1.2-2') + '€' : '—' }}
+            </p>
             <span>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
                 <path fill-rule="evenodd" d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06l6.22-6.22H3a.75.75 0 0 1 0-1.5h16.19l-6.22-6.22a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
               </svg>
             </span>
-            <p
-              class="text-xs px-2 py-0.5 rounded-full font-medium"
-              [class.bg-green-800]="alert.is_active"
-              [class.text-green-300]="alert.is_active"
-              [class.bg-neutral-700]="!alert.is_active"
-              [class.text-neutral-400]="!alert.is_active"
-            >
-              {{ alert.is_active ? 'Activa' : 'Disparada' }}
-            </p>
+            <p class="font-ibm">{{ alert.target_price | number:'1.2-2' }}€</p>
           </div>
         </div>
 
         <!-- Footer -->
         <div class="flex items-center justify-between">
           <p class="text-xs text-neutral-400">
-            Creada el {{ alert.created_at | date:'dd MMM yyyy' }}
+            Creada el {{ alert.created_at | date:'dd/MM/yyyy' }}
           </p>
           <button
             type="button"
@@ -125,16 +125,23 @@
   </div>
 }
 
-<!-- Modal nueva alerta -->
+<!-- Modal crear / editar -->
 @if (showModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center">
     <div class="absolute inset-0 bg-black/60" (click)="closeModal()"></div>
 
     <div class="relative bg-neutral-950 border border-neutral-600 rounded-2xl p-6 w-full max-w-md mx-4 flex flex-col gap-5">
-      <h2 class="font-ibm text-xl text-center">Nueva alerta</h2>
+
+      <h2 class="font-ibm text-xl text-center">
+        {{ editingAlert() ? 'Editar alerta' : 'Nueva alerta' }}
+      </h2>
 
       <!-- Buscador activo -->
-      <div class="flex flex-col gap-1">
+      <div
+        class="flex flex-col gap-1"
+        [class.pointer-events-none]="editingAlert()"
+        [class.opacity-50]="editingAlert()"
+      >
         <label class="text-sm text-neutral-400">Activo</label>
         <div class="relative">
           <div class="flex items-center gap-2 bg-neutral-800 border border-neutral-600 rounded-xl px-3 py-2 focus-within:border-orange-500">
@@ -174,9 +181,12 @@
           <div class="flex items-center gap-2 mt-2 bg-neutral-800 border border-orange-500 rounded-xl px-3 py-2">
             <span class="text-sm text-orange-400 font-medium">{{ selectedSymbol()?.symbol }}</span>
             <span class="text-sm text-neutral-400">{{ selectedSymbol()?.name }}</span>
+            @if (selectedSymbolPrice()) {
+              <span class="text-sm text-neutral-400 ml-1">· {{ selectedSymbolPrice() | number:'1.2-2' }}€</span>
+            }
             <button
               type="button"
-              (click)="selectedSymbol.set(null)"
+              (click)="selectedSymbol.set(null); selectedSymbolPrice.set(null)"
               class="ml-auto text-neutral-500 hover:text-red-400"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
@@ -187,13 +197,13 @@
         }
       </div>
 
-      <!-- Condición -->
+      <!-- Condicion -->
       <div class="flex flex-col gap-1">
         <label class="text-sm text-neutral-400">Condición</label>
         <div class="flex border border-neutral-600 rounded-xl">
           <button
             type="button"
-            (click)="condition.set('above')"
+            (click)="condition.set('above'); priceError.set(null)"
             class="flex-1 py-2 rounded-xl text-sm"
             [class.bg-orange-500]="condition() === 'above'"
             [class.text-neutral-400]="condition() !== 'above'"
@@ -202,7 +212,7 @@
           </button>
           <button
             type="button"
-            (click)="condition.set('below')"
+            (click)="condition.set('below'); priceError.set(null)"
             class="flex-1 py-2 rounded-xl text-sm"
             [class.bg-orange-500]="condition() === 'below'"
             [class.text-neutral-400]="condition() !== 'below'"
@@ -215,15 +225,23 @@
       <!-- Precio objetivo -->
       <div class="flex flex-col gap-1">
         <label class="text-sm text-neutral-400">Precio objetivo</label>
-        <div class="flex items-center gap-2 bg-neutral-800 border border-neutral-600 rounded-xl px-3 py-2 focus-within:border-orange-500">
+        <div
+          class="flex items-center gap-2 bg-neutral-800 border rounded-xl px-3 py-2 focus-within:border-orange-500"
+          [class.border-red-500]="priceError()"
+          [class.border-neutral-600]="!priceError()"
+        >
           <input
             type="number"
             [(ngModel)]="targetPrice"
+            (ngModelChange)="priceError.set(null)"
             placeholder="0.00"
             class="flex-1 bg-transparent outline-none text-sm text-neutral-100 placeholder:text-neutral-400"
           />
           <span class="text-neutral-400 text-sm shrink-0">&#8364;</span>
         </div>
+        @if (priceError()) {
+          <p class="text-xs text-red-400">{{ priceError() }}</p>
+        }
       </div>
 
       <!-- Botones -->
@@ -231,17 +249,17 @@
         <button
           type="button"
           (click)="closeModal()"
-          class="w-1/2 bg-neutral-500 hover:opacity-80 p-2 rounded-md text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-1/2 bg-neutral-500 hover:opacity-80 p-2 rounded-md text-white flex items-center justify-center"
         >
           Cancelar
         </button>
         <button
           type="button"
-          (click)="createAlert()"
+          (click)="saveAlert()"
           [disabled]="!selectedSymbol() || !targetPrice || isCreating()"
           class="w-1/2 bg-orange-500 hover:bg-orange-500/80 p-2 rounded-md text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {{ isCreating() ? 'Creando...' : 'Crear alerta' }}
+          {{ isCreating() ? 'Guardando...' : (editingAlert() ? 'Guardar cambios' : 'Crear alerta') }}
         </button>
       </div>
     </div>

@@ -76,7 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //Alerts
     Route::get('/alerts',          [AlertController::class, 'index']);
     Route::post('/alerts',         [AlertController::class, 'store']);
-    Route::put('/alerts/{alert}',[AlertController::class, 'update']);
+    Route::patch('/alerts/{alert}',[AlertController::class, 'update']);
     Route::delete('/alerts/{alert}',[AlertController::class, 'destroy']);
 
     // Favorites

@@ -1,31 +1,9 @@
 <div class="space-y-6">
   <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-    <!-- Titulo + Toggle de vista -->
     <div class="flex items-center gap-3">
       <h1 class="text-3xl font-ibm text-white">Carteras</h1>
-
-      <div class="flex items-center gap-1 bg-neutral-950 rounded-md p-1">
-        <button
-          (click)="cambiarVista('list')"
-          class="p-1.5 rounded flex items-center justify-center"
-          [class]="viewMode() === 'list' ? 'bg-orange-500 text-white' : 'text-neutral-500 hover:text-white'">
-          <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-          </svg>
-        </button>
-
-        <button
-          (click)="cambiarVista('grid')"
-          class="p-1.5 rounded flex items-center justify-center"
-          [class]="viewMode() === 'grid' ? 'bg-orange-500 text-white' : 'text-neutral-500 hover:text-white'">
-          <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
-          </svg>
-        </button>
-      </div>
     </div>
 
-    <!-- Botones de accion -->
     <div class="flex items-center gap-3">
       <input
         #csvFileInput
@@ -36,7 +14,7 @@
 
       <button
         type="button"
-        (click)="abrirImportModal()"
+        (click)="openImportModal()"
         class="bg-white hover:bg-neutral-200/80 h-10 px-3 rounded-md text-black flex items-center justify-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -45,7 +23,7 @@
       </button>
 
       <button
-        (click)="abrirModalCrear()"
+        (click)="openCreateModal()"
         class="bg-orange-500 hover:bg-orange-500/80 h-10 px-3 rounded-md text-white flex items-center justify-center gap-2">
         <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -64,9 +42,9 @@
         </svg>
         <p>Cargando tus carteras...</p>
       </div>
-    } @else if (misCarteras().length === 0) {
+    } @else if (myPortfolios().length === 0) {
       <div
-        (click)="abrirModalCrear()"
+        (click)="openCreateModal()"
         class="group flex flex-col items-center justify-center py-20 px-4 bg-neutral-950 hover:bg-neutral-950/80 border border-neutral-600 hover:border-orange-500 rounded-2xl cursor-pointer">
         <div class="h-14 w-14 bg-neutral-900 group-hover:bg-orange-500 text-neutral-500 group-hover:text-white rounded-full flex items-center justify-center mb-5">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
@@ -79,97 +57,109 @@
         </p>
       </div>
     } @else {
-      <div [class]="viewMode() === 'list' ? 'flex flex-col gap-3' : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4'">
-        @for (cartera of misCarteras(); track cartera.id) {
-          <div
-            (click)="irACartera(cartera.id)"
-            class="p-4 rounded-xl border hover:opacity-80 cursor-pointer"
-            [class]="viewMode() === 'list'
-              ? 'flex flex-col gap-4 md:flex-row md:items-center md:gap-6 lg:gap-10'
-              : 'flex flex-col relative'"
-            [class.border-orange-500]="cartera.is_default"
-            [class.bg-naranja-secundario]="cartera.is_default"
-            [class.border-neutral-600]="!cartera.is_default"
-            [class.bg-neutral-950]="!cartera.is_default"
-            >
+      <div
+        class="grid gap-4 auto-rows-fr"
+        [ngClass]="{
+          'grid-cols-1 sm:grid-cols-1 lg:grid-cols-1': sortedPortfolios().length === 1,
+          'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2': sortedPortfolios().length === 2,
+          'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3': sortedPortfolios().length >= 3
+        }">
+        @for (portfolio of sortedPortfolios(); track portfolio.id) {
+        <div
+          (click)="goToPortfolio(portfolio.id)"
+          class="group flex flex-col p-4 rounded-xl border hover:opacity-80 cursor-pointer transition-all duration-200 h-full"
+          [ngClass]="{
+          'border-orange-500 bg-orange-500/15': portfolio.is_default,
+          'border-neutral-600 bg-neutral-950': !portfolio.is_default
+        }">
 
-            <div class="flex flex-col gap-1 min-w-0" [class]="viewMode() === 'list' ? 'md:w-1/3' : 'w-full pr-28'">
-              <div class="flex items-center gap-2 min-w-0">
-                <h3 class="text-lg font-medium text-white truncate">{{ cartera.name }}</h3>
-                @if (cartera.is_default) {
-                  <span class="bg-orange-500/10 text-orange-500 text-xs px-1.5 py-0.5 rounded">Default</span>
-                }
-              </div>
-
-              <span class="flex items-center gap-1 text-orange-500 text-xs">
-                @if (cartera.is_public) {
-                  <svg class="size-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18 1.5c2.9 0 5.25 2.35 5.25 5.25v3.75a.75.75 0 0 1-1.5 0V6.75a3.75 3.75 0 1 0-7.5 0v3a3 3 0 0 1 3 3v6.75a3 3 0 0 1-3 3H3.75a3 3 0 0 1-3-3v-6.75a3 3 0 0 1 3-3h9v-3c0-2.9 2.35-5.25 5.25-5.25Z" />
-                  </svg>
-                  <span>Pública</span>
-                } @else {
-                  <svg class="size-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clip-rule="evenodd" />
-                  </svg>
-                  <span>Privada</span>
-                }
-              </span>
+          <div class="flex flex-col gap-1 min-w-0 pr-28 relative">
+            <div class="flex items-center gap-2 min-w-0">
+              <h3 class="text-lg font-medium text-white truncate">{{ portfolio.name }}</h3>
+              @if (portfolio.is_default) {
+                <span class="bg-orange-500/10 text-orange-500 text-xs px-1.5 py-0.5 rounded shrink-0">Default</span>
+              }
             </div>
 
-            <div
-              class="flex flex-1 justify-between items-center text-sm"
-              [class]="viewMode() === 'list' ? 'md:px-8 md:min-h-[44px]' : 'mt-4'">
-              <p class="text-white">
-                @if (cartera.asset_count === 1) {
-                  1 activo
-                } @else {
-                  {{ cartera.asset_count }} activos
-                }
-              </p>
-              <p class="text-white font-ibm font-medium text-lg">{{ cartera.total_value }}€</p>
-            </div>
+            <button
+              type="button"
+              [cdkMenuTriggerFor]="cardMenu"
+              (click)="$event.stopPropagation(); selectedPortfolio.set(portfolio)"
+              class="absolute top-0 right-0 text-white rounded">
+              <svg class="size-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM12 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
+              </svg>
+            </button>
 
-            <div
-              class="flex gap-2"
-              [class]="viewMode() === 'list' ? 'md:ml-auto' : 'absolute top-4 right-4'">
-              <button
-                (click)="$event.stopPropagation(); abrirModalEditar(cartera)"
-                class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-500/80 text-white text-sm px-3 h-8 rounded">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+            <span class="flex items-center gap-1 text-orange-500 text-xs">
+              @if (portfolio.is_public) {
+                <svg class="size-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18 1.5c2.9 0 5.25 2.35 5.25 5.25v3.75a.75.75 0 0 1-1.5 0V6.75a3.75 3.75 0 1 0-7.5 0v3a3 3 0 0 1 3 3v6.75a3 3 0 0 1-3 3H3.75a3 3 0 0 1-3-3v-6.75a3 3 0 0 1 3-3h9v-3c0-2.9 2.35-5.25 5.25-5.25Z" />
                 </svg>
-                @if (viewMode() === 'list') {
-                  <span>Editar</span>
-                }
-              </button>
-
-              <button
-                (click)="$event.stopPropagation(); abrirModalEliminar(cartera)"
-                class="inline-flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-sm px-3 h-8 rounded">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.11 0 0 0-7.5 0" />
+                <span>Pública</span>
+              } @else {
+                <svg class="size-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clip-rule="evenodd" />
                 </svg>
-                @if (viewMode() === 'list') {
-                  <span>Eliminar</span>
-                }
-              </button>
-            </div>
+                <span>Privada</span>
+              }
+            </span>
           </div>
-        }
+
+          <div class="flex flex-1 justify-between items-center text-sm mt-4">
+            <p class="text-white">
+              @if (portfolio.asset_count === 1) {
+                1 activo
+              } @else {
+                {{ portfolio.asset_count }} activos
+              }
+            </p>
+            <p class="text-white font-ibm font-medium text-lg">{{ portfolio.total_value }}€</p>
+          </div>
+        </div>
+      }
       </div>
     }
   </div>
 </div>
 
-<!-- MODAL CREAR/EDITAR -->
+<ng-template #cardMenu>
+  <div
+    class="mt-2 min-w-[140px] bg-neutral-800 border border-neutral-700 rounded-xl overflow-hidden shadow-xl"
+    cdkMenu>
+    <button
+      (click)="openEditModal(selectedPortfolio()!)"
+      class="w-full flex items-center gap-2 px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white"
+      cdkMenuItem>
+      <svg class="size-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+      </svg>
+      Editar
+    </button>
+
+    <div class="h-px bg-neutral-700/60 mx-3"></div>
+
+    <button
+      (click)="openDeleteModal(selectedPortfolio()!)"
+      class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-neutral-800"
+      cdkMenuItem>
+      <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+      </svg>
+      Borrar
+    </button>
+  </div>
+</ng-template>
+
+<!-- CREATE/EDIT MODAL -->
 @if (isModalOpen()) {
   <div class="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4">
     <div class="bg-neutral-950 border border-neutral-600 rounded-lg p-6 w-full max-w-sm">
       <h2 class="text-xl text-white font-medium mb-4">
-        {{ modoFormulario() === 'create' ? 'Nueva cartera' : 'Editar cartera' }}
+        {{ formMode() === 'create' ? 'Nueva cartera' : 'Editar cartera' }}
       </h2>
 
-      <form [formGroup]="formularioCartera" (ngSubmit)="guardarCartera()">
+      <form [formGroup]="portfolioForm" (ngSubmit)="savePortfolio()">
         <input
           formControlName="name"
           type="text"
@@ -217,7 +207,7 @@
         <div class="flex flex-col-reverse sm:flex-row gap-3">
           <button
             type="button"
-            (click)="cerrarModal()"
+            (click)="closeModal()"
             [disabled]="isSubmitting()"
             class="w-full bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black disabled:cursor-not-allowed disabled:opacity-60">
             Cancelar
@@ -225,7 +215,7 @@
 
           <button
             type="submit"
-            [disabled]="formularioCartera.invalid || isSubmitting()"
+            [disabled]="portfolioForm.invalid || isSubmitting()"
             class="w-full bg-orange-500 hover:bg-orange-500/80 flex justify-center items-center gap-2 rounded-md py-2 text-white disabled:cursor-not-allowed disabled:opacity-60">
             @if (isSubmitting()) {
               <svg class="animate-spin size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -233,7 +223,7 @@
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             }
-            {{ modoFormulario() === 'create' ? 'Crear' : 'Guardar cambios' }}
+            {{ formMode() === 'create' ? 'Crear' : 'Guardar cambios' }}
           </button>
         </div>
       </form>
@@ -241,7 +231,7 @@
   </div>
 }
 
-<!-- MODAL IMPORTAR CSV -->
+<!-- IMPORT CSV MODAL -->
 @if (importModalOpen()) {
   <div class="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4">
     <div class="bg-neutral-950 border border-neutral-600 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
@@ -254,7 +244,7 @@
 
       <button
         type="button"
-        (click)="dispararSeleccionCsv()"
+        (click)="triggerCsvSelection()"
         class="w-full mb-3 bg-neutral-900 border border-neutral-700 hover:border-orange-500 text-white rounded-md py-2 text-sm">
         {{ importFileName() ? 'Cambiar archivo: ' + importFileName() : 'Elegir archivo .csv' }}
       </button>
@@ -270,7 +260,7 @@
         <div class="flex gap-2">
           <button
             type="button"
-            [disabled]="misCarteras().length === 0"
+            [disabled]="myPortfolios().length === 0"
             (click)="importTarget.set('existing')"
             [class]="importTarget() === 'existing' ? 'bg-orange-500 text-white' : 'bg-neutral-800 text-neutral-400'"
             class="flex-1 rounded-md py-2 disabled:opacity-40">
@@ -287,14 +277,14 @@
 
         @if (importTarget() === 'existing') {
           <select
-            [formControl]="importCarteraId"
+            [formControl]="importPortfolioId"
             class="w-full bg-neutral-900 border border-neutral-800 rounded px-3 py-2 text-white outline-none focus:border-orange-500">
-            @for (c of misCarteras(); track c.id) {
-              <option [ngValue]="c.id">{{ c.name }}</option>
+            @for (p of myPortfolios(); track p.id) {
+              <option [ngValue]="p.id">{{ p.name }}</option>
             }
           </select>
         } @else {
-          <form [formGroup]="importNuevaCartera" class="space-y-3">
+          <form [formGroup]="importNewPortfolio" class="space-y-3">
             <input
               formControlName="name"
               type="text"
@@ -315,15 +305,15 @@
       <div class="flex flex-col-reverse sm:flex-row gap-3">
         <button
           type="button"
-          (click)="cerrarImportModal()"
+          (click)="closeImportModal()"
           [disabled]="importSubmitting()"
           class="w-full bg-white hover:bg-neutral-200/80 rounded-md py-2 text-black disabled:opacity-60">
           Cancelar
         </button>
         <button
           type="button"
-          (click)="ejecutarImportacion()"
-          [disabled]="importSubmitting() || importRows().length === 0 || !!importParseError() || (importTarget() === 'new' && importNuevaCartera.invalid) || (importTarget() === 'existing' && importCarteraId.invalid)"
+          (click)="executeImport()"
+          [disabled]="importSubmitting() || importRows().length === 0 || !!importParseError() || (importTarget() === 'new' && importNewPortfolio.invalid) || (importTarget() === 'existing' && importPortfolioId.invalid)"
           class="w-full bg-orange-500 hover:bg-orange-500/80 rounded-md py-2 text-white disabled:opacity-60 flex justify-center items-center gap-2">
           @if (importSubmitting()) {
             <svg class="animate-spin size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -338,20 +328,20 @@
   </div>
 }
 
-<!-- MODAL ELIMINAR -->
+<!-- DELETE MODAL -->
 @if (isDeleteModalOpen()) {
   <div class="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4">
     <div class="bg-neutral-950 border border-neutral-600 rounded-lg p-6 w-full max-w-sm">
       <h2 class="text-xl text-white font-medium mb-4">Eliminar cartera</h2>
 
       <p class="text-white mb-6">
-        ¿Seguro que quieres eliminar la cartera <strong>"{{ carteraSeleccionada()?.name }}"</strong>?
+        ¿Seguro que quieres eliminar la cartera <strong>"{{ selectedPortfolio()?.name }}"</strong>?
       </p>
 
       <div class="flex flex-col-reverse sm:flex-row gap-3">
         <button
           type="button"
-          (click)="cerrarModalEliminar()"
+          (click)="closeDeleteModal()"
           [disabled]="isSubmitting()"
           class="w-full bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black disabled:cursor-not-allowed disabled:opacity-60">
           Cancelar
@@ -359,7 +349,7 @@
 
         <button
           type="button"
-          (click)="eliminarCartera()"
+          (click)="deletePortfolio()"
           [disabled]="isSubmitting()"
           class="w-full bg-red-500 hover:bg-red-500/80 flex justify-center items-center gap-2 rounded-md py-2 text-white disabled:cursor-not-allowed disabled:opacity-60">
           @if (isSubmitting()) {

@@ -1,5 +1,5 @@
-import { Component, signal, OnInit, inject, viewChild, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, OnInit, inject, viewChild, ElementRef, computed } from '@angular/core';
+import { CommonModule, NgClass } from '@angular/common';
 import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 import { switchMap, finalize } from 'rxjs/operators';
@@ -7,11 +7,12 @@ import { PortfolioService } from '../../../services/portfolio.service';
 import { InvestmentService } from '../../../services/investment.service';
 import { Portfolio } from '../../../models/portfolio.model';
 import { ImportPositionRow, parsePositionsCsv } from '../wallets-csv';
+import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 
 @Component({
   selector: 'app-portfolios',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, NgClass, CdkMenuTrigger, CdkMenu, CdkMenuItem],
   templateUrl: './portfolios.component.html',
   styleUrl: './portfolios.component.css'
 })
@@ -22,12 +23,11 @@ export class PortfoliosComponent implements OnInit {
 
   csvFileInput = viewChild<ElementRef<HTMLInputElement>>('csvFileInput');
 
-  viewMode = signal<'list' | 'grid'>('list');
   isLoading = signal(true);
   isSubmitting = signal(false);
   isModalOpen = signal(false);
   isDeleteModalOpen = signal(false);
-  modoFormulario = signal<'create' | 'edit'>('create');
+  formMode = signal<'create' | 'edit'>('create');
 
   importModalOpen = signal(false);
   importSubmitting = signal(false);
@@ -36,98 +36,107 @@ export class PortfoliosComponent implements OnInit {
   importParseError = signal<string | null>(null);
   importFileName = signal<string | null>(null);
 
-  misCarteras = signal<Portfolio[]>([]);
-  carteraSeleccionada = signal<Portfolio | null>(null);
+  myPortfolios = signal<Portfolio[]>([]);
+  selectedPortfolio = signal<Portfolio | null>(null);
 
-  formularioCartera = new FormGroup({
+  // Computed: Sorted portfolios with default first
+  sortedPortfolios = computed(() => {
+    const portfolios = this.myPortfolios();
+    return [...portfolios].sort((a, b) => {
+      if (a.is_default && !b.is_default) return -1;
+      if (!a.is_default && b.is_default) return 1;
+      return a.id - b.id;
+    });
+  });
+
+  portfolioForm = new FormGroup({
     name: new FormControl('', [Validators.required, Validators.maxLength(50)]),
     is_default: new FormControl(false),
     is_public: new FormControl(false)
   });
 
-  importNuevaCartera = new FormGroup({
+  importNewPortfolio = new FormGroup({
     name: new FormControl('', [Validators.required, Validators.maxLength(50)]),
     is_default: new FormControl(false),
     is_public: new FormControl(false)
   });
 
-  importCarteraId = new FormControl<number | null>(null, [Validators.required]);
+  importPortfolioId = new FormControl<number | null>(null, [Validators.required]);
 
   ngOnInit() {
-    this.cargarPreferenciasVista();
-    this.cargarCarteras();
+    this.loadPortfolios();
   }
 
-  cargarCarteras() {
+  loadPortfolios() {
     this.isLoading.set(true);
     this.portfolioService.getPortfolios().subscribe({
       next: (data) => {
-        this.misCarteras.set(data as Portfolio[]);
+        this.myPortfolios.set(data as Portfolio[]);
         this.isLoading.set(false);
       },
       error: (err) => {
-        console.error('Error al cargar carteras', err);
+        console.error('Error loading portfolios', err);
         this.isLoading.set(false);
       }
     });
   }
 
-  guardarCartera() {
-    if (this.formularioCartera.invalid) return;
+  savePortfolio() {
+    if (this.portfolioForm.invalid) return;
 
     const data = {
-      name: this.formularioCartera.value.name!,
-      is_default: this.formularioCartera.value.is_default!,
-      is_public: this.formularioCartera.value.is_public!
+      name: this.portfolioForm.value.name!,
+      is_default: this.portfolioForm.value.is_default!,
+      is_public: this.portfolioForm.value.is_public!
     };
 
-    const peticion$ = this.modoFormulario() === 'create'
+    const request$ = this.formMode() === 'create'
       ? this.portfolioService.createPortfolio(data)
-      : this.portfolioService.updatePortfolio(this.carteraSeleccionada()!.id, data);
+      : this.portfolioService.updatePortfolio(this.selectedPortfolio()!.id, data);
 
     this.isSubmitting.set(true);
-    peticion$.subscribe({
+    request$.subscribe({
       next: () => {
         this.isSubmitting.set(false);
-        this.cerrarModal();
-        this.cargarCarteras();
+        this.closeModal();
+        this.loadPortfolios();
       },
       error: (err) => {
-        console.error('Error al guardar cartera:', err);
+        console.error('Error saving portfolio:', err);
         this.isSubmitting.set(false);
       }
     });
   }
 
-  eliminarCartera() {
-    const seleccionada = this.carteraSeleccionada();
-    if (!seleccionada) return;
+  deletePortfolio() {
+    const selected = this.selectedPortfolio();
+    if (!selected) return;
 
     this.isSubmitting.set(true);
-    this.portfolioService.deletePortfolio(seleccionada.id).subscribe({
+    this.portfolioService.deletePortfolio(selected.id).subscribe({
       next: () => {
         this.isSubmitting.set(false);
-        this.cerrarModalEliminar();
-        this.cargarCarteras();
+        this.closeDeleteModal();
+        this.loadPortfolios();
       },
       error: (err) => {
-        console.error('Error al eliminar cartera:', err);
+        console.error('Error deleting portfolio:', err);
         this.isSubmitting.set(false);
       }
     });
   }
 
-  abrirImportModal() {
+  openImportModal() {
     this.importModalOpen.set(true);
     this.importRows.set([]);
     this.importParseError.set(null);
     this.importFileName.set(null);
-    this.importTarget.set(this.misCarteras().length ? 'existing' : 'new');
-    this.importNuevaCartera.reset({ name: '', is_default: false, is_public: false });
-    this.importCarteraId.setValue(this.misCarteras()[0]?.id ?? null);
+    this.importTarget.set(this.myPortfolios().length ? 'existing' : 'new');
+    this.importNewPortfolio.reset({ name: '', is_default: false, is_public: false });
+    this.importPortfolioId.setValue(this.myPortfolios()[0]?.id ?? null);
   }
 
-  cerrarImportModal() {
+  closeImportModal() {
     this.importModalOpen.set(false);
     this.importSubmitting.set(false);
     const input = this.csvFileInput()?.nativeElement;
@@ -155,7 +164,7 @@ export class PortfoliosComponent implements OnInit {
     reader.readAsText(file, 'UTF-8');
   }
 
-  ejecutarImportacion() {
+  executeImport() {
     const rows = this.importRows();
     if (rows.length === 0 || this.importParseError()) return;
 
@@ -172,11 +181,11 @@ export class PortfoliosComponent implements OnInit {
     }));
 
     if (this.importTarget() === 'new') {
-      if (this.importNuevaCartera.invalid) {
+      if (this.importNewPortfolio.invalid) {
         this.importSubmitting.set(false);
         return;
       }
-      const v = this.importNuevaCartera.getRawValue();
+      const v = this.importNewPortfolio.getRawValue();
       this.portfolioService
         .createPortfolio({
           name: v.name!,
@@ -191,15 +200,15 @@ export class PortfoliosComponent implements OnInit {
         )
         .subscribe({
           next: () => {
-            this.cerrarImportModal();
-            this.cargarCarteras();
+            this.closeImportModal();
+            this.loadPortfolios();
           },
-          error: (err) => console.error('Error en importación:', err)
+          error: (err) => console.error('Import error:', err)
         });
       return;
     }
 
-    const pid = this.importCarteraId.value;
+    const pid = this.importPortfolioId.value;
     if (pid == null) {
       this.importSubmitting.set(false);
       return;
@@ -210,63 +219,51 @@ export class PortfoliosComponent implements OnInit {
       .pipe(finalize(() => this.importSubmitting.set(false)))
       .subscribe({
         next: () => {
-          this.cerrarImportModal();
-          this.cargarCarteras();
+          this.closeImportModal();
+          this.loadPortfolios();
         },
-        error: (err) => console.error('Error en importación:', err)
+        error: (err) => console.error('Import error:', err)
       });
   }
 
-  dispararSeleccionCsv() {
+  triggerCsvSelection() {
     this.csvFileInput()?.nativeElement.click();
   }
 
-  cambiarVista(modo: 'list' | 'grid') {
-    this.viewMode.set(modo);
-    localStorage.setItem('vistaCarteras', modo);
+  openCreateModal() {
+    this.prepareModal('create', null);
   }
 
-  abrirModalCrear() {
-    this.prepararModal('create', null);
+  openEditModal(portfolio: Portfolio) {
+    this.prepareModal('edit', portfolio);
   }
 
-  abrirModalEditar(cartera: Portfolio) {
-    this.prepararModal('edit', cartera);
-  }
-
-  cerrarModal() {
+  closeModal() {
     this.isModalOpen.set(false);
-    this.carteraSeleccionada.set(null);
+    this.selectedPortfolio.set(null);
   }
 
-  abrirModalEliminar(cartera: Portfolio) {
-    this.carteraSeleccionada.set(cartera);
+  openDeleteModal(portfolio: Portfolio) {
+    this.selectedPortfolio.set(portfolio);
     this.isDeleteModalOpen.set(true);
   }
 
-  cerrarModalEliminar() {
+  closeDeleteModal() {
     this.isDeleteModalOpen.set(false);
-    this.carteraSeleccionada.set(null);
+    this.selectedPortfolio.set(null);
   }
 
-  irACartera(carteraId: number) {
-    this.router.navigate(['/app/wallets', carteraId]);
+  goToPortfolio(portfolioId: number) {
+    this.router.navigate(['/app/wallets', portfolioId]);
   }
 
-  private cargarPreferenciasVista() {
-    const guardado = localStorage.getItem('vistaCarteras');
-    if (guardado === 'list' || guardado === 'grid') {
-      this.viewMode.set(guardado);
-    }
-  }
-
-  private prepararModal(modo: 'create' | 'edit', cartera: Portfolio | null) {
-    this.modoFormulario.set(modo);
-    this.carteraSeleccionada.set(cartera);
-    this.formularioCartera.reset({
-      name: cartera ? cartera.name : '',
-      is_default: cartera ? cartera.is_default : false,
-      is_public: cartera ? cartera.is_public : false
+  private prepareModal(mode: 'create' | 'edit', portfolio: Portfolio | null) {
+    this.formMode.set(mode);
+    this.selectedPortfolio.set(portfolio);
+    this.portfolioForm.reset({
+      name: portfolio ? portfolio.name : '',
+      is_default: portfolio ? portfolio.is_default : false,
+      is_public: portfolio ? portfolio.is_public : false
     });
     this.isModalOpen.set(true);
   }

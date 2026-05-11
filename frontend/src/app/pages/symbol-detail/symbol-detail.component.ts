@@ -5,6 +5,7 @@ import { MarketService } from '../../services/market.service';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { PreferencesService } from '../../services/preferences.service';
 
 interface SymbolInfo {
   symbol: string;
@@ -25,11 +26,9 @@ interface SymbolInfo {
 })
 export class SymbolDetailComponent implements OnInit {
 
-  
+  private preferencesService = inject(PreferencesService)
   private http = inject(HttpClient);
-  private router = inject(Router);
   private route    = inject(ActivatedRoute);
-  private location = inject(Location);
   private market   = inject(MarketService);
 
   symbol         = signal('');
@@ -63,7 +62,7 @@ export class SymbolDetailComponent implements OnInit {
       this.http.get<any>(`https://api.coingecko.com/api/v3/coins/${coinId}`).subscribe({
         next: (data) => {
           this.info.set({
-            symbol: symbol,    
+            symbol: symbol,
             name: data.name,
             type: 'CRYPTO',
             price: data.market_data.current_price.usd,
@@ -103,11 +102,33 @@ export class SymbolDetailComponent implements OnInit {
         const prices = values.map((v: any) => +(v.y ?? 0));
         const first  = prices[0] ?? 0;
         const last   = prices[prices.length - 1] ?? 0;
-        const color  = '#f97316';
+        const color = this.preferencesService.colorHex();
 
         const val = +(last - first).toFixed(2);
         const pct = first !== 0 ? +((last - first) / first * 100).toFixed(2) : 0;
         this.changeData = { value: val, percent: pct, positive: val >= 0 };
+
+        const xFormatter = (value: string, timestamp?: number) => {
+          if (!timestamp) return '';
+          const d = new Date(timestamp);
+
+          switch (period) {
+            case '1D':
+              return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+            case '1W':
+              return d.toLocaleDateString('es-ES', { weekday: 'short' });
+
+            case '1M':
+              return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+
+            case '1Y':
+              return d.toLocaleDateString('es-ES', { month: 'short' });
+
+            default:
+              return d.toLocaleDateString('es-ES', { month: 'short', day: '2-digit' });
+          }
+        };
 
         this.chartOptions = {
           chart: {
@@ -117,13 +138,21 @@ export class SymbolDetailComponent implements OnInit {
             background: 'transparent',
             animations: { enabled: true, speed: 400 }
           },
-          series: [{ name: symbol, data: prices }],
+          colors: [color],
+          series: [{
+            name: symbol,
+            data: values.map((v: any) => ({ x: v.x, y: +(v.y ?? 0) }))
+          }],
           xaxis: {
-            categories: values.map((v: any) => {
-              const d = new Date(v.x);
-              return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-            }),
-            labels: { show: false },
+            type: 'datetime',
+            tickAmount: period === '1D' ? 6 : period === '1W' ? 7 : period === '1M' ? 6 : 12,
+            labels: {
+              show: true,
+              formatter: (_value: string, timestamp?: number) => xFormatter(_value, timestamp),
+              style: {
+                colors: '#6b7280'
+              }
+            },
             axisBorder: { show: false },
             axisTicks: { show: false }
           },
@@ -133,11 +162,23 @@ export class SymbolDetailComponent implements OnInit {
               formatter: (v: number) => v.toFixed(2)
             }
           },
-          stroke: { curve: 'smooth', width: 2, colors: [color] },
+          stroke: {
+            curve: 'smooth',
+            width: 2,
+            colors: [color]
+          },
           fill: {
             type: 'gradient',
             colors: [color],
-            gradient: { shadeIntensity: 1, opacityFrom: 0.25, opacityTo: 0 }
+            gradient: {
+              shade: 'dark',
+              type: 'vertical',
+              shadeIntensity: 0.35,
+              gradientToColors: [color],
+              inverseColors: false,
+              opacityFrom: 0.25,
+              opacityTo: 0
+            }
           },
           grid: { borderColor: '#1f2937', strokeDashArray: 3 },
           tooltip: { theme: 'dark', x: { show: true } },
@@ -160,7 +201,7 @@ export class SymbolDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/public/home']);
+    window.history.back()
   }
 
   getLogoUrl(symbol: string): string {

@@ -1,99 +1,98 @@
-<div class="px-4 py-6 md:px-14">
-  <!-- Volver -->
-  <button (click)="goBack()"
-    class="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors mb-6 text-sm">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
-      <path fill-rule="evenodd" d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd"/>
-    </svg>
-    Volver
-  </button>
+<section class="max-w-[1440px] mx-auto w-full my-5">
+  <div class="px-4 py-6 md:px-14">
+    <!-- Volver -->
+    <button (click)="goBack()"
+      class="flex items-center gap-2 text-white mb-6 text-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+        <path fill-rule="evenodd" d="M7.72 12.53a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 1 1 1.06 1.06L9.31 12l6.97 6.97a.75.75 0 1 1-1.06 1.06l-7.5-7.5Z" clip-rule="evenodd" />
+      </svg>
+      Volver
+    </button>
 
-  <!-- Header -->
-  @if (loadingInfo()) {
-    <div class="flex justify-between items-start mb-6 animate-pulse">
-      <div class="space-y-2">
-        <div class="h-8 w-32 bg-neutral-600 rounded-lg"></div>
-        <div class="h-4 w-48 bg-neutral-600 rounded"></div>
-      </div>
-      <div class="space-y-2 text-right">
-        <div class="h-9 w-28 bg-neutral-600 rounded-lg ml-auto"></div>
-        <div class="h-4 w-20 bg-neutral-600 rounded ml-auto"></div>
-      </div>
-    </div>
-  } @else if (info()) {
-    <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
-      <div>
-        <div class="flex items-center gap-3 mb-1">
-
-          <div class="w-10 h-10 rounded-full bg-neutral-800 shrink-0 flex items-center justify-center overflow-hidden">
-            <img
-              [src]="getLogoUrl(symbol())"
-              [alt]="symbol()"
-              (error)="onImgError($event)"
-              class="w-10 h-10 object-contain"
-            />
-          </div>
-
-          <h1 class="font-ibm text-3xl font-bold">{{ symbol() }}</h1>
-          <span class="text-xs font-semibold px-2 py-1 rounded-full bg-orange-600/15 text-orange-500">
-            {{ info()!.type }}
-          </span>
+    <!-- Header -->
+    @if (loadingInfo()) {
+      <div class="flex justify-between items-start mb-6 animate-pulse">
+        <div class="space-y-2">
+          <div class="h-8 w-32 bg-neutral-600 rounded-lg"></div>
+          <div class="h-4 w-48 bg-neutral-600 rounded"></div>
         </div>
-        <p class="text-neutral-400 text-sm">{{ info()!.name }}</p>
-        @if (info()!.sector) {
-          <p class="text-neutral-600 text-xs mt-1">{{ info()!.sector }}</p>
-        }
+        <div class="space-y-2 text-right">
+          <div class="h-9 w-28 bg-neutral-600 rounded-lg ml-auto"></div>
+          <div class="h-4 w-20 bg-neutral-600 rounded ml-auto"></div>
+        </div>
       </div>
-      <div class="text-right">
-        <p class="font-ibm text-4xl font-bold tracking-tight">
-          {{ info()!.price | number:'1.2-2' }}
-          <span class="text-lg text-neutral-400 ml-1">{{ info()!.currency }}</span>
-        </p>
-        @if (chartOptions.series) {
-          <p class="text-sm mt-1 font-medium"
-            [class.text-emerald-500]="changeData.positive"
-            [class.text-red-500]="!changeData.positive">
-            {{ changeData.positive ? '+' : '' }}{{ changeData.value }}
-            ({{ changeData.positive ? '+' : '' }}{{ changeData.percent }}%)
-            · {{ selectedPeriod() }}
+    } @else if (info()) {
+      <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
+        <div>
+          <div class="flex items-center gap-3 mb-1">
+
+            <div class="w-10 h-10 rounded-full bg-neutral-800 shrink-0 flex items-center justify-center overflow-hidden">
+              <img
+                [src]="getLogoUrl(symbol())"
+                [alt]="symbol()"
+                (error)="onImgError($event)"
+                class="w-10 h-10 object-contain"
+              />
+            </div>
+
+            <h1 class="font-ibm text-3xl font-bold">{{ symbol() }}</h1>
+          </div>
+          <p class="text-neutral-400 text-sm">{{ info()!.name }}</p>
+          @if (info()!.sector) {
+            <p class="text-neutral-600 text-xs mt-1">{{ info()!.sector }}</p>
+          }
+        </div>
+        <div class="text-right">
+          <p class="font-ibm text-4xl font-bold tracking-tight">
+            {{ info()!.price | number:'1.2-2' }}
+            <span class="text-lg text-neutral-400 ml-1">{{ info()!.currency }}</span>
           </p>
+          @if (chartOptions.series) {
+            <p class="text-sm mt-1 font-medium font-ibm"
+              [class.text-green-500]="changeData.positive"
+              [class.text-red-500]="!changeData.positive">
+              {{ changeData.positive ? '+' : '' }}{{ changeData.value }}€
+              ({{ changeData.positive ? '+' : '' }}{{ changeData.percent }}%)
+              · {{ selectedPeriod() }}
+            </p>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Grafica -->
+    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-5 mb-5">
+
+      <div class="flex justify-end gap-1 mb-2">
+        @for (p of periods; track p) {
+          <button (click)="selectPeriod(p)"
+            class="px-2.5 py-0.5 rounded-md transition-colors"
+            [class.bg-orange-600]="selectedPeriod() === p"
+            [class.text-white]="selectedPeriod() === p"
+            [class.text-neutral-400]="selectedPeriod() !== p">
+            {{ p }}
+          </button>
         }
       </div>
-    </div>
-  }
 
-  <!-- Grafica -->
-  <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-5 mb-5">
-
-    <div class="flex justify-end gap-1 mb-2">
-      @for (p of periods; track p) {
-        <button (click)="selectPeriod(p)"
-          class="px-2.5 py-0.5 rounded-md transition-colors"
-          [class.bg-orange-600]="selectedPeriod() === p"
-          [class.text-white]="selectedPeriod() === p"
-          [class.text-neutral-400]="selectedPeriod() !== p">
-          {{ p }}
-        </button>
+      @if (loadingChart()) {
+        <div class="h-[250px] flex items-center justify-center">
+          <div class="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      } @else {
+        <apx-chart
+          [series]="chartOptions.series"
+          [chart]="chartOptions.chart"
+          [xaxis]="chartOptions.xaxis"
+          [yaxis]="chartOptions.yaxis"
+          [stroke]="chartOptions.stroke"
+          [fill]="chartOptions.fill"
+          [grid]="chartOptions.grid"
+          [tooltip]="chartOptions.tooltip"
+          [dataLabels]="chartOptions.dataLabels"
+          [theme]="chartOptions.theme"
+        />
       }
     </div>
-
-    @if (loadingChart()) {
-      <div class="h-[250px] flex items-center justify-center">
-        <div class="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    } @else {
-      <apx-chart
-        [series]="chartOptions.series"
-        [chart]="chartOptions.chart"
-        [xaxis]="chartOptions.xaxis"
-        [yaxis]="chartOptions.yaxis"
-        [stroke]="chartOptions.stroke"
-        [fill]="chartOptions.fill"
-        [grid]="chartOptions.grid"
-        [tooltip]="chartOptions.tooltip"
-        [dataLabels]="chartOptions.dataLabels"
-        [theme]="chartOptions.theme"
-      />
-    }
   </div>
-</div>
+</section>

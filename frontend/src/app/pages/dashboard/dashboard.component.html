@@ -135,68 +135,95 @@
   </div>
 
   <!-- Tabla -->
-  <div class="col-span-2 bg-neutral-950 border border-neutral-600 rounded-2xl p-5 overflow-y-auto">
-    <p class="mb-3">Mis posiciones</p>
+  <div class="grid grid-cols-3 gap-4 my-5">
+    <!-- tree map -->
+    <div class="col-span-3 lg:col-span-1 bg-neutral-950 border border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3 text-neutral-300 font-medium">Distribución por activo</p>
 
-    <table mat-table [dataSource]="dataSource" matSort class="w-full bg-transparent">
+      @if (treemapOptions) {
+        <div class="h-80 w-full">
+          <apx-chart
+            class="block w-full h-full gap-2"
+            [series]="treemapOptions.series"
+            [chart]="treemapOptions.chart"
+            [colors]="treemapOptions.colors"
+            [xaxis]="treemapOptions.xaxis"
+            [yaxis]="treemapOptions.yaxis"
+            [plotOptions]="treemapOptions.plotOptions"
+            [stroke]="treemapOptions.stroke"
+            [dataLabels]="treemapOptions.dataLabels"
+            [legend]="treemapOptions.legend"
+            [tooltip]="treemapOptions.tooltip"
+          ></apx-chart>
+        </div>
+      } @else {
+        <div class="h-80 bg-neutral-900 rounded-xl animate-pulse"></div>
+      }
+    </div>
 
-      <ng-container matColumnDef="ticker">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header
-            class="text-neutral-400  uppercase bg-transparent border-b">
-          Ticker
-        </th>
-        <td mat-cell *matCellDef="let pos"
-            class="text-sm text-neutral-100 border-b py-3">
-          {{ pos.ticker }}
-        </td>
-      </ng-container>
+    <div class="col-span-3 lg:col-span-2 bg-neutral-950 border border-neutral-600 rounded-2xl p-5 overflow-y-auto">
+      <p class="mb-3">Mis posiciones</p>
 
-      <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header
-            class="text-neutral-400  uppercase bg-transparent border-b">
-          Nombre
-        </th>
-        <td mat-cell *matCellDef="let pos"
-            class="text-neutral-400 border-b py-3">
-          {{ pos.name }}
-        </td>
-      </ng-container>
+      <table mat-table [dataSource]="dataSource" matSort class="w-full bg-transparent">
 
-      <ng-container matColumnDef="price">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header
-            class="text-neutral-400  uppercase bg-transparent border-b">
-          Precio
-        </th>
-        <td mat-cell *matCellDef="let pos"
-            class="text-sm text-neutral-100 border-b py-3">
-          {{ pos.price }}
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="ticker">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header
+              class="text-neutral-400  uppercase bg-transparent border-b">
+            Ticker
+          </th>
+          <td mat-cell *matCellDef="let pos"
+              class="text-sm text-neutral-100 border-b py-3">
+            {{ pos.ticker }}
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="change">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header
-            class="text-neutral-400 uppercase bg-transparent border-b">
-          Rendimiento
-        </th>
-        <td mat-cell *matCellDef="let pos"
-            class=" border-b py-3"
-            [class.text-green-500]="pos.positive"
-            [class.text-red-500]="!pos.positive">
-          {{ pos.change }}
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header
+              class="text-neutral-400  uppercase bg-transparent border-b">
+            Nombre
+          </th>
+          <td mat-cell *matCellDef="let pos"
+              class="text-neutral-400 border-b py-3">
+            {{ pos.name }}
+          </td>
+        </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-transparent"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-          class="hover:bg-neutral-800 cursor-pointer"></tr>
-    </table>
+        <ng-container matColumnDef="price">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header
+              class="text-neutral-400  uppercase bg-transparent border-b">
+            Precio
+          </th>
+          <td mat-cell *matCellDef="let pos"
+              class="text-sm text-neutral-100 border-b py-3">
+            {{ pos.price }}
+          </td>
+        </ng-container>
 
-    <mat-paginator
-      [pageSizeOptions]="[5, 10, 20]"
-      [pageSize]="5"
-      showFirstLastButtons
-      class="bg-transparent text-white">
-    </mat-paginator>
+        <ng-container matColumnDef="change">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header
+              class="text-neutral-400 uppercase bg-transparent border-b">
+            Rendimiento
+          </th>
+          <td mat-cell *matCellDef="let pos"
+              class=" border-b py-3"
+              [class.text-green-500]="pos.positive"
+              [class.text-red-500]="!pos.positive">
+            {{ pos.change }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-transparent"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            class="hover:bg-neutral-800 cursor-pointer" [routerLink]="['/public/symbol', row.ticker]"></tr>
+      </table>
+
+      <mat-paginator
+        [pageSizeOptions]="[5, 10, 20]"
+        [pageSize]="5"
+        showFirstLastButtons
+        class="bg-transparent text-white">
+      </mat-paginator>
+    </div>
   </div>
 
 } @else {
@@ -242,7 +269,7 @@
     <!-- Tabla skeleton -->
     <div class="col-span-2 bg-neutral-950 border border-neutral-800 rounded-2xl p-5">
       <div class="h-5 w-32 bg-neutral-800 rounded animate-pulse mb-4"></div>
-      
+
       <!-- Headers -->
       <div class="grid grid-cols-[80px_1fr_80px_80px] gap-4 mb-2 text-sm font-medium text-neutral-400">
         @for (header of ['Ticker', 'Nombre', 'Precio', 'Rendimiento']; track header) {

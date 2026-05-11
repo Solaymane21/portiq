@@ -52,6 +52,7 @@ class AlertController extends Controller
         ]);
 
         $alert->load('symbol');
+        $alert->refresh();
 
         return response()->json($this->format($alert), 201);
     }
@@ -60,14 +61,14 @@ class AlertController extends Controller
     {
         $this->authorize('update', $alert);
 
-        $data = $request->validate([
+        $validated = $request->validate([
             'target_price' => 'sometimes|numeric|min:0',
             'condition'    => 'sometimes|in:above,below',
             'is_active'    => 'sometimes|boolean',
         ]);
 
-        $alert->update($data);
-        $alert->load('symbol');
+        $alert->update($validated);
+        $alert->load('symbol');  
 
         return response()->json($this->format($alert));
     }
@@ -91,7 +92,7 @@ class AlertController extends Controller
             'target_price' => $alert->target_price,
             'condition'    => $alert->condition,
             'is_active'    => $alert->is_active,
-            'created_at'   => $alert->created_at,
+            'created_at'   => ($alert->created_at ?? now())->toISOString()
         ];
     }
 }

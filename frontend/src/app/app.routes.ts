@@ -30,38 +30,47 @@ export const routes: Routes = [
     {
         path: 'app',
         component: MainLayoutComponent,
+        data: { title: 'Dashboard' },
         canActivate: [authGuard],
         children: [
             {
                 path: 'dashboard',
-                component: DashboardComponent
+                component: DashboardComponent,
+                data: { title: 'Dashboard' }
             },
             {
                 path: 'wallets',
-                component: PortfoliosComponent
+                component: PortfoliosComponent,
+                data: { title: 'Carteras' }
             },
-            { 
-                path: 'wallets/:id', 
-                component: InvestmentsComponent
+            {
+                path: 'wallets/:id',
+                component: InvestmentsComponent,
+                data: { title: 'Carteras' }
             },
-            {   path: 'wallets/:id/trades', 
-                component: TradesComponent
+            {   path: 'wallets/:id/trades',
+                component: TradesComponent,
+                data: { title: 'Transacciones' }
             },
             {
                 path: 'favorites',
-                component: FavoritesComponent
+                component: FavoritesComponent,
+                data: { title: 'Favoritos' }
             },
             {
                 path: 'investor-profile',
-                component: InvestorProfileComponent
+                component: InvestorProfileComponent,
+                data: { title: 'Perfil de inversor' }
             },
             {
                 path: 'ranking',
-                component: RankingComponent
+                component: RankingComponent,
+                data: { title: 'Clasificación' }
             },
             {
                 path: 'alerts',
-                component: AlertsComponent
+                component: AlertsComponent,
+                data: { title: 'Alertas' }
             },
             {
                 path: 'not-found',
@@ -69,7 +78,8 @@ export const routes: Routes = [
             },
             {
                 path: 'settings',
-                component: SettingsComponent
+                component: SettingsComponent,
+                data: { title: 'Ajustes' }
             }
         ]
     },
@@ -80,24 +90,29 @@ export const routes: Routes = [
         children: [
             {
                 path: 'login',
-                component: LoginComponent
+                component: LoginComponent,
+                data: { title: 'Inicio de sesión' }
             },
             {
                 path: 'register',
-                component: RegisterComponent
+                component: RegisterComponent,
+                data: { title: 'Registro' }
             },
             {
                 path: 'forgot-password',
-                component: ForgotPasswordComponent
+                component: ForgotPasswordComponent,
+                data: { title: 'Contraseña olvidada' }
             },
             {
                 path: 'reset-password',
                 component: ResetPasswordComponent,
-                canActivate: [resetPasswordGuard]
+                canActivate: [resetPasswordGuard],
+                data: { title: 'Establecer nueva contraseña' }
             },
             {
               path: 'callback',
-              component: CallbackComponent
+              component: CallbackComponent,
+                data: { title: 'Redirigiendo' }
             }
         ]
     },
@@ -108,7 +123,8 @@ export const routes: Routes = [
         children: [
             {
                 path: 'dashboard',
-                component: AdminComponent
+                component: AdminComponent,
+                data: { title: 'Panel de administrador' }
             }
         ]
     },
@@ -118,11 +134,13 @@ export const routes: Routes = [
         children: [
             {
                 path: 'home',
-                component: HomeComponent
+                component: HomeComponent,
+                data: { title: 'Inicio' }
             },
             {
                 path: 'symbol/:symbol',
-                component: SymbolDetailComponent
+                component: SymbolDetailComponent,
+                data: { title: 'Precio  de activos' }
             }
         ]
     },

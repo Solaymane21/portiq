@@ -158,7 +158,6 @@ export class AuthService {
     }).subscribe({
       next: (res: any) => {
         this.saveUserData(res);
-        this.isLoading.set(false);
         if(res.user.is_admin) {
           this.router.navigate(['/admin/dashboard'])
         } else {
@@ -166,6 +165,7 @@ export class AuthService {
             next: () => this.router.navigate(['/app/dashboard'])
           });
         }
+        this.isLoading.set(false);
 
       },
       error: () => {

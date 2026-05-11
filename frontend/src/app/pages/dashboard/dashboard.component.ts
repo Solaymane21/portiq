@@ -172,9 +172,9 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
 
     this.investmentService.getInvestments(portfolioId).subscribe({
       next: (response: any) => {
-        console.log('Response API:', response); 
+        console.log('Response API:', response);
         const investments = response.investments.filter((inv: any) => inv.quantity > 0);
-        
+
         const idx = this.portfolios.findIndex(p => p.id === portfolioId);
         if (idx !== -1) {
 
@@ -203,7 +203,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
           this.portfolios = [...this.portfolios];
         }
 
-        
+
         this.dataSource.data = this.currentPortfolio?.positions ?? [];
         this.dataSource.sort = this.sort;
         this.dataSource.paginator = this.paginator;
@@ -232,8 +232,8 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
 
     const colores: Record<string, string> = {
       'stock':  primary,
-      'crypto': primary + '44',
-      'etf':    primary + '22'
+      'crypto': primary + '80',
+      'etf':    primary + '60'
     };
 
     return Object.entries(grupos).map(([tipo, valor]) => ({
@@ -259,7 +259,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       const primary = this.primaryColor;
 
       const colors = alloc.map((_, i) => {
-        const opacities = ['', '44', '22'];
+        const opacities = ['', '80', '60'];
         return primary + (opacities[i] ?? '2a');
       });
 
@@ -323,7 +323,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
     if (!this.currentPortfolio) return;
     this.isLoading = true;
     const symbol = this.currentPortfolio.symbol;
-    const assetType = this.currentPortfolio.assetType ?? 'stock';  
+    const assetType = this.currentPortfolio.assetType ?? 'stock';
 
     this.marketService.getHistory(symbol, period, assetType).subscribe({
       next: (response) => {

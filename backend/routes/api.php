@@ -30,14 +30,14 @@ Route::prefix('auth')->group(function() {
 });
 
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
+Route::get('/assets/search', [AssetSearchController::class, 'search']);
+Route::get('/assets/history', [AssetSearchController::class, 'history']);
 
 // rutas protegidas con sanctum
 Route::middleware('auth:sanctum')->group(function () {
     // General
     Route::get('/auth/validate-token', [AuthController::class, 'validateToken']);
     Route::get('/user', [AuthController::class, 'me']);
-    Route::get('/assets/search', [AssetSearchController::class, 'search']);
-    Route::get('/assets/history', [AssetSearchController::class, 'history']);
     Route::get('/initial-data', [InitialDataController::class, 'index']);
 
     // Stripe
@@ -100,4 +100,4 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function() {
 });
 
 
-    
+

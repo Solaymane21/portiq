@@ -1,7 +1,5 @@
 <nav class="w-full h-16 bg-neutral-950 border-b border-neutral-600 text-white z-50">
-
   <div class="flex justify-between items-center h-16 px-4 md:mx-14">
-
     <div>
       <button (click)="goToPublic()">
         <p class="font-ibm text-2xl text-white">PortIQ</p>
@@ -9,43 +7,65 @@
     </div>
 
     <div class="hidden md:block relative flex-1 max-w-screen-sm lg:max-w-5xl mx-6">
-      <input
-        class="w-full bg-neutral-800 outline-none focus:outline-neutral-600 rounded-full px-3 py-1 text-neutral-300 placeholder:text-neutral-300"
-        type="text" autocomplete="off" placeholder="Busca una acción o crypto..."
-        [value]="query()" (input)="onInput($any($event.target).value)" (keydown)="onKeydown($event)"
-      >
-      <span class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-300 cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
-          <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd"/>
+      <div class="flex items-center gap-2 bg-neutral-950 border border-neutral-600 rounded-full px-4 py-2 focus-within:border-orange-500">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 text-neutral-400 shrink-0">
+          <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
         </svg>
-      </span>
+        <input
+          class="flex-1 bg-transparent outline-none text-neutral-100 placeholder:text-neutral-500 text-sm"
+          type="text" autocomplete="off" placeholder="Busca una acción o crypto..."
+          [value]="query()" (input)="onInput($any($event.target).value)" (keydown)="onKeydown($event)"
+        >
+        @if (isLoading()) {
+          <div class="w-5 h-5 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin shrink-0"></div>
+        }
+        @if(!isLoading() && isOpen() && results().length > 0) {
+          <div class="text-neutral-400 cursor-pointer" (click)="clearSearch()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+              <path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+            </svg>
+          </div>
+        }
+      </div>
 
+      <!-- Dropdown resultados (estilo favoritos) -->
       @if (isOpen() && results().length > 0) {
-        <ul class="absolute top-full left-0 mt-2 w-full bg-neutral-900 border border-neutral-700 rounded-xl z-50 overflow-hidden shadow-[0_16px_48px_rgba(0,0,0,0.6)] py-1">
+        <div class="absolute top-full left-0 right-0 mt-1 bg-neutral-900 border border-neutral-600 rounded-xl overflow-hidden z-50 shadow-xl">
           @for (r of results(); track r.symbol; let i = $index) {
-            <li>
-              <button type="button" (click)="goToSymbol(r)" (mouseenter)="activeIndex.set(i)"
-                class="w-full flex items-center gap-3 px-4 py-2 text-left transition-colors"
-                [class.bg-neutral-800]="activeIndex() === i">
-                <span class="font-mono font-bold text-sm text-white bg-neutral-700 rounded px-2 py-0.5 w-[68px] shrink-0 text-center truncate">
-                  {{ r.symbol }}
-                </span>
-                <div class="flex-1 min-w-0">
+            <div
+              class="flex items-center justify-between px-4 py-3 hover:bg-neutral-800 cursor-pointer transition-colors"
+              [class.bg-neutral-800]="activeIndex() === i"
+              (click)="goToSymbol(r)"
+              (mouseenter)="activeIndex.set(i)"
+            >
+              <div class="flex items-center gap-3">
+                @if (r.image_url) {
+                  <img [src]="r.image_url" class="h-7 w-7 rounded-full object-cover" />
+                } @else {
+                  <div class="h-7 w-7 rounded-full bg-neutral-600"></div>
+                }
+                <div class="min-w-0 flex-1">
                   <p class="text-sm text-neutral-100 font-medium truncate">{{ r.name }}</p>
+                  <p class="text-xs text-neutral-400 uppercase font-mono truncate">{{ r.symbol }}</p>
                   @if (r.exchange) {
-                    <p class="text-[11px] text-neutral-500 mt-0.5">{{ r.exchange }}</p>
+                    <p class="text-xs text-neutral-500 mt-0.5">{{ r.exchange }}</p>
                   }
                 </div>
-                <span [class]="badgeClass(r.asset_type)">{{ typeLabel(r.asset_type) }}</span>
-              </button>
-            </li>
+              </div>
+            </div>
           }
-        </ul>
+        </div>
+      }
+
+      <!-- Sin resultados -->
+      @if (isOpen() && query().length > 1 && results().length === 0 && !isLoading()) {
+        <div class="absolute top-full left-0 right-0 mt-1 bg-neutral-900 border border-neutral-600 rounded-xl px-4 py-3 z-50">
+          <p class="text-sm text-neutral-400">No se encontraron activos para "{{ query() }}"</p>
+        </div>
       }
     </div>
 
     <div class="flex flex-row gap-2 md:gap-5 items-center">
-
       <button (click)="showSearch = !showSearch"
         class="md:hidden bg-interactivo p-2 rounded text-white hover:opacity-80">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
@@ -87,47 +107,63 @@
           </div>
         </ng-template>
       </div>
-
     </div>
   </div>
 
   <!-- Móvil -->
   @if (showSearch) {
     <div class="md:hidden px-4 pb-3">
-      <div class="relative">
-        <input class="w-full bg-neutral-800 outline-none focus:outline-neutral-600 rounded-full px-4 py-2 text-neutral-300 placeholder:text-neutral-300"
+      <div class="flex items-center gap-2 bg-neutral-950 border border-neutral-600 rounded-full px-4 py-2 focus-within:border-orange-500">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 text-neutral-400 shrink-0">
+          <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
+        </svg>
+        <input class="flex-1 bg-transparent outline-none text-neutral-100 placeholder:text-neutral-500 text-sm"
           type="text" autocomplete="off" placeholder="Busca una acción o crypto..." autofocus
           [value]="query()" (input)="onInput($any($event.target).value)" (keydown)="onKeydown($event)">
-        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-300">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
-            <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd"/>
-          </svg>
-        </span>
+        @if (isLoading()) {
+          <div class="w-5 h-5 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin shrink-0"></div>
+        }
+        @if(!isLoading() && isOpen() && results().length > 0) {
+          <div class="text-neutral-400 cursor-pointer" (click)="clearSearch()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+              <path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+            </svg>
+          </div>
+        }
       </div>
 
+      <!-- Dropdown móvil (estilo favoritos) -->
       @if (isOpen() && results().length > 0) {
-        <ul class="mt-2 w-full bg-neutral-900 border border-neutral-700 rounded-xl z-50 overflow-hidden shadow-[0_16px_48px_rgba(0,0,0,0.6)] py-1">
+        <div class="mt-2 w-full bg-neutral-900 border border-neutral-600 rounded-xl z-50 overflow-hidden shadow-xl">
           @for (r of results(); track r.symbol; let i = $index) {
-            <li>
-              <button type="button" (click)="goToSymbol(r)" (mouseenter)="activeIndex.set(i)"
-                class="w-full flex items-center gap-3 px-4 py-2 text-left transition-colors"
-                [class.bg-neutral-800]="activeIndex() === i">
-                <span class="font-mono font-bold text-sm text-white bg-neutral-700 rounded px-2 py-0.5 w-[68px] shrink-0 text-center truncate">
-                  {{ r.symbol }}
-                </span>
-                <div class="flex-1 min-w-0">
+            <div
+              class="flex items-center justify-between px-4 py-3 hover:bg-neutral-800 cursor-pointer transition-colors"
+              [class.bg-neutral-800]="activeIndex() === i"
+              (click)="goToSymbol(r)"
+              (mouseenter)="activeIndex.set(i)"
+            >
+              <div class="flex items-center gap-3">
+                @if (r.image_url) {
+                  <img [src]="r.image_url" class="h-7 w-7 rounded-full object-cover" />
+                } @else {
+                  <div class="h-7 w-7 rounded-full bg-neutral-600"></div>
+                }
+                <div class="min-w-0 flex-1">
                   <p class="text-sm text-neutral-100 font-medium truncate">{{ r.name }}</p>
-                  @if (r.exchange) {
-                    <p class="text-[11px] text-neutral-500 mt-0.5">{{ r.exchange }}</p>
-                  }
+                  <p class="text-xs text-neutral-400 uppercase font-mono truncate">{{ r.symbol }}</p>
                 </div>
-                <span [class]="badgeClass(r.asset_type)">{{ typeLabel(r.asset_type) }}</span>
-              </button>
-            </li>
+              </div>
+            </div>
           }
-        </ul>
+        </div>
+      }
+
+      <!-- Sin resultados móvil -->
+      @if (isOpen() && query().length > 1 && results().length === 0 && !isLoading()) {
+        <div class="mt-2 w-full bg-neutral-900 border border-neutral-600 rounded-xl px-4 py-3 z-50">
+          <p class="text-sm text-neutral-400">No se encontraron activos para "{{ query() }}"</p>
+        </div>
       }
     </div>
   }
-
 </nav>

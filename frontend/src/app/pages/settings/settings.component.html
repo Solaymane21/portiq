@@ -1,15 +1,15 @@
-<h1 class="text-3xl font-ibm mb-6">Configuración</h1>
+<h1 class="text-3xl font-ibm mb-6 text-zinc-900 dark:text-white">Configuración</h1>
 
 <div class="flex flex-col md:flex-row gap-6 min-h-fit">
 
-  <!-- menu table y desktop -->
   <aside class="hidden md:flex flex-col justify-between min-w-fit">
-    <div class="flex flex-col gap-2 bg-neutral-950 p-2 rounded-2xl border border-neutral-600">
+    <div class="flex flex-col gap-2 bg-zinc-50 dark:bg-neutral-950 p-2 rounded-2xl border border-zinc-400 dark:border-neutral-600">
       <div (click)="activeSection.set('perfil')"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl"
-        [class.text-white]="activeSection() === 'perfil'"
+        class="group flex text-zinc-500 dark:text-neutral-400 font-normal hover:cursor-pointer hover:bg-zinc-200 dark:hover:bg-neutral-800 p-3 rounded-xl"
+        [class.text-zinc-900]="activeSection() === 'perfil'"
+        [class.dark:text-white]="activeSection() === 'perfil'"
         [class.font-medium]="activeSection() === 'perfil'"
-        [ngClass]="{'bg-orange-500/15': activeSection() === 'perfil'}">
+        [ngClass]="{'bg-orange-500/20': activeSection() === 'perfil'}">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
           class="size-6" [ngClass]="{'stroke-orange-500': activeSection() === 'perfil'}">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
@@ -18,10 +18,11 @@
       </div>
 
       <div (click)="activeSection.set('seguridad')"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl"
-        [class.text-white]="activeSection() === 'seguridad'"
+        class="group flex text-zinc-500 dark:text-neutral-400 font-normal hover:cursor-pointer hover:bg-zinc-200 dark:hover:bg-neutral-800 p-3 rounded-xl"
+        [class.text-zinc-900]="activeSection() === 'seguridad'"
+        [class.dark:text-white]="activeSection() === 'seguridad'"
         [class.font-medium]="activeSection() === 'seguridad'"
-        [ngClass]="{'bg-orange-500/15': activeSection() === 'seguridad'}">
+        [ngClass]="{'bg-orange-500/20': activeSection() === 'seguridad'}">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
           class="size-6" [ngClass]="{'stroke-orange-500': activeSection() === 'seguridad'}">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
@@ -30,10 +31,11 @@
       </div>
 
       <div (click)="activeSection.set('suscripcion')"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl"
-        [class.text-white]="activeSection() === 'suscripcion'"
+        class="group flex text-zinc-500 dark:text-neutral-400 font-normal hover:cursor-pointer hover:bg-zinc-200 dark:hover:bg-neutral-800 p-3 rounded-xl"
+        [class.text-zinc-900]="activeSection() === 'suscripcion'"
+        [class.dark:text-white]="activeSection() === 'suscripcion'"
         [class.font-medium]="activeSection() === 'suscripcion'"
-        [ngClass]="{'bg-orange-500/15': activeSection() === 'suscripcion'}">
+        [ngClass]="{'bg-orange-500/20': activeSection() === 'suscripcion'}">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
           class="size-6" [ngClass]="{'stroke-orange-500': activeSection() === 'suscripcion'}">
           <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
@@ -42,10 +44,11 @@
       </div>
 
       <div (click)="activeSection.set('preferencias')"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl"
-        [class.text-white]="activeSection() === 'preferencias'"
+        class="group flex text-zinc-500 dark:text-neutral-400 font-normal hover:cursor-pointer hover:bg-zinc-200 dark:hover:bg-neutral-800 p-3 rounded-xl"
+        [class.text-zinc-900]="activeSection() === 'preferencias'"
+        [class.dark:text-white]="activeSection() === 'preferencias'"
         [class.font-medium]="activeSection() === 'preferencias'"
-        [ngClass]="{'bg-orange-500/15': activeSection() === 'preferencias'}">
+        [ngClass]="{'bg-orange-500/20': activeSection() === 'preferencias'}">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
           class="size-6" [ngClass]="{'stroke-orange-500': activeSection() === 'preferencias'}">
           <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
@@ -54,10 +57,11 @@
       </div>
 
       <div (click)="activeSection.set('cuenta')"
-        class="group flex text-muted font-normal hover:cursor-pointer hover:bg-neutral-800 p-3 rounded-xl"
-        [class.text-white]="activeSection() === 'cuenta'"
+        class="group flex text-zinc-500 dark:text-neutral-400 font-normal hover:cursor-pointer hover:bg-zinc-200 dark:hover:bg-neutral-800 p-3 rounded-xl"
+        [class.text-zinc-900]="activeSection() === 'cuenta'"
+        [class.dark:text-white]="activeSection() === 'cuenta'"
         [class.font-medium]="activeSection() === 'cuenta'"
-        [ngClass]="{'bg-orange-500/15': activeSection() === 'cuenta'}">
+        [ngClass]="{'bg-orange-500/20': activeSection() === 'cuenta'}">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" [ngClass]="{'stroke-orange-500': activeSection() === 'cuenta'}">
           <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
         </svg>
@@ -66,7 +70,6 @@
     </div>
   </aside>
 
-  <!-- menu movil -->
   <div class="md:hidden w-full mb-2">
     <div class="flex flex-wrap gap-3 pb-1">
       <button (click)="activeSection.set('perfil')"
@@ -74,56 +77,64 @@
         [class.bg-orange-500]="activeSection() === 'perfil'"
         [class.border-none]="activeSection() === 'perfil'"
         [class.text-white]="activeSection() === 'perfil'"
-        [class.border-neutral-600]="activeSection() !== 'perfil'"
-        [class.text-neutral-400]="activeSection() !== 'perfil'">Perfil</button>
+        [class.border-zinc-400]="activeSection() !== 'perfil'"
+        [class.dark:border-neutral-600]="activeSection() !== 'perfil'"
+        [class.text-zinc-500]="activeSection() !== 'perfil'"
+        [class.dark:text-neutral-400]="activeSection() !== 'perfil'">Perfil</button>
 
       <button (click)="activeSection.set('seguridad')"
         class="px-4 py-1 rounded-full text-sm border"
         [class.bg-orange-500]="activeSection() === 'seguridad'"
         [class.border-none]="activeSection() === 'seguridad'"
         [class.text-white]="activeSection() === 'seguridad'"
-        [class.border-neutral-600]="activeSection() !== 'seguridad'"
-        [class.text-neutral-400]="activeSection() !== 'seguridad'">Seguridad</button>
+        [class.border-zinc-400]="activeSection() !== 'seguridad'"
+        [class.dark:border-neutral-600]="activeSection() !== 'seguridad'"
+        [class.text-zinc-500]="activeSection() !== 'seguridad'"
+        [class.dark:text-neutral-400]="activeSection() !== 'seguridad'">Seguridad</button>
 
       <button (click)="activeSection.set('suscripcion')"
         class="px-4 py-1 rounded-full text-sm border"
         [class.bg-orange-500]="activeSection() === 'suscripcion'"
         [class.border-none]="activeSection() === 'suscripcion'"
         [class.text-white]="activeSection() === 'suscripcion'"
-        [class.border-neutral-600]="activeSection() !== 'suscripcion'"
-        [class.text-neutral-400]="activeSection() !== 'suscripcion'">Suscripción</button>
+        [class.border-zinc-400]="activeSection() !== 'suscripcion'"
+        [class.dark:border-neutral-600]="activeSection() !== 'suscripcion'"
+        [class.text-zinc-500]="activeSection() !== 'suscripcion'"
+        [class.dark:text-neutral-400]="activeSection() !== 'suscripcion'">Suscripción</button>
 
       <button (click)="activeSection.set('preferencias')"
         class="px-4 py-1 rounded-full text-sm border"
         [class.bg-orange-500]="activeSection() === 'preferencias'"
         [class.border-none]="activeSection() === 'preferencias'"
         [class.text-white]="activeSection() === 'preferencias'"
-        [class.border-neutral-600]="activeSection() !== 'preferencias'"
-        [class.text-neutral-400]="activeSection() !== 'preferencias'">Preferencias</button>
+        [class.border-zinc-400]="activeSection() !== 'preferencias'"
+        [class.dark:border-neutral-600]="activeSection() !== 'preferencias'"
+        [class.text-zinc-500]="activeSection() !== 'preferencias'"
+        [class.dark:text-neutral-400]="activeSection() !== 'preferencias'">Preferencias</button>
 
       <button (click)="activeSection.set('cuenta')"
         class="px-4 py-1 rounded-full text-sm border"
         [class.bg-orange-500]="activeSection() === 'cuenta'"
         [class.border-none]="activeSection() === 'cuenta'"
         [class.text-white]="activeSection() === 'cuenta'"
-        [class.border-neutral-600]="activeSection() !== 'cuenta'"
-        [class.text-neutral-400]="activeSection() !== 'cuenta'">Cuenta</button>
+        [class.border-zinc-400]="activeSection() !== 'cuenta'"
+        [class.dark:border-neutral-600]="activeSection() !== 'cuenta'"
+        [class.text-zinc-500]="activeSection() !== 'cuenta'"
+        [class.dark:text-neutral-400]="activeSection() !== 'cuenta'">Cuenta</button>
     </div>
   </div>
 
-  <!-- contenido -->
   <div class="flex-1 flex flex-col gap-4">
 
-    <!-- perfil -->
     @if (activeSection() === 'perfil') {
-      <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-6">
-        <h2 class="font-ibm text-xl mb-5">Perfil</h2>
+      <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-6">
+        <h2 class="font-ibm text-xl mb-5 text-zinc-900 dark:text-white">Perfil</h2>
         <form [formGroup]="profileForm" (ngSubmit)="saveName()" class="flex flex-col gap-4">
 
           <div class="flex flex-col">
-            <label class="ps-2">Nombre</label>
+            <label class="ps-2 text-zinc-900 dark:text-white">Nombre</label>
             <input type="text" formControlName="name"
-              class="w-full bg-neutral-800 border border-neutral-600 rounded-xl px-3 py-2 outline-none focus:border-orange-500" />
+              class="w-full bg-zinc-200 dark:bg-neutral-800 border border-zinc-400 dark:border-neutral-600 rounded-xl px-3 py-2 outline-none focus:border-orange-500 text-zinc-900 dark:text-white" />
             @if (profileForm.get('name')?.errors?.['required'] && submittedProfile()) {
               <p class="ps-2 text-sm text-red-500 mt-1">El nombre es obligatorio.</p>
             }
@@ -139,9 +150,9 @@
           </div>
 
           <div class="flex flex-col">
-            <label class="ps-2">Email</label>
+            <label class="ps-2 text-zinc-900 dark:text-white">Email</label>
             <input type="text" [value]="user()?.email" disabled
-              class="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 cursor-not-allowed" />
+              class="w-full bg-zinc-200 dark:bg-neutral-800 border border-zinc-300 dark:border-neutral-700 rounded-xl px-3 py-2 cursor-not-allowed text-zinc-500 dark:text-neutral-400" />
             <p class="ps-2 text-sm text-orange-500 mt-1">El email no se puede modificar.</p>
           </div>
 
@@ -160,20 +171,18 @@
       </div>
     }
 
-    <!-- seguridad -->
     @if (activeSection() === 'seguridad') {
-      <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-6">
-        <h2 class="font-ibm text-xl mb-5">Seguridad</h2>
+      <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-6">
+        <h2 class="font-ibm text-xl mb-5 text-zinc-900 dark:text-white">Seguridad</h2>
 
           <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="flex flex-col gap-4">
 
-            <!-- Contraseña actual -->
             <div class="flex flex-col gap-1">
-              <label class="ps-2">Contraseña actual</label>
+              <label class="ps-2 text-zinc-900 dark:text-white">Contraseña actual</label>
               <div class="relative">
                 <input type="password" id="currentPassword" formControlName="currentPassword"
-                  class="w-full bg-neutral-800 border border-neutral-600 rounded-xl px-3 py-2 pe-10 outline-none focus:border-orange-500" />
-                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-orange-500 hover:text-white cursor-pointer"
+                  class="w-full bg-zinc-200 dark:bg-neutral-800 border border-zinc-400 dark:border-neutral-600 rounded-xl px-3 py-2 pe-10 outline-none focus:border-orange-500 text-zinc-900 dark:text-white" />
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-orange-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
                   (click)="showHidePassword('currentPassword')">
                   @if (passwordVisible) {
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
@@ -192,13 +201,12 @@
               }
             </div>
 
-            <!-- Nueva contraseña -->
             <div class="flex flex-col gap-1">
-              <label class="ps-2">Nueva contraseña</label>
+              <label class="ps-2 text-zinc-900 dark:text-white">Nueva contraseña</label>
               <div class="relative">
                 <input type="password" id="newPassword" formControlName="newPassword"
-                  class="w-full bg-neutral-800 border border-neutral-600 rounded-xl px-3 py-2 pe-10 outline-none focus:border-orange-500" />
-                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-orange-500 hover:text-white cursor-pointer"
+                  class="w-full bg-zinc-200 dark:bg-neutral-800 border border-zinc-400 dark:border-neutral-600 rounded-xl px-3 py-2 pe-10 outline-none focus:border-orange-500 text-zinc-900 dark:text-white" />
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-orange-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
                   (click)="showHidePassword('newPassword')">
                   @if (newPasswordVisible) {
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
@@ -220,13 +228,12 @@
               }
             </div>
 
-            <!-- Confirmar contraseña -->
             <div class="flex flex-col gap-1">
-              <label class="ps-2">Confirmar nueva contraseña</label>
+              <label class="ps-2 text-zinc-900 dark:text-white">Confirmar nueva contraseña</label>
               <div class="relative">
                 <input type="password" id="confirmPassword" formControlName="confirmPassword"
-                  class="w-full bg-neutral-800 border border-neutral-600 rounded-xl px-3 py-2 pe-10 outline-none focus:border-orange-500" />
-                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-orange-500 hover:text-white cursor-pointer"
+                  class="w-full bg-zinc-200 dark:bg-neutral-800 border border-zinc-400 dark:border-neutral-600 rounded-xl px-3 py-2 pe-10 outline-none focus:border-orange-500 text-zinc-900 dark:text-white" />
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-orange-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
                   (click)="showHidePassword('confirmPassword')">
                   @if (confirmPasswordVisible) {
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
@@ -263,52 +270,50 @@
       </div>
     }
 
-    <!-- suscripcion -->
     @if (activeSection() === 'suscripcion') {
-      <div id="subscription" class="bg-neutral-950 border border-neutral-600 rounded-2xl p-6">
-        <h2 class="font-ibm text-xl mb-5">Suscripción</h2>
+      <div id="subscription" class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-6">
+        <h2 class="font-ibm text-xl mb-5 text-zinc-900 dark:text-white">Suscripción</h2>
         <div class="flex flex-col gap-5">
 
-          <div class="flex items-center justify-between py-3 border-b border-neutral-800">
+          <div class="flex items-center justify-between py-3 border-b border-zinc-300 dark:border-neutral-800">
             <div>
-              <p class="text-sm mb-2">Plan actual</p>
+              <p class="text-sm mb-2 text-zinc-900 dark:text-white">Plan actual</p>
               @if (user()?.suscription_type === 'premium') {
                 <span class="badge-premium rounded-full py-1 px-3 border border-orange-500">
-                  <span class="font-ibm text text-sm font-bold">Pro</span>
+                  <span class="font-ibm text text-sm font-bold text-zinc-900 dark:text-white">Pro</span>
                 </span>
               } @else {
-                <span class="bg-neutral-700 text-neutral-300 text-sm px-3 py-1 rounded-full font-ibm">Gratuito</span>
+                <span class="bg-zinc-300 dark:bg-neutral-700 text-zinc-800 dark:text-neutral-300 text-sm px-3 py-1 rounded-full font-ibm">Gratuito</span>
               }
             </div>
 
             @if (user()?.suscription_type === 'premium') {
                   <div class="text-right">
                     @if (subscriptionService.status()?.on_grace) {
-                      <p class="text-sm">Caduca el</p>
+                      <p class="text-sm text-zinc-900 dark:text-white">Caduca el</p>
                       <p class="text-sm font-ibm text-red-500">{{ renewalDate() }}</p>
                     } @else {
-                      <p class="text-sm">Próxima renovación</p>
-                      <p class="text-sm font-ibm">{{ renewalDate() }}</p>
+                      <p class="text-sm text-zinc-900 dark:text-white">Próxima renovación</p>
+                      <p class="text-sm font-ibm text-zinc-900 dark:text-white">{{ renewalDate() }}</p>
                     }
                   </div>
             }
           </div>
 
           @if (user()?.suscription_type !== 'premium') {
-            <!-- Bloque Free: mostrar beneficios + botón upgrade -->
-            <div class="bg-neutral-800 border border-neutral-700 rounded-xl p-4">
-              <p class="text-sm text-neutral-300 mb-3">Desbloquea con Premium:</p>
+            <div class="bg-zinc-200 dark:bg-neutral-800 border border-zinc-300 dark:border-neutral-700 rounded-xl p-4">
+              <p class="text-sm text-zinc-800 dark:text-neutral-300 mb-3">Desbloquea con Premium:</p>
               <div class="flex flex-col gap-2">
-                <div class="flex items-center gap-2 text-neutral-400">
+                <div class="flex items-center gap-2 text-zinc-500 dark:text-neutral-400">
                   <span class="text-orange-500">✓</span> Alertas ilimitadas
                 </div>
-                <div class="flex items-center gap-2 text-neutral-400">
+                <div class="flex items-center gap-2 text-zinc-500 dark:text-neutral-400">
                   <span class="text-orange-500">✓</span> Análisis ML avanzado
                 </div>
-                <div class="flex items-center gap-2 text-neutral-400">
+                <div class="flex items-center gap-2 text-zinc-500 dark:text-neutral-400">
                   <span class="text-orange-500">✓</span> Portfolios ilimitados
                 </div>
-                <div class="flex items-center gap-2 text-neutral-400">
+                <div class="flex items-center gap-2 text-zinc-500 dark:text-neutral-400">
                   <span class="text-orange-500">✓</span> Exportación de datos
                 </div>
               </div>
@@ -325,9 +330,7 @@
 
           } @else {
 
-            <!-- Bloque Premium: cancelar O reanudar según on_grace -->
             @if (subscriptionService.status()?.on_grace) {
-              <!-- Suscripción cancelada pero en periodo de gracia → mostrar Reanudar -->
               <div class="mb-4">
                 <p class="text-sm text-orange-500">
                   Tu suscripción está cancelada pero sigue activa hasta el {{ renewalDate() }}.
@@ -345,7 +348,6 @@
               </button>
 
             } @else {
-              <!-- Suscripción activa → mostrar Cancelar -->
               <button (click)="cancelSubscription()"
                 [disabled]="subscriptionService.isCancelling()"
                 class="w-full bg-red-600 hover:bg-red-600/80 flex justify-center rounded-md py-2 px-4 text-white disabled:opacity-80 disabled:cursor-not-allowed">
@@ -362,52 +364,59 @@
       </div>
     }
 
-    <!-- preferencias -->
     @if (activeSection() === 'preferencias') {
-      <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-6">
-        <h2 class="font-ibm text-xl mb-5">Preferencias</h2>
+      <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-6">
+        <h2 class="font-ibm text-xl mb-5 text-zinc-900 dark:text-white">Preferencias</h2>
         <div class="flex flex-col gap-6">
           <div>
-            <p class="text-sm mb-3">Moneda por defecto</p>
+            <p class="text-sm mb-3 text-zinc-900 dark:text-white">Moneda por defecto</p>
             <div class="flex gap-2">
               <button (click)="currency.set('EUR')"
-                class="px-5 py-2 rounded-xl border font-ibm"
+                class="px-5 py-2 rounded-xl border font-ibm transition-colors"
                 [class.bg-orange-500]="currency() === 'EUR'"
-                [class.border-none]="currency() === 'EUR'"
+                [class.border-transparent]="currency() === 'EUR'"
                 [class.text-white]="currency() === 'EUR'"
-                [class.border-neutral-600]="currency() !== 'EUR'"
-                [class.text-neutral-400]="currency() !== 'EUR'">€ EUR</button>
+                [class.border-zinc-400]="currency() !== 'EUR'"
+                [class.dark:border-neutral-600]="currency() !== 'EUR'"
+                [class.text-zinc-500]="currency() !== 'EUR'"
+                [class.dark:text-neutral-400]="currency() !== 'EUR'">€ EUR</button>
               <button (click)="currency.set('USD')"
-                class="px-5 py-2 rounded-xl border font-ibm"
+                class="px-5 py-2 rounded-xl border font-ibm transition-colors"
                 [class.bg-orange-500]="currency() === 'USD'"
-                [class.border-none]="currency() === 'USD'"
+                [class.border-transparent]="currency() === 'USD'"
                 [class.text-white]="currency() === 'USD'"
-                [class.border-neutral-600]="currency() !== 'USD'"
-                [class.text-neutral-400]="currency() !== 'USD'">$ USD</button>
+                [class.border-zinc-400]="currency() !== 'USD'"
+                [class.dark:border-neutral-600]="currency() !== 'USD'"
+                [class.text-zinc-500]="currency() !== 'USD'"
+                [class.dark:text-neutral-400]="currency() !== 'USD'">$ USD</button>
             </div>
           </div>
           <div>
-            <p class="text-sm mb-3">Tema por defecto</p>
+            <p class="text-sm mb-3 text-zinc-900 dark:text-white">Tema por defecto</p>
             <div class="flex gap-2">
-              <button (click)="theme.set('dark')"
-                class="flex items-center gap-2 px-5 py-2 rounded-xl border font-ibm"
+              <button (click)="this.preferencesService.applyTheme('dark')"
+                class="flex items-center gap-2 px-5 py-2 rounded-xl border font-ibm transition-colors"
                 [class.bg-orange-500]="theme() === 'dark'"
-                [class.border-none]="theme() === 'dark'"
+                [class.border-transparent]="theme() === 'dark'"
                 [class.text-white]="theme() === 'dark'"
-                [class.border-neutral-600]="theme() !== 'dark'"
-                [class.text-neutral-400]="theme() !== 'dark'">
+                [class.border-zinc-400]="theme() !== 'dark'"
+                [class.dark:border-neutral-600]="theme() !== 'dark'"
+                [class.text-zinc-500]="theme() !== 'dark'"
+                [class.dark:text-neutral-400]="theme() !== 'dark'">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
                   <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .162.819A8.97 8.97 0 0 0 9 6a9 9 0 0 0 9 9 8.97 8.97 0 0 0 3.463-.69.75.75 0 0 1 .981.98 10.503 10.503 0 0 1-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 0 1 .818.162Z" clip-rule="evenodd" />
                 </svg>
                 Modo oscuro
               </button>
-              <button (click)="theme.set('light')"
-                class="flex items-center gap-2 px-5 py-2 rounded-xl border font-ibm"
+              <button (click)="this.preferencesService.applyTheme('light')"
+                class="flex items-center gap-2 px-5 py-2 rounded-xl border font-ibm transition-colors"
                 [class.bg-orange-500]="theme() === 'light'"
-                [class.border-none]="theme() === 'light'"
+                [class.border-transparent]="theme() === 'light'"
                 [class.text-white]="theme() === 'light'"
-                [class.border-neutral-600]="theme() !== 'light'"
-                [class.text-neutral-400]="theme() !== 'light'">
+                [class.border-zinc-400]="theme() !== 'light'"
+                [class.dark:border-neutral-600]="theme() !== 'light'"
+                [class.text-zinc-500]="theme() !== 'light'"
+                [class.dark:text-neutral-400]="theme() !== 'light'">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
                   <path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM18.894 6.166a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.591-1.59ZM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75ZM17.834 18.894a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 1 0-1.061 1.06l1.59 1.591ZM12 18a.75.75 0 0 1 .75.75V21a.75.75 0 0 1-1.5 0v-2.25A.75.75 0 0 1 12 18ZM7.758 17.303a.75.75 0 0 0-1.061-1.06l-1.591 1.59a.75.75 0 0 0 1.06 1.061l1.591-1.59ZM6 12a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h2.25A.75.75 0 0 1 6 12ZM6.697 7.757a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 0 0-1.061 1.06l1.59 1.591Z" />
                 </svg>
@@ -416,19 +425,19 @@
             </div>
           </div>
           <div>
-            <p class="text-sm mb-3">Tema por defecto</p>
+            <p class="text-sm mb-3 text-zinc-900 dark:text-white">Color destacado</p>
             <div class="flex flex-wrap gap-2">
               @for (color of colors; track color.value) {
                 <button
                   (click)="this.preferencesService.applyColor(color.value)"
-                  class="rounded-full w-10 h-10 flex items-center justify-center"
+                  class="rounded-full w-10 h-10 flex items-center justify-center border border-zinc-300 dark:border-neutral-700 hover:opacity-80 transition-opacity"
                   [style.background-color]="color.hex"
                   [title]="color.label">
                   @if(this.preferencesService.colorTheme() === color.value) {
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-white">
                       <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                     </svg>
-                  }                 
+                  }                
                 </button>
               }
             </div>
@@ -446,11 +455,10 @@
       </div>
     }
 
-    <!-- cuenta -->
     @if (activeSection() === 'cuenta') {
-      <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-6">
-        <h2 class="font-ibm text-xl mb-1">Eliminar cuenta</h2>
-        <p class="text-neutral-400 text-sm mb-5">
+      <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-6">
+        <h2 class="font-ibm text-xl mb-1 text-zinc-900 dark:text-white">Eliminar cuenta</h2>
+        <p class="text-zinc-500 dark:text-neutral-400 text-sm mb-5">
           Se eliminarán permanentemente todos tus portfolios, inversiones, alertas y datos asociados. Esta acción no tiene vuelta atrás.
         </p>
         <button (click)="deleteAccount()"
@@ -463,7 +471,6 @@
   </div>
 </div>
 
-<!-- modal eliminar cuenta -->
 @if (showDeleteModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center rounded">
     <div
@@ -471,19 +478,19 @@
       (click)="showDeleteModal.set(false)">
     </div>
 
-    <div class="relative bg-neutral-950 border border-neutral-600 rounded p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+    <div class="relative bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
       <div class="flex flex-col items-center gap-2 text-center">
-        <h2 class="text-xl">¿Eliminar cuenta?</h2>
-        <p class="text-sm text-neutral-400">Todos tus datos serán eliminados permanentemente.</p>
+        <h2 class="text-xl text-zinc-900 dark:text-white">¿Eliminar cuenta?</h2>
+        <p class="text-sm text-zinc-500 dark:text-neutral-400">Todos tus datos serán eliminados permanentemente.</p>
       </div>
 
       <div class="flex gap-3">
         <button
           (click)="showDeleteModal.set(false)"
-          class="w-1/2 bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black">
+          class="w-1/2 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-white dark:text-black transition-colors">
           Volver
         </button>
-        <button (click)="onConfirmDeleteAccount()" [disabled]="settingsService.isLoading()" class="w-1/2 bg-red-600 hover:bg-red-600/80 flex justify-center rounded-md py-2 text-white">
+        <button (click)="onConfirmDeleteAccount()" [disabled]="settingsService.isLoading()" class="w-1/2 bg-red-600 hover:bg-red-600/80 flex justify-center rounded-md py-2 text-white transition-colors">
           @if (settingsService.isLoading()) {
             <mat-spinner diameter="20" />
           } @else {
@@ -495,7 +502,6 @@
   </div>
 }
 
-<!-- modal cancelar suscripcion -->
 @if (showCancelModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center rounded">
     <div
@@ -503,25 +509,24 @@
       (click)="showCancelModal.set(false)">
     </div>
 
-    <div class="relative bg-neutral-950 border border-neutral-600 rounded p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+    <div class="relative bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
       <div class="flex flex-col items-center gap-2 text-center">
-        <h2 class="text-xl">¿Cancelar suscripción?</h2>
-        <p class="text-sm text-neutral-400">Tú suscripción será cancelada a final del periodo.</p>
+        <h2 class="text-xl text-zinc-900 dark:text-white">¿Cancelar suscripción?</h2>
+        <p class="text-sm text-zinc-500 dark:text-neutral-400">Tú suscripción será cancelada a final del periodo.</p>
       </div>
 
       <div class="flex gap-3">
         <button
           (click)="showCancelModal.set(false)"
-          class="w-1/2 bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black">
+          class="w-1/2 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-white dark:text-black transition-colors">
           Volver
         </button>
-        <button (click)="onConfirmCancelSubscription()" class="w-1/2 bg-red-600 hover:bg-red-600/80 flex justify-center rounded-md py-2 text-white">Cancelar suscripción</button>
+        <button (click)="onConfirmCancelSubscription()" class="w-1/2 bg-red-600 hover:bg-red-600/80 flex justify-center rounded-md py-2 text-white transition-colors">Cancelar suscripción</button>
       </div>
     </div>
   </div>
 }
 
-<!-- modal eliminar cuenta -->
 @if (showResumeModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center rounded">
     <div
@@ -529,19 +534,19 @@
       (click)="showResumeModal.set(false)">
     </div>
 
-    <div class="relative bg-neutral-950 border border-neutral-600 rounded p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+    <div class="relative bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
       <div class="flex flex-col items-center gap-2 text-center">
-        <h2 class="text-xl">¿Reanudar suscripción?</h2>
-        <p class="text-sm text-neutral-400">Tú suscripción seguirá activa.</p>
+        <h2 class="text-xl text-zinc-900 dark:text-white">¿Reanudar suscripción?</h2>
+        <p class="text-sm text-zinc-500 dark:text-neutral-400">Tú suscripción seguirá activa.</p>
       </div>
 
       <div class="flex gap-3">
         <button
           (click)="showResumeModal.set(false)"
-          class="w-1/2 bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black">
+          class="w-1/2 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-white dark:text-black transition-colors">
           Volver
         </button>
-        <button (click)="onConfirmResumeSubscription()" class="w-1/2 bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white">Reanudar suscripción</button>
+        <button (click)="onConfirmResumeSubscription()" class="w-1/2 bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white transition-colors">Reanudar suscripción</button>
       </div>
     </div>
   </div>

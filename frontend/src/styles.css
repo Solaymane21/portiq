@@ -105,7 +105,7 @@ mat-spinner circle { stroke: #fff !important; }
 [data-color="lime"] .bg-orange-500,
 [data-color="lime"] .bg-orange-600 { background-color: #84cc16 !important; }
 [data-color="lime"] .bg-orange-500\/80 { background-color: rgb(132 204 22 / 0.8) !important; }
-[data-color="lime"] .bg-orange-500\/15 { background-color: rgb(132 204 22 / 0.15) !important; }
+[data-color="lime"] .bg-orange-500\/20 { background-color: rgb(132 204 22 / 0.2) !important; }
 [data-color="lime"] .border-orange-500,
 [data-color="lime"] .border-orange-600,
 [data-color="lime"] .border-orange-800 { border-color: #84cc16 !important; }
@@ -123,7 +123,7 @@ mat-spinner circle { stroke: #fff !important; }
 [data-color="teal"] .bg-orange-500,
 [data-color="teal"] .bg-orange-600 { background-color: #14b8a6 !important; }
 [data-color="teal"] .bg-orange-500\/80 { background-color: rgb(20 184 166 / 0.8) !important; }
-[data-color="teal"] .bg-orange-500\/15 { background-color: rgb(20 184 166 / 0.15) !important; }
+[data-color="teal"] .bg-orange-500\/20 { background-color: rgb(20 184 166 / 0.2) !important; }
 [data-color="teal"] .border-orange-500,
 [data-color="teal"] .border-orange-600,
 [data-color="teal"] .border-orange-800 { border-color: #14b8a6 !important; }
@@ -141,7 +141,7 @@ mat-spinner circle { stroke: #fff !important; }
 [data-color="sky"] .bg-orange-500,
 [data-color="sky"] .bg-orange-600 { background-color: #0ea5e9 !important; }
 [data-color="sky"] .bg-orange-500\/80 { background-color: rgb(14 165 233 / 0.8) !important; }
-[data-color="sky"] .bg-orange-500\/15 { background-color: rgb(14 165 233 / 0.15) !important; }
+[data-color="sky"] .bg-orange-500\/20 { background-color: rgb(14 165 233 / 0.2) !important; }
 [data-color="sky"] .border-orange-500,
 [data-color="sky"] .border-orange-600,
 [data-color="sky"] .border-orange-800 { border-color: #0ea5e9 !important; }
@@ -159,7 +159,7 @@ mat-spinner circle { stroke: #fff !important; }
 [data-color="indigo"] .bg-orange-500,
 [data-color="indigo"] .bg-orange-600 { background-color: #6366f1 !important; }
 [data-color="indigo"] .bg-orange-500\/80 { background-color: rgb(99 102 241 / 0.8) !important; }
-[data-color="indigo"] .bg-orange-500\/15 { background-color: rgb(99 102 241 / 0.15) !important; }
+[data-color="indigo"] .bg-orange-500\/20 { background-color: rgb(99 102 241 / 0.2) !important; }
 [data-color="indigo"] .border-orange-500,
 [data-color="indigo"] .border-orange-600,
 [data-color="indigo"] .border-orange-800 { border-color: #6366f1 !important; }
@@ -177,7 +177,7 @@ mat-spinner circle { stroke: #fff !important; }
 [data-color="violet"] .bg-orange-500,
 [data-color="violet"] .bg-orange-600 { background-color: #8b5cf6 !important; }
 [data-color="violet"] .bg-orange-500\/80 { background-color: rgb(139 92 246 / 0.8) !important; }
-[data-color="violet"] .bg-orange-500\/15 { background-color: rgb(139 92 246 / 0.15) !important; }
+[data-color="violet"] .bg-orange-500\/20 { background-color: rgb(139 92 246 / 0.2) !important; }
 [data-color="violet"] .border-orange-500,
 [data-color="violet"] .border-orange-600,
 [data-color="violet"] .border-orange-800 { border-color: #8b5cf6 !important; }
@@ -195,7 +195,7 @@ mat-spinner circle { stroke: #fff !important; }
 [data-color="rose"] .bg-orange-500,
 [data-color="rose"] .bg-orange-600 { background-color: #f43f5e !important; }
 [data-color="rose"] .bg-orange-500\/80 { background-color: rgb(244 63 94 / 0.8) !important; }
-[data-color="rose"] .bg-orange-500\/15 { background-color: rgb(244 63 94 / 0.15) !important; }
+[data-color="rose"] .bg-orange-500\/20 { background-color: rgb(244 63 94 / 0.2) !important; }
 [data-color="rose"] .border-orange-500,
 [data-color="rose"] .border-orange-600,
 [data-color="rose"] .border-orange-800 { border-color: #f43f5e !important; }
@@ -213,7 +213,7 @@ mat-spinner circle { stroke: #fff !important; }
 [data-color="red"] .bg-orange-500,
 [data-color="red"] .bg-orange-600 { background-color: #ef4444 !important; }
 [data-color="red"] .bg-orange-500\/80 { background-color: rgb(239 68 68 / 0.8) !important; }
-[data-color="red"] .bg-orange-500\/15 { background-color: rgb(239 68 68 / 0.15) !important; }
+[data-color="red"] .bg-orange-500\/20 { background-color: rgb(239 68 68 / 0.2) !important; }
 [data-color="red"] .border-orange-500,
 [data-color="red"] .border-orange-600,
 [data-color="red"] .border-orange-800 { border-color: #ef4444 !important; }

@@ -167,7 +167,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       error: (err) => {
         console.error('Error cargando carteras', err);
         this.isLoadingPortfolios = false;
-        this.isLoadingInvestments.set(false);
+        
       }
     });
   }
@@ -442,9 +442,9 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
     };
 
     const getAlphaByWeight = (weight: number) => {
-      if (weight <= 5) return 0.15;
-      if (weight <= 10) return 0.30;
-      if (weight <= 15) return 0.50;
+      if (weight <= 5) return 0.35;
+      if (weight <= 10) return 0.45;
+      if (weight <= 15) return 0.55;
       if (weight <= 20) return 0.70;
       if (weight <= 25) return 0.85;
       return 1;

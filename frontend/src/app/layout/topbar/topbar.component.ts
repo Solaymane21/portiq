@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { A11yModule } from '@angular/cdk/a11y';
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { PreferencesService } from '../../services/preferences.service';
 
 export interface AssetSearchResult {
   symbol: string;
@@ -24,10 +25,10 @@ export interface AssetSearchResult {
 export class TopbarComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
+  preferencesService = inject(PreferencesService);
 
   user = this.authService.currentUser;
   isPremium = signal<boolean>(false);
-  isLightMode = signal<boolean>(false)
 
   avatar = computed(() =>
     this.user()?.avatar ?? 'https://api.dicebear.com/9.x/fun-emoji/svg?seed=q'
@@ -66,7 +67,8 @@ export class TopbarComponent implements OnInit {
   }
 
   updateMode() {
-    this.isLightMode.update(v => !v)
+    const next = this.preferencesService.theme() === 'dark' ? 'light' : 'dark';
+    this.preferencesService.applyTheme(next);
   }
 
   // ── Search state ──────────────────────────────

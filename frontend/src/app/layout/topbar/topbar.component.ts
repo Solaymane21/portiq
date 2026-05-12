@@ -27,6 +27,7 @@ export class TopbarComponent implements OnInit {
 
   user = this.authService.currentUser;
   isPremium = signal<boolean>(false);
+  isLightMode = signal<boolean>(false)
 
   avatar = computed(() =>
     this.user()?.avatar ?? 'https://api.dicebear.com/9.x/fun-emoji/svg?seed=q'
@@ -62,6 +63,10 @@ export class TopbarComponent implements OnInit {
         this.isSearching.set(false);
       }
     });
+  }
+
+  updateMode() {
+    this.isLightMode.update(v => !v)
   }
 
   // ── Search state ──────────────────────────────

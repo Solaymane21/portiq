@@ -1,78 +1,84 @@
 <div class="space-y-6">
-  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-    <div class="flex items-start gap-4 min-w-0">
-      <button
-        (click)="irAWallets()"
-        class="inline-flex items-center justify-center p-2 rounded-md bg-neutral-950 text-neutral-500 hover:text-white cursor-pointer shrink-0 mt-1">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-        </svg>
-      </button>
-      <div class="min-w-0 flex-1">
-        <h1 class="text-3xl font-ibm text-white truncate">{{ nombreCartera() }}</h1>
-        @if (soloLectura() && ownerName()) {
-          <p class="text-sm text-orange-500 mt-1">Cartera pública de {{ ownerName() }} · solo lectura</p>
-        }
-      </div>
+
+  <!-- HEADER -->
+  <div class="flex flex-row items-center justify-between gap-3">
+    <!-- Botón back (izquierda) -->
+    <button
+      (click)="irAWallets()"
+      class="inline-flex items-center justify-center p-2 rounded-md bg-neutral-950 text-neutral-500 hover:text-white cursor-pointer shrink-0">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+      </svg>
+    </button>
+
+    <!-- Título (centro) -->
+    <div class="flex-1 min-w-0">
+      <h1 class="text-3xl font-ibm text-white truncate">{{ nombreCartera() }}</h1>
+      @if (soloLectura() && ownerName()) {
+        <p class="text-sm text-orange-500 mt-1">Cartera pública de {{ ownerName() }} · solo lectura</p>
+      }
     </div>
 
+    <!-- Botones (derecha) -->
     @if (!soloLectura()) {
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 shrink-0">
         <button
           type="button"
           (click)="exportarCsv()"
-          class="bg-white hover:bg-neutral-200/80 p-2 rounded-md text-black flex items-center gap-2 cursor-pointer">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+          class="bg-white hover:bg-neutral-200/80 h-10 px-3 rounded-md text-black flex items-center gap-2 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
           </svg>
-          <span class="whitespace-nowrap">Exportar CSV</span>
+          <span class="hidden sm:inline whitespace-nowrap">Exportar CSV</span>
         </button>
 
         <button
           type="button"
           (click)="abrirModalNuevaPosicion()"
-          class="bg-orange-500 hover:bg-orange-500/80 p-2 rounded-md text-white flex items-center gap-2 cursor-pointer">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+          class="bg-orange-500 hover:bg-orange-500/80 h-10 px-3 rounded-md text-white flex items-center gap-2 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
-          <span>Nueva Posición</span>
+          <span class="hidden sm:inline whitespace-nowrap">Nueva Posición</span>
         </button>
       </div>
     }
   </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-5 mb-5">
+  <!-- STATS CARDS -->
+  <div class="grid grid-cols-2 xl:grid-cols-4 gap-3">
 
-    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-      <p class="mb-3">Valor Total</p>
-      <h3 class="text-3xl font-ibm font-bold text-neutral-100 text-center">{{ formatNumber(valorTotal(), 0) }}€</h3>
+    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-4 flex flex-col gap-2">
+      <p class="text-sm text-neutral-400">Valor Total</p>
+      <h3 class="text-xl sm:text-2xl xl:text-3xl font-ibm font-bold text-neutral-100 truncate">{{ formatNumber(valorTotal(), 0) }}€</h3>
     </div>
 
-    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-      <p class="mb-3">Ganancias Totales</p>
-      <h3 class="text-3xl font-ibm font-bold text-green-500 text-center">+{{ formatNumber(ganancias(), 0) }}€</h3>
+    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-4 flex flex-col gap-2">
+      <p class="text-sm text-neutral-400">Ganancias</p>
+      <h3 class="text-xl sm:text-2xl xl:text-3xl font-ibm font-bold text-green-500 truncate">+{{ formatNumber(ganancias(), 0) }}€</h3>
     </div>
 
-    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-      <p class="mb-3">% Retorno</p>
-      <h3 class="text-3xl font-ibm font-bold text-green-500 text-center">+{{ formatNumber(porcentajeGanancias(), 2) }}%</h3>
+    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-4 flex flex-col gap-2">
+      <p class="text-sm text-neutral-400">% Retorno</p>
+      <h3 class="text-xl sm:text-2xl xl:text-3xl font-ibm font-bold text-green-500 truncate">+{{ formatNumber(porcentajeGanancias(), 2) }}%</h3>
     </div>
 
-    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-      <p class="mb-3">Activos</p>
-      <h3 class="text-3xl font-ibm font-bold text-neutral-100 text-center">{{ totalPosiciones() }}</h3>
+    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-4 flex flex-col gap-2">
+      <p class="text-sm text-neutral-400">Activos</p>
+      <h3 class="text-xl sm:text-2xl xl:text-3xl font-ibm font-bold text-neutral-100">{{ totalPosiciones() }}</h3>
     </div>
 
   </div>
 
+  <!-- TABLA -->
   <div class="bg-neutral-950 border border-neutral-600 rounded-xl overflow-hidden">
     <div class="px-4 md:px-6 py-4 border-b border-neutral-600 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h2 class="text-base font-medium text-white">Rendimiento de Activos</h2>
 
       <button
         (click)="verHistorialTrades()"
-        class="bg-orange-500 hover:bg-orange-500/80 p-2 rounded-md text-white flex items-center justify-center gap-2 cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        class="bg-orange-500 hover:bg-orange-500/80 h-9 px-3 rounded-md text-white flex items-center justify-center gap-2 cursor-pointer text-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         Ver Historial
@@ -110,7 +116,7 @@
                     <span class="font-medium text-white truncate font font-ibm">{{ element.symbol }}</span>
                   </div>
                 }
-                @case ('value') { {{ formatNumber(element.value, 2  ) }}€ }
+                @case ('value') { {{ formatNumber(element.value, 2) }}€ }
                 @case ('weight') { {{ formatNumber(element.weight, 2) }}% }
                 @case ('return_7d') { {{ (element.return_7d ?? 0) >= 0 ? '+' : '' }}{{ formatNumber(element.return_7d, 2) }}% }
                 @case ('quantity') { {{ formatNumber(element.quantity, 8) }} }
@@ -168,6 +174,7 @@
       class="border-t !border-neutral-600 !bg-neutral-950 !text-neutral-500">
     </mat-paginator>
   </div>
+
 </div>
 
 <!-- MODAL -->

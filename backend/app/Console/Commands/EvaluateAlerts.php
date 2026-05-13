@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 class EvaluateAlerts extends Command
 {
     protected $signature   = 'alerts:evaluate';
-    protected $description = 'Evalúa alertas activas y las desactiva si se cumplen';
+    protected $description = 'Evalua alertas activas y las desactiva si se cumplen';
 
     public function __construct(private MLService $ml)
     {

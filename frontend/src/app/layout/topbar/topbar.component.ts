@@ -1,13 +1,15 @@
-import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, HostListener, inject, OnInit, signal, DestroyRef} from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { RouterLink, Router } from '@angular/router';
-import { NgClass } from '@angular/common';
+import { NgClass, DatePipe} from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { A11yModule } from '@angular/cdk/a11y';
-import { Subject, of } from 'rxjs';
+import { Subject, of, interval} from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError} from 'rxjs/operators';
 import { PreferencesService } from '../../services/preferences.service';
 import { MarketService } from '../../services/market.service';
+import { NotificationService, AppNotification } from '../../services/notification.service';
 
 export interface AssetSearchResult {
   symbol: string;
@@ -19,7 +21,7 @@ export interface AssetSearchResult {
 
 @Component({
   selector: 'app-topbar',
-  imports: [RouterLink, NgClass, FormsModule, A11yModule],
+  imports: [RouterLink, NgClass, FormsModule, A11yModule, DatePipe],
   templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.css'
 })
@@ -27,7 +29,9 @@ export class TopbarComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   preferencesService = inject(PreferencesService);
+  private notificationService  = inject(NotificationService);
   private market = inject(MarketService);
+  private destroyRef = inject(DestroyRef);
 
   user = this.authService.currentUser;
   isPremium = signal<boolean>(false);
@@ -36,10 +40,22 @@ export class TopbarComponent implements OnInit {
     this.user()?.avatar ?? 'https://api.dicebear.com/9.x/fun-emoji/svg?seed=q'
   );
 
+  notifications     = signal<AppNotification[]>([]);
+  showNotifications = signal(false);
+  selectedNotif     = signal<AppNotification | null>(null);
+
+  unreadCount = computed(() => this.notifications().filter(n => !n.is_read).length);
+
   ngOnInit(): void {
     this.authService.isPremium().subscribe(value => {
       this.isPremium.set(value);
     });
+
+    this.loadNotifications();
+
+    interval(10_000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.loadNotifications());
 
     this.searchSubject.pipe(
       debounceTime(250),
@@ -67,6 +83,38 @@ export class TopbarComponent implements OnInit {
         this.searchResults.set([]);
         this.isSearching.set(false);
       }
+    });
+  }
+
+  // ── Notifications logic ───────────────────────
+
+  loadNotifications(): void {
+    this.notificationService.getAll().subscribe(data => this.notifications.set(data));
+  }
+
+  toggleNotifications(): void {
+    this.showNotifications.update(v => !v);
+    this.selectedNotif.set(null);
+  }
+
+  openNotif(notif: AppNotification): void {
+    this.selectedNotif.set(notif);
+    if (!notif.is_read) {
+      this.notificationService.markRead(notif.id).subscribe(() => {
+        this.notifications.update(prev =>
+          prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n)
+        );
+      });
+    }
+  }
+
+  closeNotifModal(): void {
+    this.selectedNotif.set(null);
+  }
+
+  markAllRead(): void {
+    this.notificationService.markAllRead().subscribe(() => {
+      this.notifications.update(prev => prev.map(n => ({ ...n, is_read: true })));
     });
   }
 

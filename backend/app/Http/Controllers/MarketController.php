@@ -25,9 +25,9 @@ class MarketController extends Controller
     public function portfolioValue(Request $request)
     {
         $positions = [
-            ['symbol' => 'AAPL',    'quantity' => 10],
-            ['symbol' => 'MSFT',    'quantity' => 5],
-            ['symbol' => 'BTC-USD', 'quantity' => 0.5],
+            ['symbol' => 'AAPL', 'quantity' => 10],
+            ['symbol' => 'MSFT','quantity' => 5],
+            ['symbol' => 'BTC-USD','quantity' => 0.5],
         ];
 
         return response()->json($this->ml->getPortfolioValue($positions));

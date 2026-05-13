@@ -1,5 +1,5 @@
 <div class="flex justify-between items-center mb-6">
-  <h1 class="text-3xl font-ibm">Alertas</h1>
+  <h1 class="text-3xl font-ibm text-zinc-900 dark:text-white">Alertas</h1>
   <button
     type="button"
     (click)="openCreateModal()"
@@ -13,8 +13,8 @@
 </div>
 
 @if (isLoading()) {
-  <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-10 text-center">
-    <p class="text-neutral-400">Cargando alertas...</p>
+  <div class="bg-zinc-100 dark:bg-neutral-950 border border-zinc-300 dark:border-neutral-600 rounded-2xl p-10 text-center">
+    <p class="text-zinc-400 dark:text-neutral-400">Cargando alertas...</p>
   </div>
 } @else if (alerts().length === 0) {
   <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-10 text-center">
@@ -28,7 +28,7 @@
     [class.lg:grid-cols-3]="alerts().length >= 3"
   >
     @for (alert of alerts(); track alert.id) {
-      <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-5 flex flex-col gap-4">
+      <div class="bg-zinc-100 dark:bg-neutral-950 border border-zinc-300 dark:border-neutral-600 rounded-2xl p-5 flex flex-col gap-4">
 
         <!-- Header -->
         <div
@@ -36,8 +36,8 @@
           [class.opacity-50]="!alert.is_active"
         >
           <div class="flex items-center gap-2">
-            <p class="font-medium text-neutral-100">{{ alert.name }}</p>
-            <p class="text-sm text-neutral-400">({{ alert.symbol }})</p>
+            <p class="font-medium text-zinc-900 dark:text-neutral-100">{{ alert.name }}</p>
+            <p class="text-sm text-zinc-500 dark:text-neutral-400">({{ alert.symbol }})</p>
           </div>
           <div>
             <button [cdkMenuTriggerFor]="menu" class="text-orange-500">⋮</button>
@@ -76,16 +76,16 @@
         </div>
 
         <!-- Condicion -->
-        <div class="bg-neutral-800 flex flex-col gap-3 rounded-md px-4 py-3">
+        <div class="bg-zinc-200 dark:bg-neutral-800 flex flex-col gap-3 rounded-md px-4 py-3">
           <div>
-            <p class="text-neutral-400">Condición</p>
-            <p>Precio {{ alert.condition === 'above' ? 'por encima de' : 'por debajo de' }}
+            <p class="text-zinc-500 dark:text-neutral-400">Condición</p>
+            <p class="text-zinc-900 dark:text-neutral-100"> Precio {{ alert.condition === 'above' ? 'por encima de' : 'por debajo de' }}
               <span class="font-ibm">{{ alert.target_price | number:'1.2-2' }}€</span>
             </p>
           </div>
           <div class="flex justify-between">
-            <p class="text-neutral-400">Actual</p>
-            <p class="text-neutral-400">Objetivo</p>
+            <p class="text-zinc-500 dark:text-neutral-400">Actual</p>
+            <p class="text-zinc-500 dark:text-neutral-400">Objetivo</p>
           </div>
           <div class="flex justify-between items-center">
             <p class="font-ibm">
@@ -102,7 +102,7 @@
 
         <!-- Footer -->
         <div class="flex items-center justify-between">
-          <p class="text-xs text-neutral-400">
+          <p class="text-xs text-zinc-400 dark:text-neutral-400">
             Creada el {{ alert.created_at | date:'dd/MM/yyyy' }}
           </p>
           <button

@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Log;
 
 class InvestmentController extends Controller
 {
-    private const PYTHON_API_URL = 'http://127.0.0.1:8001';
     private const CACHE_TTL = 60;
 
     /**
@@ -82,7 +81,7 @@ class InvestmentController extends Controller
 
         return response()->json([
             'message' => 'Posición guardada con éxito',
-            'investment' => $investment->load('symbol'),
+            'investment'=> $investment->load('symbol'),
         ], 201);
     }
 
@@ -297,7 +296,7 @@ class InvestmentController extends Controller
 
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($symbolsStr) {
             try {
-                $response = Http::timeout(10)->get(self::PYTHON_API_URL . '/prices', [
+                $response = Http::timeout(10)->get(env('PYTHON_API_URL') . '/prices', [
                     'symbols' => $symbolsStr,
                     'asset_types' => 'stock,crypto',
                 ]);

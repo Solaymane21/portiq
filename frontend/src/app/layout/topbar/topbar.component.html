@@ -42,10 +42,68 @@
                 </svg>
               }
             </div>
-            <div class="bg-zinc-200 dark:bg-neutral-800 p-2 rounded text-zinc-700 dark:text-neutral-300 hover:cursor-pointer hover:opacity-90">
+            <div class="relative">
+              <div
+                class="bg-zinc-200 dark:bg-neutral-800 p-2 rounded text-zinc-700 dark:text-neutral-300 hover:cursor-pointer hover:opacity-90"
+                (click)="toggleNotifications()"
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                 </svg>
+
+                @if (unreadCount() > 0) {
+                  <span class="absolute top-0 right-0 min-w-[18px] h-[18px] rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center px-1">
+                    {{ unreadCount() > 9 ? '9+' : unreadCount() }}
+                  </span>
+                }
+              </div>
+
+              @if (showNotifications()) {
+                <div class="absolute right-0 top-full mt-2 w-80 bg-zinc-50 dark:bg-neutral-900 border border-zinc-200 dark:border-neutral-700 rounded-2xl shadow-xl z-50 overflow-hidden">
+                  <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-neutral-700">
+                    <p class="text-sm font-medium text-zinc-900 dark:text-white">Notificaciones</p>
+                    @if (unreadCount() > 0) {
+                      <button (click)="markAllRead()" class="text-xs text-zinc-400 dark:text-neutral-400 hover:text-zinc-900 dark:hover:text-white">
+                        Marcar todas como leídas
+                      </button>
+                    }
+                  </div>
+                  @if (notifications().length === 0) {
+                    <div class="px-4 py-8 text-center text-zinc-400 dark:text-neutral-400 text-sm">
+                      No tienes notificaciones
+                    </div>
+                  } @else {
+                    <div class="max-h-80 overflow-y-auto">
+                      @for (notif of notifications(); track notif.id) {
+                        <div
+                          class="flex items-start gap-3 px-4 py-3 hover:bg-zinc-100 dark:hover:bg-neutral-800 cursor-pointer border-b border-zinc-100 dark:border-neutral-800 last:border-0"
+                          (click)="openNotif(notif)"
+                        >
+                          <div class="mt-1.5 shrink-0">
+                            @if (!notif.is_read) {
+                              <span class="block w-2 h-2 rounded-full bg-orange-500"></span>
+                            } @else {
+                              <span class="block w-2 h-2"></span>
+                            }
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <p class="text-sm truncate"
+                              [class.text-zinc-900]="!notif.is_read && preferencesService.theme() === 'light'"
+                              [class.text-white]="!notif.is_read && preferencesService.theme() === 'dark'"
+                              [class.text-zinc-400]="notif.is_read && preferencesService.theme() === 'light'"
+                              [class.text-neutral-500]="notif.is_read && preferencesService.theme() === 'dark'">{{ notif.title }}
+                            </p>
+                            <p class="text-xs text-zinc-400 dark:text-neutral-500 mt-0.5">
+                              {{ notif.created_at | date:'dd/MM/yyyy HH:mm' }}
+                            </p>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+                <div class="fixed inset-0 z-40" (click)="showNotifications.set(false)"></div>
+              }
             </div>
             <div
               class="w-10 h-10 rounded-full overflow-hidden cursor-pointer border border-zinc-200 dark:border-neutral-600"
@@ -57,6 +115,24 @@
         </div>
     </div>
 </nav>
+
+@if (selectedNotif()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/60" (click)="closeNotifModal()"></div>
+    <div class="relative bg-zinc-50 dark:bg-neutral-950 border border-zinc-200 dark:border-neutral-700 rounded-2xl p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-ibm text-lg text-zinc-900 dark:text-white">{{ selectedNotif()!.title }}</h3>
+        <button (click)="closeNotifModal()" class="text-zinc-400 hover:text-zinc-900 dark:hover:text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+            <path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+      <p class="text-zinc-600 dark:text-neutral-300 text-sm leading-relaxed">{{ selectedNotif()!.message }}</p>
+      <p class="text-xs text-zinc-400 dark:text-neutral-500">{{ selectedNotif()!.created_at | date:'dd/MM/yyyy HH:mm' }}</p>
+    </div>
+  </div>
+}
 
 @if (isAssetSearchOpen()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center rounded">

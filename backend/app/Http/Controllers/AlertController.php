@@ -26,29 +26,29 @@ class AlertController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'symbol'     => 'required|string|max:20',
-            'name'       => 'required|string|max:100',
+            'symbol'  => 'required|string|max:20',
+            'name' => 'required|string|max:100',
             'asset_type' => 'required|in:stock,crypto,etf',
-            'api_id'     => 'nullable|string|max:100',
-            'image_url'  => 'nullable|url',
+            'api_id' => 'nullable|string|max:100',
+            'image_url' => 'nullable|url',
             'target_price' => 'required|numeric|min:0',
-            'condition'    => 'required|in:above,below',
+            'condition' => 'required|in:above,below',
         ]);
 
         $symbol = Symbol::firstOrCreate(
             ['symbol' => strtoupper($data['symbol'])],
             [
-                'name'       => $data['name'],
+                'name' => $data['name'],
                 'asset_type' => $data['asset_type'],
-                'api_id'     => $data['api_id'] ?? null,
-                'image_url'  => $data['image_url'] ?? null,
+                'api_id' => $data['api_id'] ?? null,
+                'image_url' => $data['image_url'] ?? null,
             ]
         );
 
         $alert = $request->user()->alerts()->create([
-            'symbol_id'    => $symbol->id,
+            'symbol_id'=> $symbol->id,
             'target_price' => $data['target_price'],
-            'condition'    => $data['condition'],
+            'condition' => $data['condition'],
         ]);
 
         $alert->load('symbol');
@@ -63,8 +63,8 @@ class AlertController extends Controller
 
         $validated = $request->validate([
             'target_price' => 'sometimes|numeric|min:0',
-            'condition'    => 'sometimes|in:above,below',
-            'is_active'    => 'sometimes|boolean',
+            'condition' => 'sometimes|in:above,below',
+            'is_active' => 'sometimes|boolean',
         ]);
 
         $alert->update($validated);
@@ -84,15 +84,15 @@ class AlertController extends Controller
     private function format(Alert $alert): array
     {
         return [
-            'id'           => $alert->id,
-            'symbol'       => $alert->symbol->symbol,
-            'name'         => $alert->symbol->name,
-            'asset_type'   => $alert->symbol->asset_type,
-            'image_url'    => $alert->symbol->image_url,
+            'id' => $alert->id,
+            'symbol' => $alert->symbol->symbol,
+            'name' => $alert->symbol->name,
+            'asset_type' => $alert->symbol->asset_type,
+            'image_url' => $alert->symbol->image_url,
             'target_price' => $alert->target_price,
-            'condition'    => $alert->condition,
-            'is_active'    => $alert->is_active,
-            'created_at'   => ($alert->created_at ?? now())->toISOString()
+            'condition'=> $alert->condition,
+            'is_active' => $alert->is_active,
+            'created_at' => ($alert->created_at ?? now())->toISOString()
         ];
     }
 }

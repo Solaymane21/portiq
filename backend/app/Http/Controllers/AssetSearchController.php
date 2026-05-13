@@ -172,7 +172,7 @@ class AssetSearchController extends Controller
             'date' => 'required|date_format:Y-m-d'
         ]);
 
-        $pythonApi = env('PYTHON_API_URL', 'http://127.0.0.1:8001');
+        $pythonApi = env('PYTHON_API_URL');
         
         try {
             $response = Http::timeout(10)->get("{$pythonApi}/historical-price/{$request->api_id}", [

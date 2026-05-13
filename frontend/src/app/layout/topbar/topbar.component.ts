@@ -5,8 +5,9 @@ import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { A11yModule } from '@angular/cdk/a11y';
 import { Subject, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, catchError} from 'rxjs/operators';
 import { PreferencesService } from '../../services/preferences.service';
+import { MarketService } from '../../services/market.service';
 
 export interface AssetSearchResult {
   symbol: string;
@@ -26,6 +27,7 @@ export class TopbarComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   preferencesService = inject(PreferencesService);
+  private market = inject(MarketService);
 
   user = this.authService.currentUser;
   isPremium = signal<boolean>(false);
@@ -49,13 +51,15 @@ export class TopbarComponent implements OnInit {
           return of([]);
         }
         this.isSearching.set(true);
-        // TODO: reemplaza esto por tu servicio real
-        // return this.marketService.searchAssets(query);
-        return of([]);
+        return this.market.search(query).pipe(
+          catchError(() => of([]))
+        );
       })
     ).subscribe({
-      next: (results: AssetSearchResult[]) => {
-        this.searchResults.set(results);
+      next: (res: any) => {
+        const raw = Array.isArray(res) ? res : (res?.data ?? []);
+        const data = raw.slice(0, 8);
+        this.searchResults.set(data);
         this.selectedIndex = 0;
         this.isSearching.set(false);
       },
@@ -128,7 +132,6 @@ export class TopbarComponent implements OnInit {
 
   selectAsset(item: AssetSearchResult) {
     this.closeAssetSearch();
-    this.router.navigate(['/app/asset', item.symbol]);
-    // Ajusta la ruta a como la tengas montada en PortIQ
+    this.router.navigate(['/public/symbol', item.symbol]);
   }
 }

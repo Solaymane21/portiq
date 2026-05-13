@@ -233,3 +233,6 @@ mat-spinner circle { stroke: #fff !important; }
 [data-color="violet"] .active-tab { color: #8b5cf6 !important; }
 [data-color="rose"] .active-tab { color: #f43f5e !important; }
 [data-color="red"] .active-tab { color: #ef4444 !important; }
+.active-tab, [data-color="orange"] .active-tab { color: #f97316 !important; }
+.active-link, [data-color="orange"] .active-link { background-color: rgb(249 115 22 / 0.15) !important; }
+.active-link svg, [data-color="orange"] .active-link svg { stroke: #f97316 !important; }

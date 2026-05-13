@@ -15,10 +15,10 @@
             <div class="flex flex-col gap-3">
                 @for(option of service.questions[service.currentQuestion()].options; track $index) {
                     <button
-                        class="py-3 rounded hover:opacity-80 transition-colors"
+                        class="py-3 rounded hover:opacity-80"
                         [class]="service.answers()[service.currentQuestion()] === option.score
                         ? 'bg-orange-500 text-white'
-                        : 'bg-zinc-200 dark:bg-neutral-600 text-zinc-900 dark:text-white'"
+                        : 'bg-zinc-300 dark:bg-neutral-600 text-zinc-900 dark:text-white'"
                         (click)="service.selectAnswer(option.score)">
                         {{ option.label }}
                     </button>
@@ -26,14 +26,16 @@
             </div>
         </div>
         <div class="flex justify-between gap-3 mt-5">
-            <button class="flex items-center justify-center gap-2 w-1/2 bg-zinc-50 dark:bg-neutral-600 text-zinc-900 dark:text-white py-3 rounded-lg hover:opacity-80 transition-colors" (click)="service.back()">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                    <path fill-rule="evenodd" d="M7.72 12.53a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 1 1 1.06 1.06L9.31 12l6.97 6.97a.75.75 0 1 1-1.06 1.06l-7.5-7.5Z" clip-rule="evenodd" />
-                </svg>
-                Anterior
-            </button>
+            @if(service.currentQuestion() !== 0) {
+                <button class="flex items-center justify-center gap-2 w-full bg-zinc-50 dark:bg-neutral-600 text-zinc-900 dark:text-white py-3 rounded-lg hover:opacity-80" (click)="service.back()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                        <path fill-rule="evenodd" d="M7.72 12.53a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 1 1 1.06 1.06L9.31 12l6.97 6.97a.75.75 0 1 1-1.06 1.06l-7.5-7.5Z" clip-rule="evenodd" />
+                    </svg>
+                    Anterior
+                </button>
+            }
             <button
-                class="flex items-center justify-center gap-2 w-1/2 py-3 rounded-lg transition-opacity text-white"
+                class="flex items-center justify-center gap-2 w-full py-3 rounded-lg transition-opacity text-white"
                 [class]="service.canGoNext() ? 'bg-orange-500 hover:opacity-80' : 'bg-orange-500 opacity-50 cursor-not-allowed'"
                 [disabled]="!service.canGoNext()"
                 (click)="service.next()">

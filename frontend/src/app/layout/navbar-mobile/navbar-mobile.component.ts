@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -13,9 +13,15 @@ export class NavbarMobileComponent {
   showMoreMenu = signal(false);
   showLogoutModal = signal<boolean>(false);
   private authService = inject(AuthService);
+  private router = inject(Router)
 
   onConfirmLogout() {
     this.showLogoutModal.set(false);
     this.authService.onLogout();
+  }
+
+  isMoreMenuActive(): boolean {
+    const moreRoutes = ['/app/investor-profile', '/app/ranking', '/app/settings', '/privacy-policy'];
+    return moreRoutes.some(route => this.router.url.includes(route));
   }
 }

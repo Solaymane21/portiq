@@ -1,6 +1,10 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <script>
+    const theme = localStorage.getItem('portiq_theme') || 'dark';
+    document.documentElement.classList.add(theme);
+  </script>
   <meta charset="utf-8">
   <title>Frontend</title>
   <base href="/">

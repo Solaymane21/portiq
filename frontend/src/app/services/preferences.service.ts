@@ -78,10 +78,24 @@ export class PreferencesService {
     });
   }
 
-   // aplica el color al html sin guardar en BD
+  // aplica el color al html sin guardar en BD
   applyColor(color: ColorTheme) {
     this.colorTheme.set(color);
     localStorage.setItem('portiq_color_theme', color);
     document.documentElement.setAttribute('data-color', color);
+  }
+
+  applyTheme(theme: 'dark' | 'light') {
+    this.theme.set(theme);
+    localStorage.setItem('portiq_theme', theme);
+    
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+    } else {
+      root.classList.add('light');
+      root.classList.remove('dark');
+    }
   }
 }

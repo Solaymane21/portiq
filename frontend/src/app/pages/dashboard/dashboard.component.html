@@ -1,303 +1,334 @@
 <div class="flex justify-between mb-6">
-  <h1 class="text-3xl font-ibm">Dashboard</h1>
-  <div class="relative w-fit">
-    <select
-      class="appearance-none bg-neutral-950 border border-neutral-600 rounded-xl px-3 py-2 pr-8 outline-none cursor-pointer"
-      [(ngModel)]="selectedPortfolioId"
-      (ngModelChange)="onPortfolioChange($event)"
-      (focus)="collapsed.set(true)"
-      (blur)="collapsed.set(false)"
-    >
-      @for (p of portfolios; track p.id) {
-        <option [ngValue]="p.id" class="text-neutral-300">{{ p.name }}</option>
-      }
-    </select>
-
-    <span class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" [style.color]="preferencesService.colorHex()">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-      </svg>
-    </span>
-  </div>
+  <h1 class="text-3xl font-ibm text-zinc-900 dark:text-white">Dashboard</h1>
+  @if(portfolios.length > 0) {
+    <div class="relative w-fit">
+      <select
+        class="appearance-none bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-xl px-3 py-2 pr-8 outline-none cursor-pointer text-zinc-700 dark:text-neutral-300"
+        [(ngModel)]="selectedPortfolioId"
+        (ngModelChange)="onPortfolioChange($event)"
+        (focus)="collapsed.set(true)"
+        (blur)="collapsed.set(false)"
+      >
+        @for (p of portfolios; track p.id) {
+          <option [ngValue]="p.id" class="text-zinc-700 dark:text-neutral-300">{{ p.name }}</option>
+        }
+      </select>
+      <span class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" [style.color]="preferencesService.colorHex()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+        </svg>
+      </span>
+    </div>
+  }
 </div>
 
-@if (currentPortfolio) {
+@if (currentPortfolio && hasInvestments() && !isLoadingInvestments()) {
 
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5 mb-5">
-    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5 mb-5 text-zinc-700 dark:text-neutral-300">
+    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5">
       <p class="mb-3">Valor total €</p>
-      <p class="text-2xl md:text-3xl font-ibm font-bold text-neutral-100 text-center">
+      <p class="text-2xl md:text-3xl font-ibm font-bold text-zinc-900 dark:text-neutral-100 text-center">
         {{ currentPortfolio.totalValue | number: "1.0-0" }}€
       </p>
     </div>
-    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-      <p class="mb-3">Valor total $</p>
-      <p class="text-2xl md:text-3xl font-ibm font-bold text-neutral-100 text-center">
-        ${{ currentPortfolio.totalValueUSD | number: "1.0-0" }}
+    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3">Ganancias €</p>
+      <p class="text-2xl md:text-3xl font-ibm font-bold text-center tabular-nums"
+        [class.text-green-500]="currentPortfolio.totalValueUSD > 0"
+        [class.text-red-500]="currentPortfolio.totalValueUSD < 0">
+        {{ currentPortfolio.totalValueUSD | number: "1.0-0" }}€
       </p>
     </div>
-    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
-      <p class="mb-3">Rendimiento</p>
-      <p
-        class="text-2xl md:text-3xl font-ibm font-bold text-center"
+    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3">Rendimiento %</p>
+      <p class="text-2xl md:text-3xl font-ibm font-bold text-center"
         [class.text-green-500]="currentPortfolio.profitLoss > 0"
-        [class.text-red-500]="currentPortfolio.profitLoss < 0"
-      >
+        [class.text-red-500]="currentPortfolio.profitLoss < 0">
         {{ currentPortfolio.profitLoss | number: "1.0-0" }}€
       </p>
     </div>
-    <div class="bg-neutral-950 border w-full border-neutral-600 rounded-2xl p-5">
+    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5">
       <p class="mb-3">Total de Posiciones</p>
-      <p class="text-2xl md:text-3xl font-ibm font-bold text-neutral-100 text-center">
+      <p class="text-2xl md:text-3xl font-ibm font-bold text-zinc-900 dark:text-neutral-100 text-center">
         {{ currentPortfolio.totalPositions }}
       </p>
     </div>
   </div>
 
-  <!-- Area -->
-  <div class="grid grid-cols-3 gap-4 mt-5 mb-5">
-    <div
-      class="col-span-3 lg:col-span-2 bg-neutral-950 border border-neutral-600 rounded-2xl p-5 flex flex-col"
-    >
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 mb-5">
+    <div class="md:col-span-3 lg:col-span-2 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 flex flex-col">
       <div class="flex justify-end gap-1 mb-2">
         @for (p of periods; track p) {
           <button
             (click)="setPeriod(p)"
             class="px-2.5 py-0.5 rounded-md transition-colors"
-            [style.background-color]="p === selectedPeriod ? preferencesService.colorHex() : '#262626'"
+            [style.background-color]="p === selectedPeriod ? preferencesService.colorHex() : null"
+            [class.bg-zinc-100]="p !== selectedPeriod"
+            [class.dark:bg-neutral-800]="p !== selectedPeriod"
             [class.text-white]="p === selectedPeriod"
-            [class.text-neutral-400]="p !== selectedPeriod"
-          >
-            {{ p }}
-          </button>
+            [class.text-zinc-500]="p !== selectedPeriod"
+            [class.dark:text-neutral-400]="p !== selectedPeriod"
+          >{{ p }}</button>
         }
       </div>
-
       @if (isLoading) {
         <div class="flex-1 flex items-center justify-center">
-          <div
-            class="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+          <div class="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
             [style.border-color]="preferencesService.colorHex()"
-            style="border-top-color: transparent"
-          ></div>
+            style="border-top-color: transparent"></div>
         </div>
       } @else if (areaOptions) {
         <apx-chart
-          [series]="areaOptions.series"
-          [chart]="areaOptions.chart"
-          [colors]="areaOptions.colors"
-          [stroke]="areaOptions.stroke"
-          [fill]="areaOptions.fill"
-          [grid]="areaOptions.grid"
-          [xaxis]="areaOptions.xaxis"
-          [yaxis]="areaOptions.yaxis"
-          [tooltip]="areaOptions.tooltip"
-          [dataLabels]="areaOptions.dataLabels"
-          [markers]="areaOptions.markers"
-        >
+          [series]="areaOptions.series" [chart]="areaOptions.chart"
+          [colors]="areaOptions.colors" [stroke]="areaOptions.stroke"
+          [fill]="areaOptions.fill" [grid]="areaOptions.grid"
+          [xaxis]="areaOptions.xaxis" [yaxis]="areaOptions.yaxis"
+          [tooltip]="areaOptions.tooltip" [dataLabels]="areaOptions.dataLabels"
+          [markers]="areaOptions.markers">
         </apx-chart>
       }
     </div>
 
-    <!-- Donut -->
-    <div
-      class="col-span-3 lg:col-span-1 bg-neutral-950 border border-neutral-600 rounded-2xl p-5"
-    >
+    <div class="md:col-span-1 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 text-zinc-700 dark:text-neutral-300">
       <div class="justify-center donut-chart">
         @if (donutOptions) {
           <apx-chart
-            [series]="donutOptions.series"
-            [chart]="donutOptions.chart"
-            [labels]="donutOptions.labels"
-            [colors]="donutOptions.colors"
-            [plotOptions]="donutOptions.plotOptions"
-            [legend]="donutOptions.legend"
-            [dataLabels]="donutOptions.dataLabels"
-          >
+            [series]="donutOptions.series" [chart]="donutOptions.chart"
+            [labels]="donutOptions.labels" [colors]="donutOptions.colors"
+            [plotOptions]="donutOptions.plotOptions" [legend]="donutOptions.legend"
+            [dataLabels]="donutOptions.dataLabels">
           </apx-chart>
         }
       </div>
-
       <div class="flex flex-col gap-2 mt-3">
         @for (item of currentPortfolio.allocation; track item.label) {
           <div class="flex items-center justify-between px-2">
-              <div class="flex items-center gap-2">
-                <span
-                  class="w-2.5 h-2.5 rounded-sm inline-block" [style.background-color]="item.color"
-                ></span>
-                <span>{{ item.label }}</span>
-              </div>
-              <span class="text-l" [class]="item.color">{{ item.percent }}%</span>
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-sm inline-block" [style.background-color]="item.color"></span>
+              <span>{{ item.label }}</span>
+            </div>
+            <span class="text-l" [class]="item.color">{{ item.percent }}%</span>
           </div>
         }
       </div>
     </div>
-  </div>
 
-  <!-- Tabla -->
-  <div class="grid grid-cols-3 gap-4 my-5">
-    <!-- tree map -->
-    <div class="col-span-3 lg:col-span-1 bg-neutral-950 border border-neutral-600 rounded-2xl p-5">
-      <p class="mb-3 text-neutral-300 font-medium">Distribución por activo</p>
-
+    <div class="md:col-span-2 lg:col-span-1 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3 text-zinc-700 dark:text-neutral-300 font-medium">Distribución por activo</p>
       @if (treemapOptions) {
         <div class="h-80 w-full">
-          <apx-chart
-            class="block w-full h-full gap-2"
-            [series]="treemapOptions.series"
-            [chart]="treemapOptions.chart"
-            [colors]="treemapOptions.colors"
-            [xaxis]="treemapOptions.xaxis"
-            [yaxis]="treemapOptions.yaxis"
-            [plotOptions]="treemapOptions.plotOptions"
-            [stroke]="treemapOptions.stroke"
-            [dataLabels]="treemapOptions.dataLabels"
-            [legend]="treemapOptions.legend"
-            [tooltip]="treemapOptions.tooltip"
-          ></apx-chart>
+          <apx-chart class="block w-full h-full gap-2"
+            [series]="treemapOptions.series" [chart]="treemapOptions.chart"
+            [colors]="treemapOptions.colors" [xaxis]="treemapOptions.xaxis"
+            [yaxis]="treemapOptions.yaxis" [plotOptions]="treemapOptions.plotOptions"
+            [stroke]="treemapOptions.stroke" [dataLabels]="treemapOptions.dataLabels"
+            [legend]="treemapOptions.legend" [tooltip]="treemapOptions.tooltip">
+          </apx-chart>
         </div>
       } @else {
-        <div class="h-80 bg-neutral-900 rounded-xl animate-pulse"></div>
+        <div class="grid grid-cols-3 grid-rows-4 gap-1.5 h-80 rounded-xl">
+          <div class="col-span-2 row-span-2 bg-zinc-100 dark:bg-neutral-900 rounded-lg animate-pulse"></div>
+          <div class="col-span-1 row-span-2 bg-zinc-200 dark:bg-neutral-700 rounded-lg animate-pulse"></div>
+          <div class="col-span-1 row-span-1 bg-zinc-200 dark:bg-neutral-600 rounded-lg animate-pulse"></div>
+          <div class="col-span-2 row-span-1 bg-zinc-100 dark:bg-neutral-800 rounded-lg animate-pulse"></div>
+          <div class="col-span-1 row-span-1 bg-zinc-200 dark:bg-neutral-700 rounded-lg animate-pulse"></div>
+          <div class="col-span-1 row-span-1 bg-zinc-200 dark:bg-neutral-600 rounded-lg animate-pulse"></div>
+          <div class="col-span-1 row-span-1 bg-zinc-200 dark:bg-neutral-600 rounded-lg animate-pulse"></div>
+        </div>
       }
     </div>
 
-    <div class="col-span-3 lg:col-span-2 bg-neutral-950 border border-neutral-600 rounded-2xl p-5 overflow-y-auto">
-      <p class="mb-3">Mis posiciones</p>
-
+    <div class="md:col-span-3 lg:col-span-2 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 overflow-y-auto">
+      <p class="mb-3 text-zinc-900 dark:text-white font-medium">Mis posiciones</p>
       <table mat-table [dataSource]="dataSource" matSort class="w-full bg-transparent">
-
         <ng-container matColumnDef="ticker">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header
-              class="text-neutral-400  uppercase bg-transparent border-b">
-            Ticker
-          </th>
-          <td mat-cell *matCellDef="let pos"
-              class="text-sm text-neutral-100 border-b py-3">
-            {{ pos.ticker }}
-          </td>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-zinc-500 dark:text-neutral-400 uppercase bg-transparent border-b border-zinc-400 dark:border-neutral-700">Ticker</th>
+          <td mat-cell *matCellDef="let pos" class="text-sm text-zinc-900 dark:text-neutral-100 border-b border-zinc-400 dark:border-neutral-700 py-3">{{ pos.ticker }}</td>
         </ng-container>
-
         <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header
-              class="text-neutral-400  uppercase bg-transparent border-b">
-            Nombre
-          </th>
-          <td mat-cell *matCellDef="let pos"
-              class="text-neutral-400 border-b py-3">
-            {{ pos.name }}
-          </td>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-zinc-500 dark:text-neutral-400 uppercase bg-transparent border-b border-zinc-400 dark:border-neutral-700">Nombre</th>
+          <td mat-cell *matCellDef="let pos" class="text-zinc-500 dark:text-neutral-400 border-b border-zinc-400 dark:border-neutral-700 py-3">{{ pos.name }}</td>
         </ng-container>
-
         <ng-container matColumnDef="price">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header
-              class="text-neutral-400  uppercase bg-transparent border-b">
-            Precio
-          </th>
-          <td mat-cell *matCellDef="let pos"
-              class="text-sm text-neutral-100 border-b py-3">
-            {{ pos.price }}
-          </td>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-zinc-500 dark:text-neutral-400 uppercase bg-transparent border-b border-zinc-400 dark:border-neutral-700">Precio</th>
+          <td mat-cell *matCellDef="let pos" class="text-sm text-zinc-900 dark:text-neutral-100 border-b border-zinc-400 dark:border-neutral-700 py-3">{{ pos.price }}</td>
         </ng-container>
-
         <ng-container matColumnDef="change">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header
-              class="text-neutral-400 uppercase bg-transparent border-b">
-            Rendimiento
-          </th>
-          <td mat-cell *matCellDef="let pos"
-              class=" border-b py-3"
-              [class.text-green-500]="pos.positive"
-              [class.text-red-500]="!pos.positive">
-            {{ pos.change }}
-          </td>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-zinc-500 dark:text-neutral-400 uppercase bg-transparent border-b border-zinc-400 dark:border-neutral-700">Rendimiento</th>
+          <td mat-cell *matCellDef="let pos" class="border-b border-zinc-400 dark:border-neutral-700 py-3"
+            [class.text-green-500]="pos.positive" [class.text-red-500]="!pos.positive">{{ pos.change }}</td>
         </ng-container>
-
         <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-transparent"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-            class="hover:bg-neutral-800 cursor-pointer" [routerLink]="['/public/symbol', row.ticker]"></tr>
+          class="hover:bg-zinc-100 dark:hover:bg-neutral-800 cursor-pointer" [routerLink]="['/public/symbol', row.ticker]"></tr>
       </table>
-
-      <mat-paginator
-        [pageSizeOptions]="[5, 10, 20]"
-        [pageSize]="5"
-        showFirstLastButtons
-        class="bg-transparent text-white">
-      </mat-paginator>
+      <mat-paginator [pageSizeOptions]="[5, 10, 20]" [pageSize]="5" showFirstLastButtons class="bg-transparent text-zinc-900 dark:text-white"></mat-paginator>
     </div>
   </div>
 
 } @else {
-  <!-- Skeleton cuando está cargando carteras -->
-  @if (isLoadingPortfolios) {
+
+  @if (isLoadingPortfolios || isLoadingInvestments()) {
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       @for (n of [1,2,3,4]; track n) {
-        <div class="bg-neutral-950 border border-neutral-800 rounded-2xl p-5">
-          <div class="h-4 w-20 bg-neutral-800 rounded animate-pulse mb-3"></div>
-          <div class="h-10 w-full bg-neutral-800 rounded-xl animate-pulse"></div>
+        <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-800 rounded-2xl p-5">
+          <div class="h-4 w-20 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse mb-3"></div>
+          <div class="h-10 w-full bg-zinc-300 dark:bg-neutral-800 rounded-xl animate-pulse"></div>
         </div>
       }
     </div>
-
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-      <!-- Gráfico area skeleton -->
-      <div class="lg:col-span-2 bg-neutral-950 border border-neutral-800 rounded-2xl p-5">
+      <div class="lg:col-span-2 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-800 rounded-2xl p-5">
         <div class="flex justify-end gap-2 mb-4">
           @for (n of [1,2,3]; track n) {
-            <div class="h-8 w-12 bg-neutral-800 rounded animate-pulse"></div>
+            <div class="h-8 w-12 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
           }
         </div>
-        <div class="w-full h-64 bg-neutral-800 rounded-xl animate-pulse"></div>
+        <div class="w-full h-64 bg-zinc-300 dark:bg-neutral-800 rounded-xl animate-pulse"></div>
       </div>
-
-      <!-- Donut skeleton -->
-      <div class="bg-neutral-950 border border-neutral-800 rounded-2xl p-5">
-        <div class="w-full h-48 bg-neutral-800 rounded-xl animate-pulse mb-4"></div>
+      <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-800 rounded-2xl p-5">
+        <div class="w-full h-48 bg-zinc-300 dark:bg-neutral-800 rounded-xl animate-pulse mb-4"></div>
         <div class="space-y-2">
           @for (n of [1,2,3]; track n) {
             <div class="flex justify-between">
               <div class="flex items-center gap-2">
-                <div class="h-3 w-3 bg-neutral-800 rounded animate-pulse"></div>
-                <div class="h-4 w-20 bg-neutral-800 rounded animate-pulse"></div>
+                <div class="h-3 w-3 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
+                <div class="h-4 w-20 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
               </div>
-              <div class="h-4 w-8 bg-neutral-800 rounded animate-pulse"></div>
+              <div class="h-4 w-8 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
             </div>
           }
         </div>
       </div>
     </div>
-
-    <!-- Tabla skeleton -->
-    <div class="col-span-2 bg-neutral-950 border border-neutral-800 rounded-2xl p-5">
-      <div class="h-5 w-32 bg-neutral-800 rounded animate-pulse mb-4"></div>
-
-      <!-- Headers -->
-      <div class="grid grid-cols-[80px_1fr_80px_80px] gap-4 mb-2 text-sm font-medium text-neutral-400">
-        @for (header of ['Ticker', 'Nombre', 'Precio', 'Rendimiento']; track header) {
-          <div class="h-8 bg-neutral-800 rounded animate-pulse"></div>
+    <div class="grid grid-cols-3 gap-4 my-5">
+      <div class="col-span-3 lg:col-span-1 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-5">
+        <div class="h-5 w-32 bg-zinc-100 dark:bg-neutral-800 rounded animate-pulse mb-6"></div>
+        <div class="grid grid-cols-3 grid-rows-4 gap-1.5 h-80 rounded-xl">
+          <div class="col-span-2 row-span-2 bg-zinc-400 dark:bg-neutral-900 rounded-lg animate-pulse"></div>
+          <div class="col-span-1 row-span-2 bg-zinc-300 dark:bg-neutral-700 rounded-lg animate-pulse"></div>
+          <div class="col-span-1 row-span-1 bg-zinc-300 dark:bg-neutral-600 rounded-lg animate-pulse"></div>
+          <div class="col-span-2 row-span-1 bg-zinc-300 dark:bg-neutral-800 rounded-lg animate-pulse"></div>
+          <div class="col-span-1 row-span-1 bg-zinc-200 dark:bg-neutral-700 rounded-lg animate-pulse"></div>
+          <div class="col-span-1 row-span-1 bg-zinc-200 dark:bg-neutral-600 rounded-lg animate-pulse"></div>
+          <div class="col-span-1 row-span-1 bg-zinc-300 dark:bg-neutral-600 rounded-lg animate-pulse"></div>
+        </div>
+      </div>
+      <div class="col-span-3 lg:col-span-2 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-800 rounded-2xl p-5">
+        <div class="h-5 w-32 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse mb-4"></div>
+        <div class="grid grid-cols-[80px_1fr_80px_80px] gap-4 mb-2">
+          @for (n of [1,2,3,4]; track n) {
+            <div class="h-8 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
+          }
+        </div>
+        @for (n of [1,2,3,4]; track n) {
+          <div class="grid grid-cols-[80px_1fr_80px_80px] gap-4 py-3 border-b border-zinc-400 dark:border-neutral-900 last:border-b-0">
+            <div class="h-10 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
+            <div class="h-10 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
+            <div class="h-10 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
+            <div class="h-10 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
+          </div>
         }
       </div>
+    </div>
 
-      <!-- Rows -->
-      @for (n of [1,2,3]; track n) {
-        <div class="grid grid-cols-[80px_1fr_80px_80px] gap-4 py-3 border-b border-neutral-900 last:border-b-0">
-          <div class="h-10 bg-neutral-800 rounded animate-pulse"></div>
-          <div class="h-10 bg-neutral-800 rounded animate-pulse"></div>
-          <div class="h-10 bg-neutral-800 rounded animate-pulse"></div>
-          <div class="h-10 bg-neutral-800 rounded animate-pulse"></div>
+  } @else {
+    <div class="relative">
+
+      <div class="pointer-events-none select-none p-2">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          @for (n of [1,2,3,4]; track n) {
+            <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-800 rounded-2xl p-5">
+              <div class="h-4 w-20 bg-zinc-100 dark:bg-neutral-800 rounded mb-3"></div>
+              <div class="h-10 w-full bg-zinc-100 dark:bg-neutral-800 rounded-xl"></div>
+            </div>
+          }
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+          <div class="lg:col-span-2 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-800 rounded-2xl p-5">
+            <div class="flex justify-end gap-2 mb-4">
+              @for (n of [1,2,3]; track n) {
+                <div class="h-8 w-12 bg-zinc-100 dark:bg-neutral-800 rounded"></div>
+              }
+            </div>
+            <div class="w-full h-64 bg-zinc-100 dark:bg-neutral-800 rounded-xl"></div>
+          </div>
+          <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-800 rounded-2xl p-5">
+            <div class="w-full h-48 bg-zinc-100 dark:bg-neutral-800 rounded-xl mb-4"></div>
+            <div class="space-y-2">
+              @for (n of [1,2,3]; track n) {
+                <div class="flex justify-between">
+                  <div class="flex items-center gap-2">
+                    <div class="h-3 w-3 bg-zinc-100 dark:bg-neutral-800 rounded"></div>
+                    <div class="h-4 w-20 bg-zinc-100 dark:bg-neutral-800 rounded"></div>
+                  </div>
+                  <div class="h-4 w-8 bg-zinc-100 dark:bg-neutral-800 rounded"></div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-4 my-5">
+          <div class="col-span-3 lg:col-span-1 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-5">
+            <div class="h-5 w-32 bg-zinc-100 dark:bg-neutral-800 rounded mb-6"></div>
+            <div class="grid grid-cols-3 grid-rows-4 gap-1.5 h-80 rounded-xl">
+              <div class="col-span-2 row-span-2 bg-zinc-100 dark:bg-neutral-900 rounded-lg"></div>
+              <div class="col-span-1 row-span-2 bg-zinc-200 dark:bg-neutral-700 rounded-lg"></div>
+              <div class="col-span-1 row-span-1 bg-zinc-200 dark:bg-neutral-600 rounded-lg"></div>
+              <div class="col-span-2 row-span-1 bg-zinc-100 dark:bg-neutral-800 rounded-lg"></div>
+              <div class="col-span-1 row-span-1 bg-zinc-200 dark:bg-neutral-700 rounded-lg"></div>
+              <div class="col-span-1 row-span-1 bg-zinc-200 dark:bg-neutral-600 rounded-lg"></div>
+              <div class="col-span-1 row-span-1 bg-zinc-200 dark:bg-neutral-600 rounded-lg"></div>
+            </div>
+          </div>
+          <div class="col-span-3 lg:col-span-2 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-800 rounded-2xl p-5">
+            <div class="h-5 w-32 bg-zinc-100 dark:bg-neutral-800 rounded mb-4"></div>
+            <div class="grid grid-cols-[80px_1fr_80px_80px] gap-4 mb-2">
+              @for (n of [1,2,3,4]; track n) {
+                <div class="h-8 bg-zinc-100 dark:bg-neutral-800 rounded"></div>
+              }
+            </div>
+            @for (n of [1,2,3,4,5]; track n) {
+              <div class="grid grid-cols-[80px_1fr_80px_80px] gap-4 py-3 border-b border-zinc-400 dark:border-neutral-900 last:border-b-0">
+                <div class="h-10 bg-zinc-100 dark:bg-neutral-800 rounded"></div>
+                <div class="h-10 bg-zinc-100 dark:bg-neutral-800 rounded"></div>
+                <div class="h-10 bg-zinc-100 dark:bg-neutral-800 rounded"></div>
+                <div class="h-10 bg-zinc-100 dark:bg-neutral-800 rounded"></div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="absolute inset-0 backdrop-blur-sm"></div>
+
+      @if (!currentPortfolio) {
+        <div class="absolute inset-0 flex items-start justify-center z-40 mt-20">
+          <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-700 rounded-2xl p-10 flex flex-col items-center text-center max-w-md w-full mx-4 shadow-2xl">
+            <h2 class="text-2xl font-ibm font-bold text-zinc-900 dark:text-neutral-100 mb-2">Sin cartera seleccionada</h2>
+            <p class="text-zinc-500 dark:text-neutral-400 mb-5">Crea tu primera cartera para ver tu dashboard.</p>
+            <a routerLink="/app/wallets"
+              class="px-8 py-2 text-white rounded-xl font-medium font-ibm hover:opacity-80 transition-opacity"
+              [style.background-color]="preferencesService.colorHex()">
+              Crear cartera
+            </a>
+          </div>
+        </div>
+      } @else if (!hasInvestments()) {
+        <div class="absolute inset-0 flex items-start justify-center z-40 mt-20">
+          <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-700 rounded-2xl p-10 flex flex-col items-center text-center max-w-md w-full mx-4 shadow-2xl">
+            <h2 class="text-2xl font-ibm font-bold text-zinc-900 dark:text-neutral-100 mb-2">Cartera sin inversiones</h2>
+            <p class="text-zinc-500 dark:text-neutral-400 mb-5">Añade inversiones a tu cartera para ver el dashboard.</p>
+            <a [routerLink]="['/app/wallets', currentPortfolio.id]"
+              class="px-8 py-2 text-white rounded-xl font-medium font-ibm hover:opacity-80 transition-opacity"
+              [style.background-color]="preferencesService.colorHex()">
+              Añadir inversiones
+            </a>
+          </div>
         </div>
       }
-    </div>
 
-  <!-- Sin carteras -->
-  } @else {
-    <div class="col-span-full flex flex-col items-center justify-center py-20 text-center bg-neutral-950 border border-neutral-600 rounded-2xl">
-      <h2 class="text-2xl">No tienes carteras</h2>
-      <p class="text-neutral-400 mt-1">
-        Crea tu primera cartera para empezar a gestionar tus inversiones y ver tu dashboard.
-      </p>
-      <a routerLink="/app/wallets" class="mt-5 px-6 py-2 bg-orange-500 text-white rounded-xl font-medium hover:opacity-80 cursor-pointer">
-        Crear cartera
-      </a>
     </div>
   }
+
 }

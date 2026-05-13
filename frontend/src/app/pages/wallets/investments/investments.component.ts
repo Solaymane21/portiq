@@ -302,7 +302,7 @@ export class InvestmentsComponent implements OnInit {
   }
 
   irAWallets() {
-    this.router.navigate(['/app/wallets']);
+    window.history.back()
   }
 
   verHistorialTrades() {

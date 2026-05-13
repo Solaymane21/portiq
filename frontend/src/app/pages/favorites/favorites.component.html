@@ -1,8 +1,8 @@
 <div class="flex justify-between items-center mb-6">
-  <h1 class="text-3xl font-ibm">Favoritos</h1>
+  <h1 class="text-3xl font-ibm text-zinc-900 dark:text-white">Favoritos</h1>
   <div class="relative w-fit">
     <select
-      class="appearance-none bg-neutral-950 border border-neutral-600 rounded-xl px-3 py-2 pr-8 outline-none cursor-pointer"
+      class="appearance-none bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-xl px-3 py-2 pr-8 outline-none cursor-pointer text-zinc-800 dark:text-neutral-300"
       [ngModel]="filter()"
       (ngModelChange)="filter.set($event)"
     >
@@ -19,10 +19,9 @@
   </div>
 </div>
 
-<!-- buscador para añadir favoritos -->
 <div class="relative mb-6">
-  <div class="flex items-center gap-2 bg-neutral-950 border border-neutral-600 rounded-full px-4 py-2 focus-within:border-orange-500">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 text-neutral-400 shrink-0">
+  <div class="flex items-center gap-2 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-full px-4 py-2 focus-within:border-orange-500">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 text-zinc-500 dark:text-neutral-400 shrink-0">
       <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
     </svg>
     <input
@@ -31,13 +30,13 @@
       (ngModelChange)="onSearch($event)"
       (focus)="showDropdown.set(true)"
       placeholder="Busca un activo para añadir a favoritos..."
-      class="flex-1 bg-transparent outline-none text-neutral-100 placeholder:text-neutral-500 text-sm"
+      class="flex-1 bg-transparent outline-none text-zinc-900 dark:text-neutral-100 placeholder:text-zinc-500 dark:placeholder:text-neutral-500 text-sm"
     />
     @if (isSearching()) {
-      <div class="w-5 h-5 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin shrink-0"></div>
+      <div class="w-5 h-5 border-2 border-zinc-500 dark:border-neutral-400 border-t-transparent rounded-full animate-spin shrink-0"></div>
     }
     @if(!isSearching() && searchResults().length > 0) {
-      <div class="text-neutral-400 cursor-pointer" (click)="clearSearch()">
+      <div class="text-zinc-500 dark:text-neutral-400 cursor-pointer" (click)="clearSearch()">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
           <path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
         </svg>
@@ -45,23 +44,22 @@
     }
   </div>
 
-  <!-- Dropdown resultados -->
   @if (showDropdown() && searchResults().length > 0) {
-    <div class="absolute top-full left-0 right-0 mt-1 bg-neutral-900 border border-neutral-600 rounded-xl overflow-hidden z-50 shadow-xl">
+    <div class="absolute top-full left-0 right-0 mt-1 bg-zinc-100 dark:bg-neutral-900 border border-zinc-400 dark:border-neutral-600 rounded-xl overflow-hidden z-50 shadow-xl">
       @for (result of searchResults(); track result.symbol) {
         <div
-          class="flex items-center justify-between px-4 py-3 hover:bg-neutral-800 cursor-pointer"
+          class="flex items-center justify-between px-4 py-3 hover:bg-zinc-200 dark:hover:bg-neutral-800 cursor-pointer"
           (click)="addToFavorites(result)"
         >
           <div class="flex items-center gap-3">
             @if (result.image_url) {
               <img [src]="result.image_url" class="h-7 w-7 rounded-full object-cover" />
             } @else {
-              <div class="h-7 w-7 rounded-full bg-neutral-600"></div>
+              <div class="h-7 w-7 rounded-full bg-zinc-400 dark:bg-neutral-600"></div>
             }
             <div>
-              <p class="text-sm text-neutral-100">{{ result.name }}</p>
-              <p class="text-xs text-neutral-400 uppercase">{{ result.symbol }}</p>
+              <p class="text-sm text-zinc-900 dark:text-neutral-100">{{ result.name }}</p>
+              <p class="text-xs text-zinc-500 dark:text-neutral-400 uppercase">{{ result.symbol }}</p>
             </div>
           </div>
           <div class="flex items-center gap-2 text-orange-500">
@@ -74,10 +72,9 @@
     </div>
   }
 
-  <!-- Sin resultados -->
   @if (showDropdown() && searchQuery.length > 1 && searchResults().length === 0 && !isSearching()) {
-    <div class="absolute top-full left-0 right-0 mt-1 bg-neutral-900 border border-neutral-600 rounded-xl px-4 py-3 z-50">
-      <p class="text-sm text-neutral-400">No se encontraron activos para "{{ searchQuery }}"</p>
+    <div class="absolute top-full left-0 right-0 mt-1 bg-zinc-100 dark:bg-neutral-900 border border-zinc-400 dark:border-neutral-600 rounded-xl px-4 py-3 z-50">
+      <p class="text-sm text-zinc-500 dark:text-neutral-400">No se encontraron activos para "{{ searchQuery }}"</p>
     </div>
   }
 </div>
@@ -87,7 +84,7 @@
   @if (isFetching()) {
     @for (n of [1, 2, 3]; track n) {
       <div
-        class="bg-neutral-950 border border-neutral-800 rounded-2xl p-5"
+        class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-200 dark:border-neutral-800 rounded-2xl p-5"
         [ngClass]="{
           'hidden md:block': n === 2,
           'hidden lg:block': n === 3
@@ -95,46 +92,46 @@
       >
         <div class="flex justify-between items-center">
           <div class="flex items-center gap-2">
-            <div class="h-10 w-10 rounded-full bg-neutral-800 animate-pulse shrink-0"></div>
+            <div class="h-10 w-10 rounded-full bg-zinc-300 dark:bg-neutral-800 animate-pulse shrink-0"></div>
             <div class="flex flex-col gap-1.5">
-              <div class="h-4 w-24 bg-neutral-800 rounded animate-pulse"></div>
-              <div class="h-3 w-12 bg-neutral-800 rounded animate-pulse"></div>
+              <div class="h-4 w-24 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
+              <div class="h-3 w-12 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
             </div>
           </div>
-          <div class="h-6 w-6 rounded bg-neutral-800 animate-pulse"></div>
+          <div class="h-6 w-6 rounded bg-zinc-300 dark:bg-neutral-800 animate-pulse"></div>
         </div>
         <div class="flex justify-between items-center mt-3 gap-2">
           <div class="flex flex-col gap-1.5">
-            <div class="h-7 w-28 bg-neutral-800 rounded animate-pulse"></div>
-            <div class="h-4 w-16 bg-neutral-800 rounded animate-pulse"></div>
+            <div class="h-7 w-28 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
+            <div class="h-4 w-16 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
           </div>
-          <div class="w-32 h-16 bg-neutral-800 rounded-lg animate-pulse shrink-0"></div>
+          <div class="w-32 h-16 bg-zinc-300 dark:bg-neutral-800 rounded-lg animate-pulse shrink-0"></div>
         </div>
       </div>
     }
 
   } @else if (filteredFavorites().length === 0) {
-    <div class="col-span-3 bg-neutral-950 border border-neutral-600 rounded-2xl p-10 text-center">
-      <p class="text-2xl">
+    <div class="col-span-3 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-10 text-center">
+      <p class="text-2xl text-zinc-900 dark:text-white">
         <p class="text-2xl">
           No tienes favoritos
           @if (filter() !== 'all') {
             de tipo {{ assetLabels[filter()] }}
           }
         </p>
-      <p class="text-neutral-400 mt-1">Usa el buscador para añadir activos a favoritos</p>
+      <p class="text-zinc-500 dark:text-neutral-400 mt-1">Usa el buscador para añadir activos a favoritos</p>
     </div>
   } @else {
     @for (fav of filteredFavorites(); track fav.symbol_id) {
-      <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-5 font-ibm">
+      <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 font-ibm">
         <div class="flex justify-between items-center">
           <div class="flex items-center gap-2">
             @if (fav.image_url) {
-              <img [src]="fav.image_url" class="h-10 w-10 rounded-full object-cover" />
+              <img [src]="fav.image_url" class="h-10 w-10 bg-neutral-950 p-0.5 dark:bg-none rounded-full object-cover" />
             }
             <div>
-              <p>{{ fav.name }}</p>
-              <p class="text-sm text-neutral-400">{{ fav.symbol }}</p>
+              <p class="text-zinc-900 dark:text-white">{{ fav.name }}</p>
+              <p class="text-sm text-zinc-500 dark:text-neutral-400">{{ fav.symbol }}</p>
             </div>
           </div>
           <button class="text-orange-500 cursor-pointer" (click)="removeFromFavorites(fav.symbol_id)">
@@ -153,10 +150,10 @@
         <div class="flex justify-between items-center mt-3 gap-2 min-w-0">
           <div class="min-w-0 flex-1">
             @if (loadingPrices()) {
-              <div class="h-7 w-24 bg-neutral-800 rounded-lg animate-pulse mb-1"></div>
-              <div class="h-4 w-16 bg-neutral-800 rounded-lg animate-pulse"></div>
+              <div class="h-7 w-24 bg-zinc-200 dark:bg-neutral-800 rounded-lg animate-pulse mb-1"></div>
+              <div class="h-4 w-16 bg-zinc-200 dark:bg-neutral-800 rounded-lg animate-pulse"></div>
             } @else {
-              <p class="text-xl font-medium truncate">{{ getPrice(fav.symbol) }}</p>
+              <p class="text-xl font-medium truncate text-zinc-900 dark:text-white">{{ getPrice(fav.symbol) }}</p>
               <p class="text-sm mt-0.5"
                 [ngClass]="{
                   'text-green-500': getChange(fav.symbol) >= 0,
@@ -180,9 +177,9 @@
                 [xaxis]="getSparkline(fav.symbol_id).xaxis"
                 [yaxis]="getSparkline(fav.symbol_id).yaxis"
               ></apx-chart>
-              <p class="text-xs text-neutral-400">Gráfica del último mes</p>
+              <p class="text-xs text-zinc-500 dark:text-neutral-400">Gráfica del último mes</p>
             } @else {
-              <div class="w-full h-full bg-neutral-800 rounded-lg animate-pulse"></div>
+              <div class="w-full h-full bg-zinc-200 dark:bg-neutral-800 rounded-lg animate-pulse"></div>
             }
           </div>
         </div>

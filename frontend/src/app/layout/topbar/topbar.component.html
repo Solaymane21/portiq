@@ -1,21 +1,21 @@
-<nav class="w-full bg-neutral-950 border-b border-neutral-600">
+<nav class="w-full bg-zinc-50 dark:bg-neutral-950 border-b border-zinc-400 dark:border-neutral-600">
     <div class="flex justify-between items-center h-16 px-6 md:px-14">
         <div class="relative flex-1 max-w-xs">
             <button
                 type="button"
                 (click)="openAssetSearch()"
-                class="w-fit bg-neutral-800 rounded-full py-1.5 px-2
+                class="w-fit bg-zinc-200 dark:bg-neutral-800 rounded-full py-1.5 px-2
                         flex items-center justify-between gap-5
-                        text-neutral-300 hover:opacity-80"
+                        text-zinc-700 dark:text-neutral-300 hover:opacity-80"
                 >
-                <span class="flex items-center gap-2 min-w-0">
+                <span class="flex items-center gap-2 min-w-0 text-zinc-700 dark:text-neutral-300">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5 shrink-0">
                     <path fill-rule="evenodd"
                         d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z"
                         clip-rule="evenodd" />
                     </svg>
                 </span>
-                <span class="hidden lg:flex items-center gap-1 rounded-md border border-neutral-400 px-2 py-0.5 text-xs text-neutral-300">
+                <span class="hidden lg:flex items-center gap-1 rounded-md border border-zinc-500 dark:border-neutral-400 px-2 py-0.5 text-xs text-zinc-700 dark:text-neutral-300">
                     <span>Ctrl + k</span>
                 </span>
             </button>
@@ -24,22 +24,31 @@
             <div>
                 @if (isPremium()) {
                     <span class="badge-premium rounded-full py-1 px-3 border border-orange-500">
-                        <span class="font-ibm text font-extrabold ">Pro</span>
+                        <span class="font-ibm text font-extrabold text-zinc-900 dark:text-white">Pro</span>
                     </span>
                 }
                 @else {
-                    <a routerLink="/app/settings" fragment="subscription" class="text hover:underline hover:cursor-pointer">¿Hacerse Pro?</a>
+                    <a routerLink="/app/settings" fragment="subscription" class="hidden md:block text hover:underline hover:cursor-pointer">¿Hacerse Pro?</a>
                 }
             </div>
-            <div class="bg-neutral-800 p-2 rounded text-neutral-300 hover:cursor-pointer hover:opacity-90">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 ">
-                    <path fill-rule="evenodd"
-                        d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 0 1-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 1 1-7.48 0 24.585 24.585 0 0 1-4.831-1.244.75.75 0 0 1-.298-1.205A8.217 8.217 0 0 0 5.25 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z"
-                        clip-rule="evenodd" />
+            <div (click)="updateMode()" class="bg-zinc-200 dark:bg-neutral-800 p-2 rounded text-zinc-700 dark:text-neutral-300 hover:cursor-pointer hover:opacity-90">
+              @if (preferencesService.theme() === 'light') {
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+                </svg>
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+                </svg>
+              }
+            </div>
+            <div class="bg-zinc-200 dark:bg-neutral-800 p-2 rounded text-zinc-700 dark:text-neutral-300 hover:cursor-pointer hover:opacity-90">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                 </svg>
             </div>
             <div
-              class="w-10 h-10 rounded-full overflow-hidden cursor-pointer"
+              class="w-10 h-10 rounded-full overflow-hidden cursor-pointer border border-zinc-200 dark:border-neutral-600"
               routerLink="/app/settings">
                 <img src="{{ avatar() }}" alt="Avatar del usuario"
                     class="w-full h-full object-cover"
@@ -61,10 +70,10 @@
       [cdkTrapFocusAutoCapture]="true"
       role="dialog"
       aria-modal="true"
-      class="relative w-full max-w-2xl rounded-2xl border border-neutral-700 bg-neutral-950 overflow-hidden mx-6"
+      class="relative w-full max-w-2xl rounded-2xl border border-zinc-200 dark:border-neutral-700 bg-zinc-50 dark:bg-neutral-950 overflow-hidden mx-6 shadow-xl"
     >
-      <div class="flex items-center flex-row-reverse md:flex-row gap-3 border-b border-neutral-950 px-4 py-3">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5 text-neutral-300">
+      <div class="flex items-center flex-row gap-3 border-b border-zinc-200 dark:border-neutral-950 px-4 py-3">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5 text-zinc-700 dark:text-neutral-300">
           <path fill-rule="evenodd"
             d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z"
             clip-rule="evenodd" />
@@ -80,44 +89,49 @@
           (keydown.arrowUp)="moveSelection(-1)"
           (keydown.enter)="openSelectedAsset()"
           placeholder="Escribe un ticker, nombre o crypto..."
-          class="w-full bg-neutral-950 outline-none text-white placeholder:text-neutral-300"
+          class="w-full bg-transparent outline-none text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-neutral-400"
         >
 
-        <span class="hidden md:block text-xs text-neutral-300">ESC</span>
+        <span class="hidden lg:block text-xs text-zinc-500 dark:text-neutral-300">ESC</span>
+        <span (click)="closeAssetSearch()" class="block lg:hidden text-xs text-zinc-500 dark:text-neutral-300">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </span>
       </div>
 
       <div class="max-h-[420px] overflow-y-auto p-2">
         @if (isSearching()) {
-          <div class="px-3 py-6 text-sm text-neutral-300">Buscando activos...</div>
+          <div class="px-3 py-6 text-sm text-zinc-700 dark:text-neutral-300">Buscando activos...</div>
         } @else {
           @for (item of searchResults(); track item.symbol; let i = $index) {
             <button
               type="button"
               (click)="selectAsset(item)"
               class="w-full flex items-center justify-between rounded-xl px-3 py-3 text-left transition-colors"
-              [ngClass]="i === selectedIndex ? 'bg-neutral-800 text-white' : 'text-neutral-300 hover:bg-neutral-900'"
+              [ngClass]="i === selectedIndex ? 'bg-zinc-200 dark:bg-neutral-800 text-zinc-900 dark:text-white' : 'text-zinc-700 dark:text-neutral-300 hover:bg-zinc-200 dark:hover:bg-neutral-900'"
             >
               <div class="flex items-center gap-3 min-w-0">
                 @if (item.image_url) {
                   <img [src]="item.image_url" [alt]="item.name" class="size-8 rounded-full object-cover">
                 } @else {
-                  <div class="size-8 rounded-full bg-neutral-800"></div>
+                  <div class="size-8 rounded-full bg-zinc-200 dark:bg-neutral-800"></div>
                 }
 
                 <div class="min-w-0">
                   <p class="truncate font-medium">{{ item.name }}</p>
-                  <p class="truncate text-xs text-neutral-500 uppercase">
+                  <p class="truncate text-xs text-zinc-500 dark:text-neutral-400 uppercase">
                     {{ item.symbol }} · {{ item.asset_type }}
                   </p>
                 </div>
               </div>
 
-              <span class="text-xs text-neutral-500">Enter</span>
+              <span class="text-xs text-zinc-500 dark:text-neutral-400" [class.invisible]="i !== selectedIndex">Enter</span>
             </button>
           }
 
           @if (!isSearching() && searchResults().length === 0 && assetQuery.trim().length > 0) {
-            <div class="px-3 py-6 text-sm text-neutral-400">
+            <div class="px-3 py-6 text-sm text-zinc-500 dark:text-neutral-400">
               No se encontraron activos.
             </div>
           }

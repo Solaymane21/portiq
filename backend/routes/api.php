@@ -15,6 +15,7 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\AlertController;
+use App\Http\Controllers\NotificationController;
 
 
 Route::prefix('auth')->group(function() {
@@ -83,6 +84,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/favorites', [FavoriteController::class, 'store']);
     Route::delete('/favorites/{symbolId}', [FavoriteController::class, 'destroy']);
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+
 });
 
 //Prices

@@ -76,4 +76,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Alert::class);
     }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(\App\Models\Notification::class);
+    }
 }

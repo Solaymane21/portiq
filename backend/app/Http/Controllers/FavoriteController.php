@@ -16,13 +16,13 @@ class FavoriteController extends Controller
             ->with('symbol')
             ->get()
             ->map(fn($f) => [
-                'id'         => $f->id,
-                'symbol_id'  => $f->symbol_id,
-                'symbol'     => $f->symbol->symbol,
-                'name'       => $f->symbol->name,
+                'id' => $f->id,
+                'symbol_id' => $f->symbol_id,
+                'symbol' => $f->symbol->symbol,
+                'name' => $f->symbol->name,
                 'image_url'  => $f->symbol->image_url,
                 'asset_type' => $f->symbol->asset_type,
-                'api_id'     => $f->symbol->api_id,
+                'api_id' => $f->symbol->api_id,
             ]);
 
         return response()->json($favorites);
@@ -31,10 +31,10 @@ class FavoriteController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'symbol'     => 'required|string',
-            'name'       => 'required|string',
-            'api_id'     => 'required|string',
-            'image_url'  => 'nullable|string',
+            'symbol' => 'required|string',
+            'name' => 'required|string',
+            'api_id' => 'required|string',
+            'image_url' => 'nullable|string',
             'asset_type' => 'required|in:crypto,stock,etf',
         ]);
 
@@ -42,7 +42,7 @@ class FavoriteController extends Controller
 
         // Stocks/ETFs sin imagen, buscar en FMP
         if (!$imageUrl && in_array($request->asset_type, ['stock', 'etf'])) {
-            $fmpUrl   = 'https://financialmodelingprep.com/image-stock/' . strtoupper($request->symbol) . '.png';
+            $fmpUrl   = 'https://financialmodelingprep.com/image-stock/' . strtoupper($request->symbol) .'.png';
             $response = Http::timeout(5)->get($fmpUrl);
 
             if ($response->successful() && str_starts_with($response->header('Content-Type'), 'image/')) {
@@ -53,10 +53,10 @@ class FavoriteController extends Controller
         $symbol = Symbol::firstOrCreate(
             ['symbol' => strtoupper($request->symbol)],
             [
-                'name'         => $request->name,
-                'api_id'       => $request->api_id,
-                'image_url'    => $imageUrl,
-                'asset_type'   => $request->asset_type,
+                'name' => $request->name,
+                'api_id' => $request->api_id,
+                'image_url' => $imageUrl,
+                'asset_type' => $request->asset_type,
                 'last_updated' => Carbon::now(),
             ]
         );

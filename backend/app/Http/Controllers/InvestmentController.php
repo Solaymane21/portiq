@@ -81,7 +81,7 @@ class InvestmentController extends Controller
 
         return response()->json([
             'message' => 'Posición guardada con éxito',
-            'investment' => $investment->load('symbol'),
+            'investment'=> $investment->load('symbol'),
         ], 201);
     }
 

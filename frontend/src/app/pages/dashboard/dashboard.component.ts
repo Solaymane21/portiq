@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewChild, AfterViewInit, signal, effect } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, signal, effect } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { MarketService } from '../../services/market.service';
@@ -16,6 +16,7 @@ import { PreferencesService } from '../../services/preferences.service';
 
 
 
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -23,7 +24,8 @@ import { PreferencesService } from '../../services/preferences.service';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
-export class DashboardComponent implements OnInit, AfterViewInit  {
+export class DashboardComponent implements OnInit {
+
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -33,37 +35,42 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   private investmentService = inject(InvestmentService);
   preferencesService  = inject(PreferencesService);
 
+
   hasInvestments = signal<boolean>(false)
   isLoadingInvestments = signal<boolean>(true)
+
 
   //Tabla
   displayedColumns = ['ticker', 'name', 'price', 'change'];
   dataSource = new MatTableDataSource<PortfolioPosition>([]);
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
 
-
-  ngAfterViewInit(): void {
-    setTimeout(()=>{
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
-    this.dataSource.sortingDataAccessor = (item: PortfolioPosition, sortHeaderId: string) => {
-      switch (sortHeaderId) {
-        case 'price':
-          return parseFloat(String(item.price).replace(/[^0-9.-]/g, '')) || 0;
-        case 'change':
-          return parseFloat(String(item.change).replace(/[^0-9.-]/g, '')) || 0;
-        case 'ticker':
-          return item.ticker?.toLowerCase() ?? '';
-        case 'name':
-          return item.name?.toLowerCase() ?? '';
-        default:
-          return (item as any)[sortHeaderId];
-        }
-      };
-    });
+  @ViewChild(MatPaginator) set paginator(paginator: MatPaginator) {
+    if (paginator) {
+      this.dataSource.paginator = paginator;
+    }
   }
+
+  @ViewChild(MatSort) set sort(sort: MatSort) {
+    if (sort) {
+      this.dataSource.sort = sort;
+      this.dataSource.sortingDataAccessor = (item: PortfolioPosition, sortHeaderId: string) => {
+        switch (sortHeaderId) {
+          case 'price':
+            return parseFloat(String(item.price).replace(/[^0-9.-]/g, '')) || 0;
+          case 'change':
+            return parseFloat(String(item.change).replace(/[^0-9.-]/g, '')) || 0;
+          case 'ticker':
+            return item.ticker?.toLowerCase() ?? '';
+          case 'name':
+            return item.name?.toLowerCase() ?? '';
+          default:
+            return (item as any)[sortHeaderId];
+          }
+        };
+      }
+    }
+
 
 
   // Carteras
@@ -71,11 +78,9 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   selectedPortfolioId: number = 0;
   isLoadingPortfolios = true;
 
-
   get currentPortfolio(): PortfolioDashboard | undefined {
     return this.portfolios.find(p => p.id === this.selectedPortfolioId) ?? this.portfolios[0];
   }
-
 
   // Chart
   selectedPeriod = '1D';
@@ -84,18 +89,22 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   areaOptions: any = null;
   isLoading = false;
 
+
   // treemap
   treemapOptions: any = null;
   private dashboardInvestments: any[] = [];
   private dashboardTotalValue = 0;
 
 
+
   marketService = inject(MarketService);
   collapsed = signal(false)
+
 
   private get primaryColor(): string {
     return this.preferencesService.colorHex();
   }
+
 
   constructor() {
     // cuando cambia el color, reconstruye ambas gráficas
@@ -109,6 +118,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
     });
   }
 
+
   private rebuildAreaColor(): void {
     if (!this.areaOptions) return;
     this.areaOptions = {
@@ -116,6 +126,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       colors: [this.primaryColor]
     };
   }
+
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
@@ -134,10 +145,13 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
     });
 
 
+
     this.portfolioService.getPortfolios().subscribe({
       next: (carteras: any[]) => {
 
+
         const defaultCarteras = carteras.find(c => c.is_default) ?? carteras[0];
+
 
         if (!defaultCarteras) {
           this.isLoadingPortfolios = false;
@@ -145,7 +159,9 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
           return
         }
 
+
         this.selectedPortfolioId = defaultCarteras.id;
+
 
         this.portfolios = carteras.map(c => ({
           id: c.id,
@@ -160,6 +176,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
           positions: []
         }));
 
+
         this.cargarInvestmentsDashboard(this.selectedPortfolioId);
         
         this.isLoadingPortfolios = false;
@@ -173,15 +190,18 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   }
 
 
+
   onPortfolioChange(portfolioId: number): void {
     this.selectedPortfolioId = +portfolioId;
     this.areaOptions = null;
     this.treemapOptions = null
     this.donutOptions = null;
     this.dataSource.data = [];
+    this.dataSource.paginator?.firstPage();
     this.isLoadingInvestments.set(true)
     this.cargarInvestmentsDashboard(this.selectedPortfolioId);
   }
+
 
 
   private cargarInvestmentsDashboard(portfolioId: number): void {
@@ -189,14 +209,17 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
     this.areaOptions = null;
     this.isLoadingInvestments.set(true)
 
+
     this.investmentService.getInvestments(portfolioId).subscribe({
       next: (response: any) => {
         console.log('Response API:', response);
+
 
         // validar el caso de que tenga inveriones pero la cantidad de acciones sea 0
         const validInvestments = response.investments.filter((inv: any) => 
           parseFloat(inv.quantity || '0') > 0
         );
+
 
         // flag para mostrar mensage si no tiene inveriones
         if (validInvestments.length > 0) {
@@ -209,12 +232,15 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
         this.dashboardInvestments = investments;
         this.dashboardTotalValue = response.total_value ?? 0;
 
+
         const idx = this.portfolios.findIndex(p => p.id === portfolioId);
         if (idx !== -1) {
+
 
           const primerActivo = investments[0];
           const esCrypto = primerActivo?.asset_type === 'crypto';
           const symbolParaChart = primerActivo?.symbol ?? 'AAPL';
+
 
           this.portfolios[idx] = {
             ...this.portfolios[idx],
@@ -234,16 +260,17 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
             }))
           };
 
+
           this.portfolios = [...this.portfolios];
         }
 
 
+
         this.dataSource.data = this.currentPortfolio?.positions ?? [];
-        this.dataSource.sort = this.sort;
-        this.dataSource.paginator = this.paginator;
         this.buildDonutChart();
         this.buildTreemap(this.dashboardInvestments, this.dashboardTotalValue);
         this.loadChart(this.selectedPeriod);
+
 
         this.isLoadingInvestments.set(false)
       },
@@ -256,15 +283,18 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
     });
   }
 
+
   // allocation
   private buildAllocation(investments: any[], totalValue: number): any[] {
     if (!investments.length || !totalValue) return [];
+
 
     const grupos: Record<string, number> = {};
     investments.forEach((inv: any) => {
       const tipo = inv.asset_type ?? 'Otros';
       grupos[tipo] = (grupos[tipo] ?? 0) + (inv.value ?? 0);
     });
+
 
     return Object.entries(grupos).map(([tipo, valor]) => ({
       label: tipo === 'crypto' ? 'Criptomonedas'
@@ -277,17 +307,21 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   }
 
 
+
   // Donut
   private buildDonutChart(): void {
     if (!this.currentPortfolio) return;
     this.donutOptions = null;
+
 
     setTimeout(() => {
       if (!this.currentPortfolio) return;
       const alloc = this.currentPortfolio.allocation;
       const total = this.currentPortfolio.totalValue;
 
+
       const colors = alloc.map(i => i.color);
+
 
       this.donutOptions = {
         series: alloc.map(i => i.percent),
@@ -338,8 +372,10 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
     }, 0);
   }
 
+
   private getAssetColor(tipo: string): string {
     const primary = this.primaryColor;
+
 
     const colores: Record<string, string> = {
       stock: primary,
@@ -347,8 +383,10 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       etf: primary + '44'
     };
 
+
     return colores[tipo] ?? primary;
   }
+
 
   setPeriod(period: string): void {
     this.selectedPeriod = period;
@@ -356,11 +394,13 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   }
 
 
+
   private loadChart(period: string): void {
     if (!this.currentPortfolio) return;
     this.isLoading = true;
     const symbol = this.currentPortfolio.symbol;
     const assetType = this.currentPortfolio.assetType ?? 'stock';
+
 
     this.marketService.getHistory(symbol, period, assetType).subscribe({
       next: (response) => {
@@ -375,8 +415,10 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
   }
 
 
+
   private buildAreaChart(data: { x: number; y: number }[], period: string): void {
     const tooltipFormat = period === '1D' ? 'HH:mm' : 'dd MMM yyyy';
+
 
     this.areaOptions = {
       series: [{ name: this.currentPortfolio?.name ?? '', data }],
@@ -425,13 +467,16 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
     };
   }
 
+
   private buildTreemap(investments: any[], totalValue: number): void {
     if (!investments.length || !totalValue) {
       this.treemapOptions = null;
       return;
     }
 
+
     const baseHex = this.primaryColor;
+
 
     const hexToRgba = (hex: string, alpha: number) => {
       const clean = hex.replace('#', '');
@@ -440,6 +485,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       const b = parseInt(clean.slice(4, 6), 16);
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
+
 
     const getAlphaByWeight = (weight: number) => {
       if (weight <= 5) return 0.35;
@@ -450,12 +496,14 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
       return 1;
     };
 
+
     const treemapData = investments
       .filter((inv: any) => (inv.value ?? 0) > 0)
       .map((inv: any) => {
         const weight = ((inv.value ?? 0) / totalValue) * 100;
         const alpha = getAlphaByWeight(weight);
         const symbol = inv.symbol ?? inv.name ?? 'Activo';
+
 
         return {
           x: symbol,
@@ -464,6 +512,7 @@ export class DashboardComponent implements OnInit, AfterViewInit  {
           meta: symbol
         };
       });
+
 
     this.treemapOptions = {
       series: [{ data: treemapData }],

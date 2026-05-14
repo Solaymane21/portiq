@@ -1,6 +1,6 @@
 import { Component, signal, inject, OnInit, HostListener, DestroyRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe, NgClass } from '@angular/common';
 import { Subject, interval } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
@@ -10,7 +10,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'app-alerts',
   standalone: true,
-  imports: [FormsModule, DatePipe, DecimalPipe, CdkMenuTrigger, CdkMenu, CdkMenuItem],
+  imports: [FormsModule, DatePipe, DecimalPipe, CdkMenuTrigger, CdkMenu, CdkMenuItem, NgClass],
   templateUrl: './alerts.component.html',
 })
 export class AlertsComponent implements OnInit {

@@ -9,7 +9,7 @@ export class NotificationsService {
   toasts = signal<Toast[]>([]);
 
   // añade un toast a la lista y lo elimina automaticamente al expirar
-  show(msg: string, type: Toast['type'] = 'info', duration = 5000): void {
+  show(msg: string, type: Toast['type'] = 'info', duration = 3000): void {
     const id = crypto.randomUUID();
     const toast: Toast = { id, msg, type, duration };
 

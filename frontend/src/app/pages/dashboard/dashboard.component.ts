@@ -244,10 +244,10 @@ export class DashboardComponent implements OnInit {
 
           this.portfolios[idx] = {
             ...this.portfolios[idx],
-            totalValue: response.total_value ?? 0,
+            totalValue: (response.total_value ?? 0) * 1.085,
             totalValueUSD: (response.total_value ?? 0) * 1.085,
             totalPositions: investments.length,
-            profitLoss: response.stats?.ganancias ?? 0,
+            profitLoss: (response.stats?.ganancias ?? 0) * 1.085,
             symbol: symbolParaChart,
             assetType: primerActivo?.asset_type ?? 'stock',
             allocation: this.buildAllocation(investments, response.total_value),

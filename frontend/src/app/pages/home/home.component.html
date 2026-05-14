@@ -3,39 +3,38 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 xl:gap-12 items-center">
 
       <div>
-        <h1 class="text-5xl md:text-6xl font-ibm font-black leading-tight text-white mb-4">
+        <h1 class="text-5xl md:text-6xl font-ibm font-black leading-tight text-zinc-900 dark:text-white mb-4">
           Entiende tu cartera <br>
           <span class="text-orange-500">domina tu futuro.</span>
         </h1>
-        <p class="text-neutral-400 text-lg mb-8 max-w-md">
+        <p class="text-zinc-500 dark:text-neutral-400 text-lg mb-8 max-w-md">
           El tracker que gestiona todos tus activos desde un solo lugar. Datos reales, análisis ML y alertas personalizadas.
         </p>
-        <div class="flex gap-3">          
+        <div class="flex gap-3">
           <a routerLink="/auth/login"
-            class="px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl transition-colors border border-neutral-600">
+            class="px-6 py-3 bg-orange-500 hover:opacity-80 text-white rounded-xl border border-zinc-400 dark:border-neutral-600">
             Iniciar sesión
           </a>
         </div>
       </div>
 
-      <!-- Tabla precios -->
-      <div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-5 hidden lg:block  max-h-[calc(100vh-10rem)] overflow-y-auto">
-        <p class="text-neutral-400 text-sm mb-4">Mercados populares</p>
+      <div class="bg-zinc-100 dark:bg-neutral-900 border border-zinc-300 dark:border-neutral-700 rounded-2xl p-5 hidden lg:block max-h-[calc(100vh-10rem)] overflow-y-auto shadow-sm dark:shadow-none">
+        <p class="text-zinc-500 dark:text-neutral-400 text-sm mb-4">Mercados populares</p>
 
         @if (ticker.length === 0) {
           <div class="space-y-3">
             @for (i of skeletonItems; track i) {
               <div class="flex items-center justify-between animate-pulse">
                 <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-neutral-700"></div>
+                  <div class="w-8 h-8 rounded-full bg-zinc-300 dark:bg-neutral-700"></div>
                   <div>
-                    <div class="h-3 w-12 bg-neutral-700 rounded mb-1"></div>
-                    <div class="h-2 w-20 bg-neutral-800 rounded"></div>
+                    <div class="h-3 w-12 bg-zinc-300 dark:bg-neutral-700 rounded mb-1"></div>
+                    <div class="h-2 w-20 bg-zinc-200 dark:bg-neutral-800 rounded"></div>
                   </div>
                 </div>
                 <div class="text-right">
-                  <div class="h-3 w-16 bg-neutral-700 rounded mb-1"></div>
-                  <div class="h-2 w-10 bg-neutral-800 rounded ml-auto"></div>
+                  <div class="h-3 w-16 bg-zinc-300 dark:bg-neutral-700 rounded mb-1"></div>
+                  <div class="h-2 w-10 bg-zinc-200 dark:bg-neutral-800 rounded ml-auto"></div>
                 </div>
               </div>
             }
@@ -45,30 +44,32 @@
             @for (item of ticker; track item.symbol) {
               <div
                 (click)="goToSymbol(item.symbol)"
-                class="flex items-center justify-between py-2 px-3 rounded-xl hover:bg-neutral-800 cursor-pointer transition-colors">
+                class="flex items-center justify-between py-2 px-3 rounded-xl hover:bg-zinc-200 dark:hover:bg-neutral-800 cursor-pointer transition-colors">
                 <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-neutral-800 overflow-hidden shrink-0">
+                  <div class="w-8 h-8 rounded-full bg-zinc-300 dark:bg-neutral-800 overflow-hidden shrink-0">
                     <img [src]="item.logoUrl" [alt]="item.symbol"
                       (error)="onImgError($event)"
                       class="w-full h-full object-contain"/>
                   </div>
                   <div>
-                    <p class="text-sm font-semibold text-white">{{ item.symbol }}</p>
-                    <p class="text-xs text-neutral-500 truncate max-w-[120px]">{{ item.name }}</p>
+                    <p class="text-sm font-semibold text-zinc-900 dark:text-white">{{ item.symbol }}</p>
+                    <p class="text-xs text-zinc-500 dark:text-neutral-500 truncate max-w-[120px]">{{ item.name }}</p>
                   </div>
                 </div>
                 <div class="text-right">
-                  <p class="text-sm font-mono text-white">
+                  <p class="text-sm font-mono text-zinc-900 dark:text-white">
                     {{ item.price !== null ? (item.price | number:'1.2-2') + '$' : '—' }}
                   </p>
                   @if (item.change !== null) {
                     <p class="text-xs font-mono"
-                      [class.text-emerald-500]="item.change >= 0"
-                      [class.text-red-500]="item.change < 0">
+                      [class.text-emerald-600]="item.change >= 0"
+                      [class.dark:text-emerald-500]="item.change >= 0"
+                      [class.text-red-600]="item.change < 0"
+                      [class.dark:text-red-500]="item.change < 0">
                       {{ item.change >= 0 ? '+' : '' }}{{ item.change | number:'1.2-2' }}%
                     </p>
                   } @else {
-                    <p class="text-xs text-neutral-600">—</p>
+                    <p class="text-xs text-zinc-400 dark:text-neutral-600">—</p>
                   }
                 </div>
               </div>
@@ -84,21 +85,19 @@
 <section class="py-12 md:py-24 px-6 md:px-14 overflow-hidden">
     <div class="max-w-7xl mx-auto">
 
-      <!-- Título -->
       <div class="text-center mb-8 md:mb-16">
         <p class="text-orange-500 text-sm font-semibold uppercase tracking-widest mb-3">Diseñado para todos los dispositivos</p>
-        <h2 class="text-4xl md:text-5xl font-ibm font-black text-white leading-tight">
+        <h2 class="text-4xl md:text-5xl font-ibm font-black text-zinc-900 dark:text-white leading-tight">
           Opera cuando quieras<br>
-          <span class="text-neutral-400">donde quieras</span>
+          <span class="text-zinc-500 dark:text-neutral-400">donde quieras</span>
         </h2>
       </div>
 
-      <!-- Mockup -->
       <div class="flex justify-center items-center h-[340px] sm:h-[480px] md:h-[560px] lg:h-[680px] overflow-hidden" >
 
         @if (selectedDevice === 'desktop') {
           <div class="w-full max-w-[860px]">
-            <div class="bg-neutral-800 border border-neutral-700 rounded-2xl p-2 shadow-2xl shadow-black/60">
+            <div class="bg-zinc-200 dark:bg-neutral-800 border border-zinc-300 dark:border-neutral-700 rounded-2xl p-2 shadow-2xl dark:shadow-black/60 shadow-zinc-300">
               <div class="rounded-xl overflow-hidden">
                 <img src="images/desktop.png" alt="PortIQ en desktop" class="w-full h-auto object-cover"/>
               </div>
@@ -108,7 +107,7 @@
 
         @if (selectedDevice === 'mobile') {
           <div class="w-[280px] sm:w-[320px]">
-            <div class="bg-neutral-800 border border-neutral-700 rounded-[2rem] p-2 shadow-xl shadow-black/50">
+            <div class="bg-zinc-200 dark:bg-neutral-800 border border-zinc-300 dark:border-neutral-700 rounded-[2rem] p-2 shadow-xl dark:shadow-black/50 shadow-zinc-300">
               <div class="rounded-[1.7rem] overflow-hidden">
                 <img src="images/mobile.png" alt="PortIQ en móvil" class="w-full h-auto object-cover"/>
               </div>
@@ -125,8 +124,10 @@
             class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
             [class.bg-orange-500]="selectedDevice === device.key"
             [class.text-white]="selectedDevice === device.key"
-            [class.bg-neutral-800]="selectedDevice !== device.key"
-            [class.text-neutral-400]="selectedDevice !== device.key">
+            [class.bg-zinc-200]="selectedDevice !== device.key"
+            [class.dark:bg-neutral-800]="selectedDevice !== device.key"
+            [class.text-zinc-600]="selectedDevice !== device.key"
+            [class.dark:text-neutral-400]="selectedDevice !== device.key">
             {{ device.label }}
           </button>
         }
@@ -135,16 +136,15 @@
     </div>
   </section>
 
-<!-- Ticker -->
-<div class="bg-neutral-900 p-2 overflow-hidden border-t border-neutral-800">
+<div class="bg-zinc-100 dark:bg-neutral-900 p-2 overflow-hidden border-t border-zinc-300 dark:border-neutral-800">
   @if (ticker.length === 0) {
     <div class="flex gap-5 px-2">
       @for (i of skeletonItems; track i) {
-        <div class="flex items-center bg-neutral-800 rounded-full px-3 py-1 gap-2 shrink-0 animate-pulse">
-          <div class="w-7 h-7 rounded-full bg-neutral-600"></div>
-          <div class="w-10 h-3 rounded bg-neutral-600"></div>
-          <div class="w-16 h-3 rounded bg-neutral-600"></div>
-          <div class="w-12 h-3 rounded bg-neutral-600"></div>
+        <div class="flex items-center bg-zinc-200 dark:bg-neutral-800 rounded-full px-3 py-1 gap-2 shrink-0 animate-pulse">
+          <div class="w-7 h-7 rounded-full bg-zinc-400 dark:bg-neutral-600"></div>
+          <div class="w-10 h-3 rounded bg-zinc-400 dark:bg-neutral-600"></div>
+          <div class="w-16 h-3 rounded bg-zinc-400 dark:bg-neutral-600"></div>
+          <div class="w-12 h-3 rounded bg-zinc-400 dark:bg-neutral-600"></div>
         </div>
       }
     </div>
@@ -154,30 +154,31 @@
         @for (item of tickerDouble; track $index) {
           <div
             (click)="goToSymbol(item.symbol)"
-            class="flex items-center bg-black w-fit rounded-full px-3 py-1 gap-2 shrink-0 cursor-pointer hover:bg-neutral-800 transition-colors">
-            <div class="w-7 h-7 rounded-full overflow-hidden">
+            class="flex items-center bg-white dark:bg-black shadow-sm dark:shadow-none border border-zinc-200 dark:border-transparent w-fit rounded-full px-3 py-1 gap-2 shrink-0 cursor-pointer hover:bg-zinc-50 dark:hover:bg-neutral-800 transition-colors">
+            <div class="w-7 h-7 rounded-full overflow-hidden bg-neutral-950 p-0.5">
               <img [src]="item.logoUrl" [alt]="item.symbol"
                 (error)="onImgError($event)"
                 class="w-full h-full object-contain"/>
             </div>
-            <p class="font-medium text-sm">{{ item.symbol }}</p>
-            <p class="font-mono text-sm">
+            <p class="font-medium text-sm text-zinc-900 dark:text-white">{{ item.symbol }}</p>
+            <p class="font-mono text-sm text-zinc-900 dark:text-white">
               {{ item.price !== null ? (item.price | number:'1.2-2') + '$' : '—' }}
             </p>
             @if (item.change !== null) {
               <p class="font-mono text-sm"
-                [class.text-emerald-500]="item.change >= 0"
-                [class.text-red-500]="item.change < 0">
+                [class.text-emerald-600]="item.change >= 0"
+                [class.dark:text-emerald-500]="item.change >= 0"
+                [class.text-red-600]="item.change < 0"
+                [class.dark:text-red-500]="item.change < 0">
                 {{ item.change >= 0 ? '+' : '' }}{{ item.change | number:'1.2-2' }}%
               </p>
             } @else {
-              <p class="font-mono text-sm text-neutral-600">—</p>
+              <p class="font-mono text-sm text-zinc-400 dark:text-neutral-600">—</p>
             }
           </div>
         }
       </div>
     </div>
   }
-
 
 </div>

@@ -1,6 +1,6 @@
 import { Component, signal, inject, OnInit, HostListener, DestroyRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe, NgClass } from '@angular/common';
 import { Subject, interval } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
@@ -10,7 +10,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'app-alerts',
   standalone: true,
-  imports: [FormsModule, DatePipe, DecimalPipe, CdkMenuTrigger, CdkMenu, CdkMenuItem],
+  imports: [FormsModule, DatePipe, DecimalPipe, CdkMenuTrigger, CdkMenu, CdkMenuItem, NgClass],
   templateUrl: './alerts.component.html',
 })
 export class AlertsComponent implements OnInit {
@@ -89,7 +89,7 @@ export class AlertsComponent implements OnInit {
     });
   }
 
-  
+
   onSearch(query: string): void {
     if (query.length < 2) { this.searchResults.set([]); return; }
     this.searchSubject.next(query);
@@ -241,5 +241,17 @@ export class AlertsComponent implements OnInit {
   onClickOutside(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.relative')) this.searchResults.set([]);
+  }
+
+  preventNegativeNums(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = Number(input.value);
+
+    if (input.value === '') return;
+
+    if (value < 0) {
+      input.value = '0';
+      this.targetPrice = 0;
+    }
   }
 }

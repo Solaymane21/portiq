@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap} from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { NotificationsService } from './notifications.service';
 
 export interface Alert {
   id: number;
@@ -28,6 +29,7 @@ export interface SymbolResult {
 export class AlertsService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}/alerts`;
+  private notificationService = inject(NotificationsService);
 
   getAlerts(): Observable<Alert[]> {
     return this.http.get<Alert[]>(this.base);
@@ -42,15 +44,30 @@ export class AlertsService {
     target_price: number;
     condition: 'above' | 'below';
   }): Observable<Alert> {
-    return this.http.post<Alert>(this.base, payload);
+    return this.http.post<Alert>(this.base, payload).pipe(
+      tap({
+        next: (alert) => this.notificationService.success(`Alerta creada para ${alert.name} (${alert.symbol})`),
+        error: () => this.notificationService.error('No se pudo crear la alerta')
+      })
+    );
   }
 
   updateAlert(id: number, data: Partial<Pick<Alert, 'target_price' | 'condition' | 'is_active'>>): Observable<Alert> {
-    return this.http.patch<Alert>(`${this.base}/${id}`, data);  // ← put → patch
+    return this.http.patch<Alert>(`${this.base}/${id}`, data).pipe(
+      tap({
+        next: () => this.notificationService.success('Alerta actualizada correctamente'),
+        error: () => this.notificationService.error('No se pudo actualizar la alerta')
+      })
+    );
   }
 
   deleteAlert(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${id}`);
+    return this.http.delete<void>(`${this.base}/${id}`).pipe(
+      tap({
+        next: ()=>this.notificationService.success('Alerta borrada correctamente'),
+        error: () =>this.notificationService.error('No se pudo borrar la alerta')
+      })
+    )
   }
 
   searchSymbols(query: string): Observable<SymbolResult[]> {

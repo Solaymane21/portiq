@@ -43,7 +43,7 @@ export class InvestmentsComponent implements OnInit {
   columnasDef = [
     { def: 'symbol', title: 'Activo', align: 'left' },
     { def: 'weight', title: 'Peso', align: 'left' },
-    { def: 'return_7d', title: '7D retorno', align: 'left' },
+    { def: 'return_7d', title: 'Rendimiento', align: 'left' },
     { def: 'value', title: 'Valor', align: 'left' },
     { def: 'quantity', title: 'Acciones', align: 'left' }
   ];

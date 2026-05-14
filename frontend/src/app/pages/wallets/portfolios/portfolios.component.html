@@ -1,12 +1,15 @@
-<!-- DIV PRINCIPAL -->
 <div class="space-y-6">
-  
-  <div class="flex flex-row items-center justify-between gap-3">
-    <div class="flex items-center gap-3">
-      <h1 class="text-3xl font-ibm text-white">Carteras</h1>
+  <div class="flex items-center justify-between gap-3">
+
+    <!-- TITULO -->
+    <div>
+      <h1 class="text-3xl font-ibm">Carteras</h1>
     </div>
 
+    <!-- BOTONES IMPORTAR CSV / NUEVA CARTERA -->
     <div class="flex items-center gap-3">
+
+      <!-- INPUT OCULTO TIPO ARCHIVO -->
       <input
         #csvFileInput
         type="file"
@@ -14,6 +17,7 @@
         class="hidden"
         (change)="onCsvSelected($event)" />
 
+      <!-- BOTON IMPORTAR -->
       <button
         type="button"
         (click)="openImportModal()"
@@ -24,37 +28,35 @@
         <span class="hidden sm:inline whitespace-nowrap">Importar CSV</span>
       </button>
 
+      <!-- BOTON NUEVA CARTERA -->
       <button
         (click)="openCreateModal()"
         class="bg-orange-500 hover:bg-orange-500/80 h-10 px-3 rounded-md text-white flex items-center justify-center gap-2">
         <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
-        <span class="hidden sm:inline whitespace-nowrap">Nueva Cartera</span>
+        <span class="hidden sm:inline">Nueva Cartera</span>
       </button>
     </div>
   </div>
 
+  <!-- LISTA DE CARTERAS -->
   <div>
+
+    <!-- CARGANDO -->
     @if (isLoading()) {
-      <!-- SKELETON: misma grid que las tarjetas reales -->
       <div class="grid gap-4 auto-rows-fr grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         @for (n of skeletonItems; track n) {
           <div class="flex flex-col p-4 rounded-xl border border-neutral-600 bg-neutral-950 h-full">
 
-            <!-- Fila superior: nombre + botón 3 puntos -->
             <div class="flex flex-col gap-1 min-w-0 pr-8 relative">
               <div class="flex items-center gap-2 min-w-0">
-                <!-- nombre -->
                 <div class="h-5 w-36 bg-neutral-800 rounded animate-pulse"></div>
               </div>
-              <!-- botón 3 puntos -->
               <div class="absolute top-0 right-0 h-5 w-5 bg-neutral-800 rounded animate-pulse"></div>
-              <!-- badge pública/privada -->
               <div class="h-4 w-14 bg-neutral-800 rounded animate-pulse mt-1"></div>
             </div>
 
-            <!-- Fila inferior: activos + valor -->
             <div class="flex flex-1 justify-between items-center mt-4">
               <div class="h-4 w-16 bg-neutral-800 rounded animate-pulse"></div>
               <div class="h-6 w-20 bg-neutral-800 rounded animate-pulse"></div>
@@ -64,6 +66,8 @@
           
         }
       </div>
+
+    <!-- SIN CARTERAS -->
     } @else if (myPortfolios().length === 0) {
       <div
         (click)="openCreateModal()"
@@ -87,6 +91,8 @@
           Configura tu espacio para empezar a trackear tus activos y criptomonedas.
         </p>
       </div>
+    
+    <!-- CARTERAS -->
     } @else {
       <div class="grid gap-4 auto-rows-fr" [ngClass]="getGridClass()">
         @for (portfolio of sortedPortfolios(); track portfolio.id) {

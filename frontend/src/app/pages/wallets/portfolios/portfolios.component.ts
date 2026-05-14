@@ -52,7 +52,7 @@ export class PortfoliosComponent implements OnInit {
   });
 
   portfolioForm = new FormGroup({
-    name: new FormControl('', [Validators.required, Validators.maxLength(50)]),
+    name: new FormControl('', [Validators.required, Validators.maxLength(15)]),
     is_default: new FormControl(false),
     is_public: new FormControl(false)
   });
@@ -67,7 +67,7 @@ export class PortfoliosComponent implements OnInit {
   );
 
   importNewPortfolio = new FormGroup({
-    name: new FormControl('', [Validators.required, Validators.maxLength(50)]),
+    name: new FormControl('', [Validators.required, Validators.maxLength(15)]),
     is_default: new FormControl(false),
     is_public: new FormControl(false)
   });

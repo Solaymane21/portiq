@@ -89,7 +89,7 @@ export class AlertsComponent implements OnInit {
     });
   }
 
-  
+
   onSearch(query: string): void {
     if (query.length < 2) { this.searchResults.set([]); return; }
     this.searchSubject.next(query);
@@ -241,5 +241,17 @@ export class AlertsComponent implements OnInit {
   onClickOutside(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.relative')) this.searchResults.set([]);
+  }
+
+  preventNegativeNums(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = Number(input.value);
+
+    if (input.value === '') return;
+
+    if (value < 0) {
+      input.value = '0';
+      this.targetPrice = 0;
+    }
   }
 }

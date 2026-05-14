@@ -1,4 +1,6 @@
+<!-- DIV PRINCIPAL -->
 <div class="space-y-6">
+  
   <div class="flex flex-row items-center justify-between gap-3">
     <div class="flex items-center gap-3">
       <h1 class="text-3xl font-ibm text-white">Carteras</h1>
@@ -35,18 +37,47 @@
 
   <div>
     @if (isLoading()) {
-      <div class="flex flex-col items-center justify-center py-16 text-neutral-500">
-        <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-orange-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p>Cargando tus carteras...</p>
+      <!-- SKELETON: misma grid que las tarjetas reales -->
+      <div class="grid gap-4 auto-rows-fr grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        @for (n of skeletonItems; track n) {
+          <div class="flex flex-col p-4 rounded-xl border border-neutral-600 bg-neutral-950 h-full">
+
+            <!-- Fila superior: nombre + botón 3 puntos -->
+            <div class="flex flex-col gap-1 min-w-0 pr-8 relative">
+              <div class="flex items-center gap-2 min-w-0">
+                <!-- nombre -->
+                <div class="h-5 w-36 bg-neutral-800 rounded animate-pulse"></div>
+              </div>
+              <!-- botón 3 puntos -->
+              <div class="absolute top-0 right-0 h-5 w-5 bg-neutral-800 rounded animate-pulse"></div>
+              <!-- badge pública/privada -->
+              <div class="h-4 w-14 bg-neutral-800 rounded animate-pulse mt-1"></div>
+            </div>
+
+            <!-- Fila inferior: activos + valor -->
+            <div class="flex flex-1 justify-between items-center mt-4">
+              <div class="h-4 w-16 bg-neutral-800 rounded animate-pulse"></div>
+              <div class="h-6 w-20 bg-neutral-800 rounded animate-pulse"></div>
+            </div>
+
+          </div>
+          
+        }
       </div>
     } @else if (myPortfolios().length === 0) {
       <div
         (click)="openCreateModal()"
-        class="group flex flex-col items-center justify-center py-20 px-4 bg-neutral-950 hover:bg-neutral-950/80 border border-neutral-600 hover:border-orange-500 rounded-2xl cursor-pointer">
-        <div class="h-14 w-14 bg-neutral-900 group-hover:bg-orange-500 text-neutral-500 group-hover:text-white rounded-full flex items-center justify-center mb-5">
+        (mouseenter)="emptyHover.set(true)"
+        (mouseleave)="emptyHover.set(false)"
+        class="group flex flex-col items-center justify-center py-20 px-4 bg-neutral-950 hover:bg-neutral-950/80 border rounded-2xl cursor-pointer transition-colors"
+        [class.border-neutral-600]="!emptyHover()"
+        [class.border-orange-500]="emptyHover()">
+        <div
+          class="h-14 w-14 rounded-full flex items-center justify-center mb-5 transition-colors"
+          [class.bg-neutral-900]="!emptyHover()"
+          [class.text-neutral-500]="!emptyHover()"
+          [class.bg-orange-500]="emptyHover()"
+          [class.text-white]="emptyHover()">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
@@ -57,13 +88,7 @@
         </p>
       </div>
     } @else {
-      <div
-        class="grid gap-4 auto-rows-fr"
-        [ngClass]="{
-          'grid-cols-1 sm:grid-cols-1 lg:grid-cols-1': sortedPortfolios().length === 1,
-          'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2': sortedPortfolios().length === 2,
-          'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3': sortedPortfolios().length >= 3
-        }">
+      <div class="grid gap-4 auto-rows-fr" [ngClass]="getGridClass()">
         @for (portfolio of sortedPortfolios(); track portfolio.id) {
         <div
           (click)="goToPortfolio(portfolio.id)"
@@ -123,6 +148,7 @@
   </div>
 </div>
 
+
 <ng-template #cardMenu>
   <div
     class="mt-2 min-w-[140px] bg-neutral-800 border border-neutral-700 rounded-xl overflow-hidden shadow-xl"
@@ -151,6 +177,7 @@
   </div>
 </ng-template>
 
+
 <!-- CREATE/EDIT MODAL -->
 @if (isModalOpen()) {
   <div class="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4">
@@ -167,41 +194,57 @@
           class="w-full bg-neutral-900 border border-neutral-800 rounded px-4 py-2 mb-4 text-white outline-none focus:border-orange-500" />
 
         <div class="space-y-4 mb-6 text-white">
+
+          <!-- Visibilidad -->
           <div>
             <p class="text-sm text-white mb-2">Visibilidad de la cartera</p>
             <div class="flex w-full bg-neutral-900 rounded-lg border border-neutral-800">
-              <label class="flex-1 text-center cursor-pointer">
-                <input type="radio" formControlName="is_public" [value]="false" class="hidden peer" />
-                <div class="py-1.5 text-sm rounded-md peer-checked:bg-neutral-800 peer-checked:text-orange-500 text-neutral-500 hover:text-white">
-                  Privada
-                </div>
-              </label>
-              <label class="flex-1 text-center cursor-pointer">
-                <input type="radio" formControlName="is_public" [value]="true" class="hidden peer" />
-                <div class="py-1.5 text-sm rounded-md peer-checked:bg-neutral-800 peer-checked:text-orange-500 text-neutral-500 hover:text-white">
-                  Pública
-                </div>
-              </label>
+              <button
+                type="button"
+                (click)="portfolioForm.get('is_public')!.setValue(false)"
+                class="flex-1 py-1.5 text-sm rounded-md"
+                [class.bg-neutral-800]="portfolioIsPublic() === false"
+                [class.bg-orange-500]="portfolioIsPublic() === false"
+                [class.text-neutral-500]="portfolioIsPublic() !== false">
+                Privada
+              </button>
+              <button
+                type="button"
+                (click)="portfolioForm.get('is_public')!.setValue(true)"
+                class="flex-1 py-1.5 text-sm rounded-md"
+                [class.bg-neutral-800]="portfolioIsPublic() === true"
+                [class.bg-orange-500]="portfolioIsPublic() === true"
+                [class.text-neutral-500]="portfolioIsPublic() !== true">
+                Pública
+              </button>
             </div>
           </div>
 
+          <!-- Cartera principal -->
           <div>
             <p class="text-sm text-white mb-2">Cartera principal</p>
             <div class="flex w-full bg-neutral-900 rounded-lg border border-neutral-800">
-              <label class="flex-1 text-center cursor-pointer">
-                <input type="radio" formControlName="is_default" [value]="false" class="hidden peer" />
-                <div class="py-1.5 text-sm rounded-md peer-checked:bg-neutral-800 peer-checked:text-orange-500 text-neutral-500 hover:text-white">
-                  No
-                </div>
-              </label>
-              <label class="flex-1 text-center cursor-pointer">
-                <input type="radio" formControlName="is_default" [value]="true" class="hidden peer" />
-                <div class="py-1.5 text-sm rounded-md peer-checked:bg-neutral-800 peer-checked:text-orange-500 text-neutral-500 hover:text-white">
-                  Hacer Default
-                </div>
-              </label>
+              <button
+                type="button"
+                (click)="portfolioForm.get('is_default')!.setValue(false)"
+                class="flex-1 py-1.5 text-sm rounded-md transition-colors"
+                [class.bg-neutral-800]="portfolioIsDefault() === false"
+                [class.bg-orange-500]="portfolioIsDefault() === false"
+                [class.text-neutral-500]="portfolioIsDefault() !== false">
+                No
+              </button>
+              <button
+                type="button"
+                (click)="portfolioForm.get('is_default')!.setValue(true)"
+                class="flex-1 py-1.5 text-sm rounded-md transition-colors"
+                [class.bg-neutral-800]="portfolioIsDefault() === true"
+                [class.bg-orange-500]="portfolioIsDefault() === true"
+                [class.text-neutral-500]="portfolioIsDefault() !== true">
+                Hacer Default
+              </button>
             </div>
           </div>
+
         </div>
 
         <div class="flex flex-col-reverse sm:flex-row gap-3">
@@ -212,7 +255,6 @@
             class="w-full bg-white hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-black disabled:cursor-not-allowed disabled:opacity-60">
             Cancelar
           </button>
-
           <button
             type="submit"
             [disabled]="portfolioForm.invalid || isSubmitting()"
@@ -231,6 +273,7 @@
   </div>
 }
 
+
 <!-- IMPORT CSV MODAL -->
 @if (importModalOpen()) {
   <div class="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4">
@@ -245,7 +288,7 @@
       <button
         type="button"
         (click)="triggerCsvSelection()"
-        class="w-full mb-3 bg-neutral-900 border border-neutral-700 hover:border-orange-500 text-white rounded-md py-2 text-sm">
+        class="w-full mb-3 bg-neutral-900 border border-neutral-700 hover:opacity-80 text-white rounded-md py-2 text-sm">
         {{ importFileName() ? 'Cambiar archivo: ' + importFileName() : 'Elegir archivo .csv' }}
       </button>
 
@@ -327,6 +370,7 @@
     </div>
   </div>
 }
+
 
 <!-- DELETE MODAL -->
 @if (isDeleteModalOpen()) {

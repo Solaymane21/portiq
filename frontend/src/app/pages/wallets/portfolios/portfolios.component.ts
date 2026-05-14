@@ -2,6 +2,7 @@ import { Component, signal, OnInit, inject, viewChild, ElementRef, computed } fr
 import { CommonModule, NgClass } from '@angular/common';
 import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, finalize } from 'rxjs/operators';
 import { PortfolioService } from '../../../services/portfolio.service';
 import { InvestmentService } from '../../../services/investment.service';
@@ -28,6 +29,7 @@ export class PortfoliosComponent implements OnInit {
   isModalOpen = signal(false);
   isDeleteModalOpen = signal(false);
   formMode = signal<'create' | 'edit'>('create');
+  emptyHover = signal(false);
 
   importModalOpen = signal(false);
   importSubmitting = signal(false);
@@ -38,8 +40,8 @@ export class PortfoliosComponent implements OnInit {
 
   myPortfolios = signal<Portfolio[]>([]);
   selectedPortfolio = signal<Portfolio | null>(null);
+  skeletonItems = Array(6);
 
-  // Computed: Sorted portfolios with default first
   sortedPortfolios = computed(() => {
     const portfolios = this.myPortfolios();
     return [...portfolios].sort((a, b) => {
@@ -54,6 +56,15 @@ export class PortfoliosComponent implements OnInit {
     is_default: new FormControl(false),
     is_public: new FormControl(false)
   });
+
+  portfolioIsPublic = toSignal(
+    this.portfolioForm.get('is_public')!.valueChanges,
+    { initialValue: false }
+  );
+  portfolioIsDefault = toSignal(
+    this.portfolioForm.get('is_default')!.valueChanges,
+    { initialValue: false }
+  );
 
   importNewPortfolio = new FormGroup({
     name: new FormControl('', [Validators.required, Validators.maxLength(50)]),
@@ -187,11 +198,7 @@ export class PortfoliosComponent implements OnInit {
       }
       const v = this.importNewPortfolio.getRawValue();
       this.portfolioService
-        .createPortfolio({
-          name: v.name!,
-          is_default: !!v.is_default,
-          is_public: !!v.is_public
-        })
+        .createPortfolio({ name: v.name!, is_default: !!v.is_default, is_public: !!v.is_public })
         .pipe(
           switchMap((res: any) =>
             this.investmentService.importPositions(res.portfolio.id, positions)
@@ -199,29 +206,20 @@ export class PortfoliosComponent implements OnInit {
           finalize(() => this.importSubmitting.set(false))
         )
         .subscribe({
-          next: () => {
-            this.closeImportModal();
-            this.loadPortfolios();
-          },
+          next: () => { this.closeImportModal(); this.loadPortfolios(); },
           error: (err) => console.error('Import error:', err)
         });
       return;
     }
 
     const pid = this.importPortfolioId.value;
-    if (pid == null) {
-      this.importSubmitting.set(false);
-      return;
-    }
+    if (pid == null) { this.importSubmitting.set(false); return; }
 
     this.investmentService
       .importPositions(pid, positions)
       .pipe(finalize(() => this.importSubmitting.set(false)))
       .subscribe({
-        next: () => {
-          this.closeImportModal();
-          this.loadPortfolios();
-        },
+        next: () => { this.closeImportModal(); this.loadPortfolios(); },
         error: (err) => console.error('Import error:', err)
       });
   }
@@ -260,11 +258,18 @@ export class PortfoliosComponent implements OnInit {
   private prepareModal(mode: 'create' | 'edit', portfolio: Portfolio | null) {
     this.formMode.set(mode);
     this.selectedPortfolio.set(portfolio);
-    this.portfolioForm.reset({
+    this.portfolioForm.patchValue({
       name: portfolio ? portfolio.name : '',
       is_default: portfolio ? portfolio.is_default : false,
       is_public: portfolio ? portfolio.is_public : false
     });
     this.isModalOpen.set(true);
+  }
+
+  getGridClass(): string {
+    const len = this.sortedPortfolios().length;
+    if (len === 1) return 'grid-cols-1';
+    if (len === 2) return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2';
+    return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
   }
 }

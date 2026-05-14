@@ -8,8 +8,12 @@ use Illuminate\Http\JsonResponse;
 
 class AdminController extends Controller
 {
-    public function users(): JsonResponse
+    public function users(Request $request): JsonResponse
     {
+        if ($request->user()->email !== 'portiqinfo@gmail.com') {
+            return response()->json(['message' => 'No eres el admin.']);
+        }
+
         $users = User::all();
         $totalUsers = User::all()->count();
         $loggedToday = User::whereDate('last_login_at', today())->count();
@@ -62,7 +66,7 @@ class AdminController extends Controller
         if ($request->user()->email !== 'portiqinfo@gmail.com') {
             return response()->json(['message' => 'No eres el admin.']);
         }
-        
+
         $user = User::find($userId);
 
         if (!$user) {

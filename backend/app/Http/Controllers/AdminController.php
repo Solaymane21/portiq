@@ -29,8 +29,12 @@ class AdminController extends Controller
         ]);
     }
 
-    public function delete($id)
+    public function delete(Request $request, $id)
     {
+        if ($request->user()->email !== 'portiqinfo@gmail.com') {
+            return response()->json(['message' => 'No eres el admin.']);
+        }
+
         $user = User::findOrFail($id);
         $user->delete();
 

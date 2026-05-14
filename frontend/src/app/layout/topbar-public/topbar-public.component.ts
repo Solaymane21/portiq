@@ -5,6 +5,7 @@ import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MarketService } from '../../services/market.service';
+import { PreferencesService } from '../../services/preferences.service';
 
 interface SearchResult {
   symbol: string;
@@ -28,6 +29,8 @@ export class TopbarPublicComponent {
   private router = inject(Router);
   private market = inject(MarketService);
   private elRef  = inject(ElementRef);
+  preferencesService = inject(PreferencesService);
+
 
   query       = signal('');
   results     = signal<SearchResult[]>([]);
@@ -74,13 +77,13 @@ export class TopbarPublicComponent {
     if (event.key === 'Escape') { this.clearSearch(); return; }
     if (!this.isOpen()) return;
     const last = this.results().length - 1;
-    if (event.key === 'ArrowDown'){ 
+    if (event.key === 'ArrowDown'){
       event.preventDefault();
-      this.activeIndex.update(i => Math.min(i + 1, last)); 
+      this.activeIndex.update(i => Math.min(i + 1, last));
     }
-    if (event.key === 'ArrowUp'){ 
-      event.preventDefault(); 
-      this.activeIndex.update(i => Math.max(i - 1, 0)); 
+    if (event.key === 'ArrowUp'){
+      event.preventDefault();
+      this.activeIndex.update(i => Math.max(i - 1, 0));
     }
     if (event.key === 'Enter') {
       const i = this.activeIndex();
@@ -128,5 +131,10 @@ export class TopbarPublicComponent {
 
   goToPublic(): void {
     this.router.navigate(['/public/home']);
+  }
+
+  updateMode() {
+    const next = this.preferencesService.theme() === 'dark' ? 'light' : 'dark';
+    this.preferencesService.applyTheme(next);
   }
 }

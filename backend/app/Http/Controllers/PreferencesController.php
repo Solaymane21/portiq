@@ -19,12 +19,28 @@ class PreferencesController extends Controller
         $request->validate([
             'currency' => 'in:EUR,USD',
             'theme'    => 'in:dark,light',
-            'color_theme' => 'sometimes|in:orange,lime,teal,sky,indigo,violet,rose,red'
+            'color_theme' => 'sometimes|in:orange,lime,teal,sky,indigo,violet,rose,red',
+            'cookies' => 'required|boolean'
         ]);
 
         $preferences = $request->user()->preferences()->updateOrCreate(
             ['user_id' => $request->user()->id],
             $request->only(['currency', 'theme', 'color_theme'])
+        );
+
+        return response()->json($preferences);
+    }
+
+    // guardar la eleccion del usuario respecto a las cookies
+    public function setCookiesPreference(Request $request)
+    {
+        $request->validate([
+            'cookies' => 'required|boolean'
+        ]);
+
+        $preferences = $request->user()->preferences()->updateOrCreate(
+            ['user_id' => $request->user()->id],
+            ['cookies' => $request->boolean('cookies')]
         );
 
         return response()->json($preferences);

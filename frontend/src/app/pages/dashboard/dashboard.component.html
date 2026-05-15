@@ -162,7 +162,7 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"
           class="hover:bg-zinc-100 dark:hover:bg-neutral-800 cursor-pointer" [routerLink]="['/public/symbol', row.ticker]"></tr>
       </table>
-      <mat-paginator [pageSizeOptions]="[5, 10, 20]" [pageSize]="5" showFirstLastButtons class="bg-transparent text-zinc-900 dark:text-white"></mat-paginator>
+      <mat-paginator [pageSizeOptions]="[4]" [pageSize]="4" showFirstLastButtons class="bg-transparent text-zinc-900 dark:text-white"></mat-paginator>
     </div>
   </div>
 
@@ -235,7 +235,7 @@
   } @else {
     <div class="relative">
 
-      <div class="pointer-events-none select-none p-2">
+      <div class="p-2">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           @for (n of [1,2,3,4]; track n) {
             <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-800 rounded-2xl p-5">
@@ -303,7 +303,7 @@
       <div class="absolute inset-0 backdrop-blur-sm"></div>
 
       @if (!currentPortfolio) {
-        <div class="absolute inset-0 flex items-start justify-center z-40 mt-20">
+        <div class="absolute inset-0 flex items-start justify-center z-30 mt-20">
           <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-700 rounded-2xl p-10 flex flex-col items-center text-center max-w-md w-full mx-4 shadow-2xl">
             <h2 class="text-2xl font-ibm font-bold text-zinc-900 dark:text-neutral-100 mb-2">Sin cartera seleccionada</h2>
             <p class="text-zinc-500 dark:text-neutral-400 mb-5">Crea tu primera cartera para ver tu dashboard.</p>
@@ -315,7 +315,7 @@
           </div>
         </div>
       } @else if (!hasInvestments()) {
-        <div class="absolute inset-0 flex items-start justify-center z-40 mt-20">
+        <div class="absolute inset-0 flex items-start justify-center z-30 mt-20">
           <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-700 rounded-2xl p-10 flex flex-col items-center text-center max-w-md w-full mx-4 shadow-2xl">
             <h2 class="text-2xl font-ibm font-bold text-zinc-900 dark:text-neutral-100 mb-2">Cartera sin inversiones</h2>
             <p class="text-zinc-500 dark:text-neutral-400 mb-5">Añade inversiones a tu cartera para ver el dashboard.</p>

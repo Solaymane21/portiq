@@ -73,6 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/account', [SettingsController::class, 'deleteAccount']);
     Route::get('/preferences', [PreferencesController::class, 'show']);
     Route::patch('/preferences', [PreferencesController::class, 'update']);
+    Route::patch('/preferences/cookies', [PreferencesController::class, 'setCookiesPreference']);
 
     //Alerts
     Route::get('/alerts',          [AlertController::class, 'index']);

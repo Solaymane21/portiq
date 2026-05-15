@@ -9,7 +9,7 @@
         <div class="h-2 bg-zinc-50 dark:bg-neutral-600 rounded-full overflow-hidden">
             <div class="bg-orange-500 h-full rounded-full" [style.width.%]="((service.currentQuestion() + 1) / 9) * 100"></div>
         </div>
-        <div class="bg-zinc-50 dark:bg-neutral-950 flex flex-col justify-center rounded-lg py-8 px-10 mt-5 border border-zinc-200 dark:border-transparent">
+        <div class="bg-zinc-50 dark:bg-neutral-950 flex flex-col justify-center rounded-xl py-8 px-10 mt-5 border border-zinc-200 dark:border-transparent">
             <p class="text-center text-xl pb-8 text-zinc-900 dark:text-white">{{ service.questions[service.currentQuestion()].text }}</p>
 
             <div class="flex flex-col gap-3">
@@ -27,7 +27,7 @@
         </div>
         <div class="flex justify-between gap-3 mt-5">
             @if(service.currentQuestion() !== 0) {
-                <button class="flex items-center justify-center gap-2 w-full bg-zinc-50 dark:bg-neutral-600 text-zinc-900 dark:text-white py-3 rounded-lg hover:opacity-80" (click)="service.back()">
+                <button class="flex items-center justify-center gap-2 w-full bg-zinc-50 dark:bg-neutral-600 text-zinc-900 dark:text-white py-3 rounded-xl hover:opacity-80" (click)="service.back()">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
                         <path fill-rule="evenodd" d="M7.72 12.53a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 1 1 1.06 1.06L9.31 12l6.97 6.97a.75.75 0 1 1-1.06 1.06l-7.5-7.5Z" clip-rule="evenodd" />
                     </svg>
@@ -35,7 +35,7 @@
                 </button>
             }
             <button
-                class="flex items-center justify-center gap-2 w-full py-3 rounded-lg transition-opacity text-white"
+                class="flex items-center justify-center gap-2 w-full py-3 rounded-xl transition-opacity text-white"
                 [class]="service.canGoNext() ? 'bg-orange-500 hover:opacity-80' : 'bg-orange-500 opacity-50 cursor-not-allowed'"
                 [disabled]="!service.canGoNext()"
                 (click)="service.next()">

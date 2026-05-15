@@ -31,11 +31,13 @@ class InitialDataController extends Controller
                 'currency'    => $user->preferences->currency,
                 'theme'       => $user->preferences->theme,
                 'color_theme' => $user->preferences->color_theme,
+                'cookies' => $user->preferences->cookies,
             ]
             : [
                 'currency'    => 'EUR',
                 'theme'       => 'dark',
                 'color_theme' => 'orange',
+                'cookies' => null,
             ];
 
         return response()->json([

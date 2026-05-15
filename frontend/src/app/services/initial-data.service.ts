@@ -26,6 +26,7 @@ export class InitialDataService {
         if (data.preferences) {
           this.preferencesService.currency.set(data.preferences.currency ?? 'EUR');
           this.preferencesService.theme.set(data.preferences.theme ?? 'dark');
+          this.preferencesService.cookies.set(data.preferences.cookies ?? null);
           this.preferencesService.applyColor(data.preferences.color_theme ?? 'orange');
         }
 

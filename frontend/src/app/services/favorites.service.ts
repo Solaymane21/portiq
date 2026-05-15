@@ -5,6 +5,7 @@ import { Observable, of } from 'rxjs';
 import { SearchResult } from '../models/search.model';
 import { NotificationsService } from './notifications.service';
 import { environment } from '../../environments/environment';
+import { PreferencesService } from './preferences.service';
 
 export interface Favorite {
   id: number;
@@ -22,6 +23,7 @@ export class FavoritesService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
   private notificationService = inject(NotificationsService);
+  private preferencesService = inject(PreferencesService);
 
   private readonly CACHE_KEY = 'portiq_favorites';
   private readonly CACHE_TTL = 5 * 60 * 1000;
@@ -71,6 +73,7 @@ export class FavoritesService {
   }
 
   private saveCache(data: Favorite[]): void {
+    if (this.preferencesService.cookies() !== true) return;
     localStorage.setItem(this.CACHE_KEY, JSON.stringify({
       data,
       timestamp: Date.now()

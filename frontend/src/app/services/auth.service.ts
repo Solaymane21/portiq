@@ -7,6 +7,7 @@ import { catchError, map, of, tap } from 'rxjs';
 import { InitialDataService } from './initial-data.service';
 import { FavoritesService } from './favorites.service';
 import { environment } from '../../environments/environment';
+import { PreferencesService } from './preferences.service';
 
 @Injectable({
   providedIn: 'root'
@@ -27,6 +28,7 @@ export class AuthService {
   private router = inject(Router);
   private initialDataService = inject(InitialDataService)
   private favoritesService = inject(FavoritesService)
+  private preferencesService = inject(PreferencesService);
 
   // signals de los campos del formulario
   username = signal<User['name']>('');
@@ -238,6 +240,7 @@ export class AuthService {
 
   // elimina token y datos del usuario de localstorage y limpia el signal
   removeUserData() {
+    this.preferencesService.clearLocalStorage()
     localStorage.removeItem('token');
     this.currentUser.set(null);
   }

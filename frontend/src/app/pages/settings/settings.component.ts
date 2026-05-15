@@ -35,6 +35,7 @@ export class SettingsComponent implements OnDestroy {
 
   currency = this.preferencesService.currency
   theme = this.preferencesService.theme
+  cookiesAllowed = this.preferencesService.cookies
 
   showDeleteModal = signal<boolean>(false);
   showCancelModal = signal<boolean>(false);
@@ -47,8 +48,6 @@ export class SettingsComponent implements OnDestroy {
 
   renewalDate(): string {
     const status = this.subscriptionService.status();
-
-    localStorage.setItem('abc', JSON.stringify(status))
 
     if (!status) return '—';
 

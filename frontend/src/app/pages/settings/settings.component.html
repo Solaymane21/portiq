@@ -372,7 +372,7 @@
             <p class="text-sm mb-3 text-zinc-900 dark:text-white">Moneda por defecto</p>
             <div class="flex gap-2">
               <button (click)="currency.set('EUR')"
-                class="px-5 py-2 rounded-xl border font-ibm transition-colors"
+                class="w-full flex justify-center items-center gap-2 py-2 rounded-xl border font-ibm"
                 [class.bg-orange-500]="currency() === 'EUR'"
                 [class.border-transparent]="currency() === 'EUR'"
                 [class.text-white]="currency() === 'EUR'"
@@ -381,7 +381,7 @@
                 [class.text-zinc-500]="currency() !== 'EUR'"
                 [class.dark:text-neutral-400]="currency() !== 'EUR'">€ EUR</button>
               <button (click)="currency.set('USD')"
-                class="px-5 py-2 rounded-xl border font-ibm transition-colors"
+                class="w-full flex justify-center items-center gap-2 py-2 rounded-xl border font-ibm"
                 [class.bg-orange-500]="currency() === 'USD'"
                 [class.border-transparent]="currency() === 'USD'"
                 [class.text-white]="currency() === 'USD'"
@@ -395,7 +395,7 @@
             <p class="text-sm mb-3 text-zinc-900 dark:text-white">Tema por defecto</p>
             <div class="flex gap-2">
               <button (click)="this.preferencesService.applyTheme('dark')"
-                class="flex items-center gap-2 px-5 py-2 rounded-xl border font-ibm transition-colors"
+                class="w-full flex justify-center items-center gap-2 py-2 rounded-xl border font-ibm"
                 [class.bg-orange-500]="theme() === 'dark'"
                 [class.border-transparent]="theme() === 'dark'"
                 [class.text-white]="theme() === 'dark'"
@@ -409,7 +409,7 @@
                 Modo oscuro
               </button>
               <button (click)="this.preferencesService.applyTheme('light')"
-                class="flex items-center gap-2 px-5 py-2 rounded-xl border font-ibm transition-colors"
+                class="w-full flex justify-center items-center gap-2 py-2 rounded-xl border font-ibm"
                 [class.bg-orange-500]="theme() === 'light'"
                 [class.border-transparent]="theme() === 'light'"
                 [class.text-white]="theme() === 'light'"
@@ -421,6 +421,33 @@
                   <path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM18.894 6.166a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.591-1.59ZM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75ZM17.834 18.894a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 1 0-1.061 1.06l1.59 1.591ZM12 18a.75.75 0 0 1 .75.75V21a.75.75 0 0 1-1.5 0v-2.25A.75.75 0 0 1 12 18ZM7.758 17.303a.75.75 0 0 0-1.061-1.06l-1.591 1.59a.75.75 0 0 0 1.06 1.061l1.591-1.59ZM6 12a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h2.25A.75.75 0 0 1 6 12ZM6.697 7.757a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 0 0-1.061 1.06l1.59 1.591Z" />
                 </svg>
                 Modo claro
+              </button>
+            </div>
+          </div>
+          <div>
+            <p class="text-sm mb-3 text-zinc-900 dark:text-white">Uso de cookies</p>
+            <div class="flex gap-2">
+              <button (click)="this.preferencesService.cookies.set(true)"
+                class="w-full flex justify-center items-center gap-2 py-2 rounded-xl border font-ibm"
+                [class.bg-orange-500]="cookiesAllowed()"
+                [class.border-transparent]="cookiesAllowed()"
+                [class.text-white]="cookiesAllowed()"
+                [class.border-zinc-400]="!cookiesAllowed()"
+                [class.dark:border-neutral-600]="!cookiesAllowed()"
+                [class.text-zinc-500]="!cookiesAllowed()"
+                [class.dark:text-neutral-400]="!cookiesAllowed()">
+                Permitir
+              </button>
+              <button (click)="this.preferencesService.cookies.set(false)"
+                class="w-full flex justify-center items-center gap-2 py-2 rounded-xl border font-ibm"
+                [class.bg-orange-500]="!cookiesAllowed()"
+                [class.border-transparent]="!cookiesAllowed()"
+                [class.text-white]="!cookiesAllowed()"
+                [class.border-zinc-400]="cookiesAllowed()"
+                [class.dark:border-neutral-600]="cookiesAllowed()"
+                [class.text-zinc-500]="cookiesAllowed()"
+                [class.dark:text-neutral-400]="cookiesAllowed()">
+                Rechazar
               </button>
             </div>
           </div>
@@ -472,7 +499,7 @@
 </div>
 
 @if (showDeleteModal()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center rounded">
+  <div class="fixed inset-0 z-50 flex items-center justify-center rounded backdrop-blur-sm">
     <div
       class="absolute inset-0 bg-black/50"
       (click)="showDeleteModal.set(false)">
@@ -487,10 +514,10 @@
       <div class="flex gap-3">
         <button
           (click)="showDeleteModal.set(false)"
-          class="w-1/2 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-white dark:text-black transition-colors">
+          class="w-1/2 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-white dark:text-black">
           Volver
         </button>
-        <button (click)="onConfirmDeleteAccount()" [disabled]="settingsService.isLoading()" class="w-1/2 bg-red-600 hover:bg-red-600/80 flex justify-center rounded-md py-2 text-white transition-colors">
+        <button (click)="onConfirmDeleteAccount()" [disabled]="settingsService.isLoading()" class="w-1/2 bg-red-600 hover:bg-red-600/80 flex justify-center rounded-md py-2 text-white">
           @if (settingsService.isLoading()) {
             <mat-spinner diameter="20" />
           } @else {
@@ -503,7 +530,7 @@
 }
 
 @if (showCancelModal()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center rounded">
+  <div class="fixed inset-0 z-50 flex items-center justify-center rounded backdrop-blur-sm">
     <div
       class="absolute inset-0 bg-black/50"
       (click)="showCancelModal.set(false)">
@@ -518,10 +545,10 @@
       <div class="flex gap-3">
         <button
           (click)="showCancelModal.set(false)"
-          class="w-1/2 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-white dark:text-black transition-colors">
+          class="w-1/2 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-white dark:text-black">
           Volver
         </button>
-        <button (click)="onConfirmCancelSubscription()" class="w-1/2 bg-red-600 hover:bg-red-600/80 flex justify-center rounded-md py-2 text-white transition-colors">Cancelar suscripción</button>
+        <button (click)="onConfirmCancelSubscription()" class="w-1/2 bg-red-600 hover:bg-red-600/80 flex justify-center rounded-md py-2 text-white">Cancelar suscripción</button>
       </div>
     </div>
   </div>
@@ -543,10 +570,10 @@
       <div class="flex gap-3">
         <button
           (click)="showResumeModal.set(false)"
-          class="w-1/2 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-white dark:text-black transition-colors">
+          class="w-1/2 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-neutral-200/80 flex justify-center rounded-md py-2 text-white dark:text-black">
           Volver
         </button>
-        <button (click)="onConfirmResumeSubscription()" class="w-1/2 bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white transition-colors">Reanudar suscripción</button>
+        <button (click)="onConfirmResumeSubscription()" class="w-1/2 bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white">Reanudar suscripción</button>
       </div>
     </div>
   </div>

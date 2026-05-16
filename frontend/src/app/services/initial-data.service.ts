@@ -30,6 +30,7 @@ export class InitialDataService {
           this.preferencesService.applyColor(data.preferences.color_theme ?? 'orange');
         }
 
+        this.preferencesService.isLoading.set(false);
         this.ready.set(true);
       }),
       map(() => void 0)

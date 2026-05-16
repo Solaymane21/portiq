@@ -69,10 +69,11 @@ export class HomeComponent implements OnInit {
     (event.target as HTMLImageElement).style.display = 'none';
   }
 
-  selectedDevice: 'desktop'| 'mobile' = 'desktop';
+  selectedDevice: 'desktop'| 'tablet' | 'mobile' = 'desktop';
 
   devices = [
-    { key: 'desktop', label: 'Desktop' },
+    { key: 'desktop', label: 'Escritorio' },
+    { key: 'tablet', label: 'Tablet' },
     { key: 'mobile',  label: 'Móvil'   },
   ] as const;
 }

@@ -7,20 +7,20 @@
     </div>
 
     <div class="hidden md:block relative flex-1 max-w-screen-sm lg:max-w-5xl mx-6">
-      <div class="flex items-center gap-2 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-full px-4 py-2 focus-within:border-orange-500">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 text-zinc-500 dark:text-neutral-400 shrink-0">
+      <div class="flex items-center gap-2 bg-zinc-200 dark:bg-neutral-800 border border-zinc-400 dark:border-neutral-600 rounded-full px-4 py-2 focus-within:border-orange-500">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 text-zinc-700 dark:text-neutral-300 shrink-0">
           <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
         </svg>
         <input
-          class="flex-1 bg-transparent outline-none text-zinc-900 dark:text-neutral-100 placeholder:text-zinc-500 dark:placeholder:text-neutral-500 text-sm"
-          type="text" autocomplete="off" placeholder="Busca una acción o crypto..."
+          class="flex-1 bg-transparent outline-none placeholder:text-zinc-700 dark:placeholder:text-neutral-300 text-sm"
+          type="text" autocomplete="off" placeholder="Busca una acción, crypto o ETF"
           [value]="query()" (input)="onInput($any($event.target).value)" (keydown)="onKeydown($event)"
         >
         @if (isLoading()) {
           <div class="w-5 h-5 border-2 border-zinc-500 dark:border-neutral-400 border-t-transparent rounded-full animate-spin shrink-0"></div>
         }
         @if(!isLoading() && isOpen() && results().length > 0) {
-          <div class="text-zinc-500 dark:text-neutral-400 cursor-pointer" (click)="clearSearch()">
+          <div class="text-zinc-700 dark:text-neutral-300 cursor-pointer" (click)="clearSearch()">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
               <path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
             </svg>
@@ -46,7 +46,7 @@
                 }
                 <div class="min-w-0 flex-1">
                   <p class="text-sm text-zinc-900 dark:text-neutral-100 font-medium truncate">{{ r.name }}</p>
-                  <p class="text-xs text-zinc-500 dark:text-neutral-400 uppercase font-mono truncate">{{ r.symbol }}</p>
+                  <p class="text-xs text-zinc-700 dark:text-neutral-300 uppercase font-mono truncate">{{ r.symbol }}</p>
                   @if (r.exchange) {
                     <p class="text-xs text-zinc-500 dark:text-neutral-500 mt-0.5">{{ r.exchange }}</p>
                   }
@@ -59,7 +59,7 @@
 
       @if (isOpen() && query().length > 1 && results().length === 0 && !isLoading()) {
         <div class="absolute top-full left-0 right-0 mt-1 bg-zinc-100 dark:bg-neutral-900 border border-zinc-400 dark:border-neutral-600 rounded-xl px-4 py-3 z-50">
-          <p class="text-sm text-zinc-500 dark:text-neutral-400">No se encontraron activos para "{{ query() }}"</p>
+          <p class="text-sm text-zinc-700 dark:text-neutral-300">No se encontraron activos para "{{ query() }}"</p>
         </div>
       }
     </div>
@@ -88,14 +88,14 @@
             <button routerLink="/auth/login"
               class="w-full flex items-center gap-2 px-4 py-2 text-sm text-zinc-800 dark:text-neutral-300 hover:bg-zinc-200 dark:hover:bg-neutral-800 hover:text-zinc-900 dark:hover:text-white"
               cdkMenuItem>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-4 text-zinc-500 dark:text-neutral-400">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-4 text-zinc-700 dark:text-neutral-300">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
               </svg>
               Iniciar sesión
             </button>
             <div class="h-px bg-zinc-300/60 dark:bg-neutral-700/60 mx-3"></div>
             <button routerLink="/auth/register"
-              class="w-full flex items-center gap-2 px-4 py-2 text-sm text-zinc-500 dark:text-neutral-400 hover:bg-zinc-200 dark:hover:bg-neutral-800 hover:text-zinc-900 dark:hover:text-white"
+              class="w-full flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 dark:text-neutral-300 hover:bg-zinc-200 dark:hover:bg-neutral-800 hover:text-zinc-900 dark:hover:text-white"
               cdkMenuItem>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-4">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
@@ -111,7 +111,7 @@
   @if (showSearch) {
     <div class="md:hidden px-4 pb-3">
       <div class="flex items-center gap-2 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-full px-4 py-2 focus-within:border-orange-500">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 text-zinc-500 dark:text-neutral-400 shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 text-zinc-700 dark:text-neutral-300 shrink-0">
           <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
         </svg>
         <input class="flex-1 bg-transparent outline-none text-zinc-900 dark:text-neutral-100 placeholder:text-zinc-500 dark:placeholder:text-neutral-500 text-sm"
@@ -121,7 +121,7 @@
           <div class="w-5 h-5 border-2 border-zinc-500 dark:border-neutral-400 border-t-transparent rounded-full animate-spin shrink-0"></div>
         }
         @if(!isLoading() && isOpen() && results().length > 0) {
-          <div class="text-zinc-500 dark:text-neutral-400 cursor-pointer" (click)="clearSearch()">
+          <div class="text-zinc-700 dark:text-neutral-300 cursor-pointer" (click)="clearSearch()">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
               <path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
             </svg>
@@ -147,7 +147,7 @@
                 }
                 <div class="min-w-0 flex-1">
                   <p class="text-sm text-zinc-900 dark:text-neutral-100 font-medium truncate">{{ r.name }}</p>
-                  <p class="text-xs text-zinc-500 dark:text-neutral-400 uppercase font-mono truncate">{{ r.symbol }}</p>
+                  <p class="text-xs text-zinc-700 dark:text-neutral-300 uppercase font-mono truncate">{{ r.symbol }}</p>
                 </div>
               </div>
             </div>
@@ -157,7 +157,7 @@
 
       @if (isOpen() && query().length > 1 && results().length === 0 && !isLoading()) {
         <div class="mt-2 w-full bg-zinc-100 dark:bg-neutral-900 border border-zinc-400 dark:border-neutral-600 rounded-xl px-4 py-3 z-50">
-          <p class="text-sm text-zinc-500 dark:text-neutral-400">No se encontraron activos para "{{ query() }}"</p>
+          <p class="text-sm text-zinc-700 dark:text-neutral-300">No se encontraron activos para "{{ query() }}"</p>
         </div>
       }
     </div>

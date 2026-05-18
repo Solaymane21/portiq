@@ -241,47 +241,55 @@ class InvestmentController extends Controller
             ->filter(fn($inv) => $inv->symbol)
             ->pluck('symbol')
             ->map(fn($s) => [
-                'api_id' => $s->api_id,
+                'api_id'     => $s->api_id,
                 'asset_type' => $s->asset_type,
-                'symbol' => $s->symbol,
+                'symbol'     => $s->symbol,
             ])
             ->toArray();
 
-        if (empty($symbols)) {
-            return [];
+        if (empty($symbols)) return [];
+
+        $tickerMap = [];
+        foreach ($symbols as $s) {
+            $ticker = $s['asset_type'] === 'crypto'
+                ? $s['api_id'] 
+                : $s['symbol'];
+            $tickerMap[$ticker] = $s['api_id']; 
         }
 
-        $apiIds = array_column($symbols, 'api_id');
-        $prices = $this->getPricesFromPythonAPI($apiIds);
+        $prices = $this->getPricesFromPythonAPI(array_keys($tickerMap));
 
-        return $portfolio->investments->map(function ($investment) use ($prices) {
-            if (!$investment->symbol) {
-                return null;
-            }
+        return $portfolio->investments->map(function ($investment) use ($prices, $tickerMap) {
+            if (!$investment->symbol) return null;
 
-            $currentPrice = $prices[$investment->symbol->api_id] ?? $investment->avg_buy_price;
-            $currentPrice = max($currentPrice, 0.00000001); // Evitar 0
+            $assetType = $investment->symbol->asset_type;
+            $lookupKey = $assetType === 'crypto'
+                ? $investment->symbol->api_id
+                : $investment->symbol->symbol;
+
+            $currentPrice = $prices[$lookupKey] ?? $investment->avg_buy_price;
+            $currentPrice = max($currentPrice, 0.00000001);
 
             $currentValue = $investment->quantity * $currentPrice;
-            $buyValue = $investment->quantity * $investment->avg_buy_price;
-            $pl = $currentValue - $buyValue;
-            $plPct = $buyValue > 0 ? round(($pl / $buyValue) * 100, 2) : 0;
+            $buyValue     = $investment->quantity * $investment->avg_buy_price;
+            $pl           = $currentValue - $buyValue;
+            $plPct        = $buyValue > 0 ? round(($pl / $buyValue) * 100, 2) : 0;
 
             return [
-                'id' => $investment->id,
-                'symbol_id' => $investment->symbol_id,
-                'quantity' => $investment->quantity,
+                'id'            => $investment->id,
+                'symbol_id'     => $investment->symbol_id,
+                'quantity'      => $investment->quantity,
                 'avg_buy_price' => round($investment->avg_buy_price, 8),
-                'symbol' => $investment->symbol->symbol,
-                'name' => $investment->symbol->name,
-                'asset_type' => $investment->symbol->asset_type,
-                'image_url' => $investment->symbol->image_url,
-                'api_id' => $investment->symbol->api_id,
+                'symbol'        => $investment->symbol->symbol,
+                'name'          => $investment->symbol->name,
+                'asset_type'    => $investment->symbol->asset_type,
+                'image_url'     => $investment->symbol->image_url,
+                'api_id'        => $investment->symbol->api_id,
                 'current_price' => round($currentPrice, 8),
-                'value' => round($currentValue, 2),
-                'pl' => round($pl, 2),
+                'value'         => round($currentValue, 2),
+                'pl'            => round($pl, 2),
                 'pl_percentage' => $plPct,
-                'weight' => 0,
+                'weight'        => 0,
             ];
         })->filter()->values()->toArray();
     }
@@ -307,9 +315,11 @@ class InvestmentController extends Controller
 
                     foreach ($data['results'] ?? [] as $result) {
                         if (isset($result['price']) && is_numeric($result['price'])) {
-                            $prices[$result['symbol']] = (float) $result['price'];
+                            $prices[$result['api_id'] ?? $result['symbol']] = (float) $result['price'];
                         }
                     }
+
+                    Log::info('Prices mapeados:', $prices);
 
                     return $prices;
                 }

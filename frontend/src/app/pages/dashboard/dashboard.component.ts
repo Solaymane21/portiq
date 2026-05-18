@@ -14,9 +14,6 @@ import { PortfolioService } from '../../services/portfolio.service';
 import { InvestmentService } from '../../services/investment.service';
 import { PreferencesService } from '../../services/preferences.service';
 
-
-
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -24,8 +21,8 @@ import { PreferencesService } from '../../services/preferences.service';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
-export class DashboardComponent implements OnInit {
 
+export class DashboardComponent implements OnInit {
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -33,17 +30,13 @@ export class DashboardComponent implements OnInit {
   private notificationService = inject(NotificationsService);
   private portfolioService = inject(PortfolioService);
   private investmentService = inject(InvestmentService);
-  preferencesService  = inject(PreferencesService);
+  preferencesService = inject(PreferencesService);
 
+  hasInvestments = signal<boolean>(false);
+  isLoadingInvestments = signal<boolean>(true);
 
-  hasInvestments = signal<boolean>(false)
-  isLoadingInvestments = signal<boolean>(true)
-
-
-  //Tabla
   displayedColumns = ['ticker', 'name', 'price', 'change'];
   dataSource = new MatTableDataSource<PortfolioPosition>([]);
-
 
   @ViewChild(MatPaginator) set paginator(paginator: MatPaginator) {
     if (paginator) {
@@ -66,14 +59,11 @@ export class DashboardComponent implements OnInit {
             return item.name?.toLowerCase() ?? '';
           default:
             return (item as any)[sortHeaderId];
-          }
-        };
-      }
+        }
+      };
     }
+  }
 
-
-
-  // Carteras
   portfolios: PortfolioDashboard[] = [];
   selectedPortfolioId: number = 0;
   isLoadingPortfolios = true;
@@ -82,32 +72,24 @@ export class DashboardComponent implements OnInit {
     return this.portfolios.find(p => p.id === this.selectedPortfolioId) ?? this.portfolios[0];
   }
 
-  // Chart
   selectedPeriod = '1D';
   periods = ['1D', '1M', '1A'];
   donutOptions: any = {};
   areaOptions: any = null;
   isLoading = false;
 
-
-  // treemap
   treemapOptions: any = null;
   private dashboardInvestments: any[] = [];
   private dashboardTotalValue = 0;
 
-
-
   marketService = inject(MarketService);
-  collapsed = signal(false)
-
+  collapsed = signal(false);
 
   private get primaryColor(): string {
     return this.preferencesService.colorHex();
   }
 
-
   constructor() {
-    // cuando cambia el color, reconstruye ambas gráficas
     effect(() => {
       this.preferencesService.colorTheme();
       if (this.currentPortfolio) {
@@ -118,7 +100,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-
   private rebuildAreaColor(): void {
     if (!this.areaOptions) return;
     this.areaOptions = {
@@ -126,7 +107,6 @@ export class DashboardComponent implements OnInit {
       colors: [this.primaryColor]
     };
   }
-
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
@@ -144,24 +124,18 @@ export class DashboardComponent implements OnInit {
       }
     });
 
-
-
     this.portfolioService.getPortfolios().subscribe({
       next: (carteras: any[]) => {
 
-
         const defaultCarteras = carteras.find(c => c.is_default) ?? carteras[0];
-
 
         if (!defaultCarteras) {
           this.isLoadingPortfolios = false;
           this.isLoadingInvestments.set(false);
-          return
+          return;
         }
 
-
         this.selectedPortfolioId = defaultCarteras.id;
-
 
         this.portfolios = carteras.map(c => ({
           id: c.id,
@@ -176,125 +150,107 @@ export class DashboardComponent implements OnInit {
           positions: []
         }));
 
-
         this.cargarInvestmentsDashboard(this.selectedPortfolioId);
-        
         this.isLoadingPortfolios = false;
       },
       error: (err) => {
         console.error('Error cargando carteras', err);
         this.isLoadingPortfolios = false;
-        
       }
     });
   }
 
-
-
   onPortfolioChange(portfolioId: number): void {
     this.selectedPortfolioId = +portfolioId;
     this.areaOptions = null;
-    this.treemapOptions = null
+    this.treemapOptions = null;
     this.donutOptions = null;
     this.dataSource.data = [];
     this.dataSource.paginator?.firstPage();
-    this.isLoadingInvestments.set(true)
+    this.isLoadingInvestments.set(true);
     this.cargarInvestmentsDashboard(this.selectedPortfolioId);
   }
-
-
 
   private cargarInvestmentsDashboard(portfolioId: number): void {
     this.isLoading = true;
     this.areaOptions = null;
-    this.isLoadingInvestments.set(true)
-
+    this.isLoadingInvestments.set(true);
 
     this.investmentService.getInvestments(portfolioId).subscribe({
       next: (response: any) => {
         console.log('Response API:', response);
 
-
-        // validar el caso de que tenga inveriones pero la cantidad de acciones sea 0
-        const validInvestments = response.investments.filter((inv: any) => 
+        const investments = response.investments.filter((inv: any) =>
           parseFloat(inv.quantity || '0') > 0
         );
 
-
-        // flag para mostrar mensage si no tiene inveriones
-        if (validInvestments.length > 0) {
-          this.hasInvestments.set(true);
-        } else {
-          this.hasInvestments.set(false);
-        }
-        
-        const investments = response.investments.filter((inv: any) => inv.quantity > 0);
+        this.hasInvestments.set(investments.length > 0);
         this.dashboardInvestments = investments;
         this.dashboardTotalValue = response.total_value ?? 0;
-
 
         const idx = this.portfolios.findIndex(p => p.id === portfolioId);
         if (idx !== -1) {
 
-
           const primerActivo = investments[0];
-          const esCrypto = primerActivo?.asset_type === 'crypto';
           const symbolParaChart = primerActivo?.symbol ?? 'AAPL';
 
+          const totalGanancias = investments.reduce((acc: number, inv: any) =>
+            acc + (parseFloat(inv.pl) || 0), 0);
+
+          const totalInvertido = investments.reduce((acc: number, inv: any) =>
+            acc + (parseFloat(inv.avg_buy_price) || 0) * (parseFloat(inv.quantity) || 0), 0);
+
+          const rendimientoGlobal = totalInvertido > 0
+            ? (totalGanancias / totalInvertido) * 100
+            : 0;
 
           this.portfolios[idx] = {
             ...this.portfolios[idx],
-            totalValue: (response.total_value ?? 0) * 1.085,
-            totalValueUSD: (response.total_value ?? 0) * 1.085,
+            totalValue: response.total_value ?? 0,
+            totalValueUSD: totalGanancias,
             totalPositions: investments.length,
-            profitLoss: (response.stats?.ganancias ?? 0) * 1.085,
+            profitLoss: rendimientoGlobal,
             symbol: symbolParaChart,
             assetType: primerActivo?.asset_type ?? 'stock',
             allocation: this.buildAllocation(investments, response.total_value),
-            positions: investments.map((inv: any) => ({
-              ticker: inv.symbol,
-              name: inv.name ?? inv.symbol,
-              price: '$' + Number(inv.current_price ?? 0).toFixed(2),
-              change: (inv.return_7d >= 0 ? '+' : '') + Number(inv.return_7d ?? 0).toFixed(2) + '%',
-              positive: (inv.return_7d ?? 0) >= 0
-            }))
+            positions: investments.map((inv: any) => {
+              const rendimiento = parseFloat(inv.pl_percentage) || 0;
+              return {
+                ticker: inv.symbol,
+                name: inv.name ?? inv.symbol,
+                price: '$' + Number(inv.current_price ?? 0).toFixed(2),
+                change: (rendimiento >= 0 ? '+' : '') + rendimiento.toFixed(2) + '%',
+                positive: rendimiento >= 0
+              };
+            })
           };
-
 
           this.portfolios = [...this.portfolios];
         }
-
-
 
         this.dataSource.data = this.currentPortfolio?.positions ?? [];
         this.buildDonutChart();
         this.buildTreemap(this.dashboardInvestments, this.dashboardTotalValue);
         this.loadChart(this.selectedPeriod);
-
-
-        this.isLoadingInvestments.set(false)
+        this.isLoadingInvestments.set(false);
       },
       error: () => {
         this.isLoading = false;
-        this.isLoadingInvestments.set(false)
+        this.isLoadingInvestments.set(false);
         this.buildDonutChart();
         this.loadChart(this.selectedPeriod);
       }
     });
   }
 
-
-  // allocation
   private buildAllocation(investments: any[], totalValue: number): any[] {
     if (!investments.length || !totalValue) return [];
-
 
     const grupos: Record<string, number> = {};
     investments.forEach((inv: any) => {
       const tipo = inv.asset_type ?? 'Otros';
       grupos[tipo] = (grupos[tipo] ?? 0) + (inv.value ?? 0);
     });
-
 
     return Object.entries(grupos).map(([tipo, valor]) => ({
       label: tipo === 'crypto' ? 'Criptomonedas'
@@ -306,22 +262,15 @@ export class DashboardComponent implements OnInit {
     }));
   }
 
-
-
-  // Donut
   private buildDonutChart(): void {
     if (!this.currentPortfolio) return;
     this.donutOptions = null;
-
 
     setTimeout(() => {
       if (!this.currentPortfolio) return;
       const alloc = this.currentPortfolio.allocation;
       const total = this.currentPortfolio.totalValue;
-
-
       const colors = alloc.map(i => i.color);
-
 
       this.donutOptions = {
         series: alloc.map(i => i.percent),
@@ -372,10 +321,8 @@ export class DashboardComponent implements OnInit {
     }, 0);
   }
 
-
   private getAssetColor(tipo: string): string {
     const primary = this.primaryColor;
-
 
     const colores: Record<string, string> = {
       stock: primary,
@@ -383,24 +330,19 @@ export class DashboardComponent implements OnInit {
       etf: primary + '44'
     };
 
-
     return colores[tipo] ?? primary;
   }
-
 
   setPeriod(period: string): void {
     this.selectedPeriod = period;
     this.loadChart(period);
   }
 
-
-
   private loadChart(period: string): void {
     if (!this.currentPortfolio) return;
     this.isLoading = true;
     const symbol = this.currentPortfolio.symbol;
     const assetType = this.currentPortfolio.assetType ?? 'stock';
-
 
     this.marketService.getHistory(symbol, period, assetType).subscribe({
       next: (response) => {
@@ -414,11 +356,8 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-
-
   private buildAreaChart(data: { x: number; y: number }[], period: string): void {
     const tooltipFormat = period === '1D' ? 'HH:mm' : 'dd MMM yyyy';
-
 
     this.areaOptions = {
       series: [{ name: this.currentPortfolio?.name ?? '', data }],
@@ -467,16 +406,13 @@ export class DashboardComponent implements OnInit {
     };
   }
 
-
   private buildTreemap(investments: any[], totalValue: number): void {
     if (!investments.length || !totalValue) {
       this.treemapOptions = null;
       return;
     }
 
-
     const baseHex = this.primaryColor;
-
 
     const hexToRgba = (hex: string, alpha: number) => {
       const clean = hex.replace('#', '');
@@ -485,7 +421,6 @@ export class DashboardComponent implements OnInit {
       const b = parseInt(clean.slice(4, 6), 16);
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
-
 
     const getAlphaByWeight = (weight: number) => {
       if (weight <= 5) return 0.35;
@@ -496,14 +431,12 @@ export class DashboardComponent implements OnInit {
       return 1;
     };
 
-
     const treemapData = investments
       .filter((inv: any) => (inv.value ?? 0) > 0)
       .map((inv: any) => {
         const weight = ((inv.value ?? 0) / totalValue) * 100;
         const alpha = getAlphaByWeight(weight);
         const symbol = inv.symbol ?? inv.name ?? 'Activo';
-
 
         return {
           x: symbol,
@@ -512,7 +445,6 @@ export class DashboardComponent implements OnInit {
           meta: symbol
         };
       });
-
 
     this.treemapOptions = {
       series: [{ data: treemapData }],

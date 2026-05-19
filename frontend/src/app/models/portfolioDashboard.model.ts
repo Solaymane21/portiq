@@ -9,7 +9,9 @@ export interface PortfolioAllocation {
 export interface PortfolioPosition {
   ticker: string;
   name: string;
-  price: string;
+  quantity: number;  
+  price: number;  
+  value: number; 
   change: string;
   positive: boolean;
 }

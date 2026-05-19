@@ -35,7 +35,7 @@ export class DashboardComponent implements OnInit {
   hasInvestments = signal<boolean>(false);
   isLoadingInvestments = signal<boolean>(true);
 
-  displayedColumns = ['ticker', 'name', 'price', 'change'];
+  displayedColumns = ['ticker', 'quantity', 'price', 'value','change'];
   dataSource = new MatTableDataSource<PortfolioPosition>([]);
 
   @ViewChild(MatPaginator) set paginator(paginator: MatPaginator) {
@@ -55,8 +55,10 @@ export class DashboardComponent implements OnInit {
             return parseFloat(String(item.change).replace(/[^0-9.-]/g, '')) || 0;
           case 'ticker':
             return item.ticker?.toLowerCase() ?? '';
-          case 'name':
-            return item.name?.toLowerCase() ?? '';
+          case 'quantity':
+            return item.quantity ?? 0;
+          case 'value':
+            return item.value ?? 0;
           default:
             return (item as any)[sortHeaderId];
         }
@@ -225,11 +227,17 @@ export class DashboardComponent implements OnInit {
             allocation: this.buildAllocation(investments, response.total_value),
             positions: investments.map((inv: any) => {
               const rendimiento = parseFloat(inv.pl_percentage) || 0;
+              const cantidad    = parseFloat(inv.quantity) || 0;
+              const precio      = parseFloat(inv.current_price) || 0;
+              const valor       = parseFloat(inv.value) || (cantidad * precio);
+
               return {
-                ticker: inv.symbol,
-                name: inv.name ?? inv.symbol,
-                price: '$' + Number(inv.current_price ?? 0).toFixed(2),
-                change: (rendimiento >= 0 ? '+' : '') + rendimiento.toFixed(2) + '%',
+                ticker:   inv.symbol,
+                name:     inv.name ?? inv.symbol,
+                quantity: cantidad,
+                price:    precio,
+                value:    valor,
+                change:   (rendimiento >= 0 ? '+' : '') + rendimiento.toFixed(2) + '%',
                 positive: rendimiento >= 0
               };
             })

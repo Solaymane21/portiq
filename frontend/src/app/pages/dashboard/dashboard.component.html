@@ -145,13 +145,17 @@
           <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-zinc-500 dark:text-neutral-400 uppercase bg-transparent border-b border-zinc-400 dark:border-neutral-700">Ticker</th>
           <td mat-cell *matCellDef="let pos" class="text-sm text-zinc-900 dark:text-neutral-100 border-b border-zinc-400 dark:border-neutral-700 py-3">{{ pos.ticker }}</td>
         </ng-container>
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-zinc-500 dark:text-neutral-400 uppercase bg-transparent border-b border-zinc-400 dark:border-neutral-700">Nombre</th>
-          <td mat-cell *matCellDef="let pos" class="text-zinc-500 dark:text-neutral-400 border-b border-zinc-400 dark:border-neutral-700 py-3">{{ pos.name }}</td>
+        <ng-container matColumnDef="quantity">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-zinc-500 dark:text-neutral-400 uppercase bg-transparent border-b border-zinc-400 dark:border-neutral-700">Cantidad</th>
+          <td mat-cell *matCellDef="let pos" class="text-sm text-zinc-900 dark:text-neutral-100 border-b border-zinc-400 dark:border-neutral-700 py-3">{{ pos.quantity | number:'1.0-4' }}</td>
         </ng-container>
         <ng-container matColumnDef="price">
           <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-zinc-500 dark:text-neutral-400 uppercase bg-transparent border-b border-zinc-400 dark:border-neutral-700">Precio</th>
-          <td mat-cell *matCellDef="let pos" class="text-sm text-zinc-900 dark:text-neutral-100 border-b border-zinc-400 dark:border-neutral-700 py-3">{{ pos.price }}</td>
+          <td mat-cell *matCellDef="let pos" class="text-sm text-zinc-900 dark:text-neutral-100 border-b border-zinc-400 dark:border-neutral-700 py-3">{{ pos.price | number:'1.2-2' }}$</td>
+        </ng-container>
+        <ng-container matColumnDef="value">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-zinc-500 dark:text-neutral-400 uppercase bg-transparent border-b border-zinc-400 dark:border-neutral-700">Valor</th>
+          <td mat-cell *matCellDef="let pos" class="text-sm text-zinc-900 dark:text-neutral-100 border-b border-zinc-400 dark:border-neutral-700 py-3">{{ pos.value | number:'1.2-2' }}$</td>  
         </ng-container>
         <ng-container matColumnDef="change">
           <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-zinc-500 dark:text-neutral-400 uppercase bg-transparent border-b border-zinc-400 dark:border-neutral-700">Rendimiento</th>

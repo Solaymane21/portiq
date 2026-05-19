@@ -178,7 +178,7 @@ class AssetSearchController extends Controller
             $response = Http::timeout(10)->get("{$pythonApi}/historical-price/{$request->api_id}", [
                 'date' => $request->date,
                 'asset_type' => $request->asset_type,
-                'convert_to_eur' => 'true'
+                'convert_to_eur' => 'false'
             ]);
 
             if ($response->successful() && isset($response->json()['price'])) {

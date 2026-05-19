@@ -181,12 +181,10 @@ export class DashboardComponent implements OnInit {
       next: (response: any) => {
         console.log('Response API:', response);
 
-        
-
         const investments = response.investments.filter((inv: any) =>
           parseFloat(inv.quantity || '0') > 0
         );
-
+        
         console.table(investments.map((inv: any) => ({
           symbol:        inv.symbol,
           qty:           inv.quantity,

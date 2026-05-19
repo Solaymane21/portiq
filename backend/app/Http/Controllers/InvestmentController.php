@@ -252,12 +252,21 @@ class InvestmentController extends Controller
         $tickerMap = [];
         foreach ($symbols as $s) {
             $ticker = $s['asset_type'] === 'crypto'
-                ? $s['api_id'] 
+                ? $s['api_id']
                 : $s['symbol'];
-            $tickerMap[$ticker] = $s['api_id']; 
+            $tickerMap[$ticker] = [
+                'api_id'     => $s['api_id'],
+                'asset_type' => $s['asset_type'],
+            ];
         }
 
-        $prices = $this->getPricesFromPythonAPI(array_keys($tickerMap));
+        $symbolsPayload = array_map(fn($ticker, $meta) => [
+            'ticker'     => $ticker,
+            'api_id'     => $meta['api_id'],
+            'asset_type' => $meta['asset_type'],
+        ], array_keys($tickerMap), array_values($tickerMap));
+
+        $prices = $this->getPricesFromPythonAPI($symbolsPayload);
 
         return $portfolio->investments->map(function ($investment) use ($prices, $tickerMap) {
             if (!$investment->symbol) return null;
@@ -297,20 +306,21 @@ class InvestmentController extends Controller
     /**
      * Llamada a tu FastAPI /prices endpoint
      */
-    private function getPricesFromPythonAPI(array $apiIds): array
+    private function getPricesFromPythonAPI(array $symbols): array
     {
-        $symbolsStr = implode(',', $apiIds);
-        $cacheKey = 'prices_' . md5($symbolsStr);
+        $tickers    = implode(',', array_column($symbols, 'ticker'));
+        $assetTypes = implode(',', array_column($symbols, 'asset_type'));
+        $cacheKey   = 'prices_' . md5($tickers);
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($symbolsStr) {
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($tickers, $assetTypes) {
             try {
                 $response = Http::timeout(10)->get(env('PYTHON_API_URL') . '/prices', [
-                    'symbols' => $symbolsStr,
-                    'asset_types' => 'stock,crypto',
+                    'symbols'     => $tickers,
+                    'asset_types' => $assetTypes,
                 ]);
 
                 if ($response->successful()) {
-                    $data = $response->json();
+                    $data   = $response->json();
                     $prices = [];
 
                     foreach ($data['results'] ?? [] as $result) {
@@ -320,7 +330,6 @@ class InvestmentController extends Controller
                     }
 
                     Log::info('Prices mapeados:', $prices);
-
                     return $prices;
                 }
             } catch (\Exception $e) {
@@ -330,7 +339,7 @@ class InvestmentController extends Controller
             return [];
         });
     }
-
+        
     /**
      * Importacion masiva optimizada
      */

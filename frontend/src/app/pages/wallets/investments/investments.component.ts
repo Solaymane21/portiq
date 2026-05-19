@@ -38,6 +38,8 @@ export class InvestmentsComponent implements OnInit {
   dataSource = new MatTableDataSource<Investment>([]);
   paginator = viewChild(MatPaginator);
   sort = viewChild(MatSort);
+
+  today: string = new Date().toISOString().split('T')[0];
   
 
   columnasDef = [

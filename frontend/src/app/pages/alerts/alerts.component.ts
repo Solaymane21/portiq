@@ -79,8 +79,13 @@ export class AlertsComponent implements OnInit {
 
   private loadCurrentPrices(alerts: Alert[]): void {
     if (!alerts.length) return;
-    const symbols    = [...new Set(alerts.map(a => a.symbol))].join(',');
-    const assetTypes = [...new Set(alerts.map(a => a.asset_type))].join(',');
+
+    const uniquePairs = [...new Map(
+      alerts.map(a => [`${a.symbol}:${a.asset_type}`, a])
+    ).values()];
+
+    const symbols    = uniquePairs.map(a => a.symbol).join(',');
+    const assetTypes = uniquePairs.map(a => a.asset_type).join(',');
 
     this.alertsService.getCurrentPrices(symbols, assetTypes).subscribe(results => {
       const map: Record<string, number> = { ...this.currentPrices() };
@@ -88,7 +93,6 @@ export class AlertsComponent implements OnInit {
       this.currentPrices.set(map);
     });
   }
-
 
   onSearch(query: string): void {
     if (query.length < 2) { this.searchResults.set([]); return; }

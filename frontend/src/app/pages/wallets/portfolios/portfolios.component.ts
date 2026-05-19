@@ -4,11 +4,13 @@ import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, finalize } from 'rxjs/operators';
+import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
+
 import { PortfolioService } from '../../../services/portfolio.service';
 import { InvestmentService } from '../../../services/investment.service';
 import { Portfolio } from '../../../models/portfolio.model';
 import { ImportPositionRow, parsePositionsCsv } from '../wallets-csv';
-import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
+
 
 @Component({
   selector: 'app-portfolios',
@@ -18,65 +20,77 @@ import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
   styleUrl: './portfolios.component.css'
 })
 export class PortfoliosComponent implements OnInit {
-  private router = inject(Router);
-  private portfolioService = inject(PortfolioService);
+
+  // Servicios
+  private router            = inject(Router);
+  private portfolioService  = inject(PortfolioService);
   private investmentService = inject(InvestmentService);
 
+  // Referencias del template
   csvFileInput = viewChild<ElementRef<HTMLInputElement>>('csvFileInput');
 
-  isLoading = signal(true);
-  isSubmitting = signal(false);
-  isModalOpen = signal(false);
-  isDeleteModalOpen = signal(false);
-  formMode = signal<'create' | 'edit'>('create');
-  emptyHover = signal(false);
-
-  importModalOpen = signal(false);
-  importSubmitting = signal(false);
-  importTarget = signal<'existing' | 'new'>('existing');
-  importRows = signal<ImportPositionRow[]>([]);
-  importParseError = signal<string | null>(null);
-  importFileName = signal<string | null>(null);
-
-  myPortfolios = signal<Portfolio[]>([]);
-  selectedPortfolio = signal<Portfolio | null>(null);
+  // Estado general
+  isLoading     = signal(true);
+  isSubmitting  = signal(false);
+  emptyHover    = signal(false);
   skeletonItems = Array(6);
 
+  myPortfolios      = signal<Portfolio[]>([]);
+  selectedPortfolio = signal<Portfolio | null>(null);
+
   sortedPortfolios = computed(() => {
-    const portfolios = this.myPortfolios();
-    return [...portfolios].sort((a, b) => {
+    return [...this.myPortfolios()].sort((a, b) => {
       if (a.is_default && !b.is_default) return -1;
       if (!a.is_default && b.is_default) return 1;
       return a.id - b.id;
     });
   });
 
+  // Modal crear / editar
+  isModalOpen = signal(false);
+  formMode    = signal<'create' | 'edit'>('create');
+
   portfolioForm = new FormGroup({
-    name: new FormControl('', [Validators.required, Validators.maxLength(15)]),
+    name:       new FormControl('', [Validators.required, Validators.maxLength(15)]),
     is_default: new FormControl(false),
-    is_public: new FormControl(false)
+    is_public:  new FormControl(false)
   });
 
-  portfolioIsPublic = toSignal(
-    this.portfolioForm.get('is_public')!.valueChanges,
-    { initialValue: false }
-  );
-  portfolioIsDefault = toSignal(
-    this.portfolioForm.get('is_default')!.valueChanges,
-    { initialValue: false }
-  );
+  portfolioIsPublic  = toSignal(this.portfolioForm.get('is_public')!.valueChanges,  { initialValue: false });
+  portfolioIsDefault = toSignal(this.portfolioForm.get('is_default')!.valueChanges, { initialValue: false });
+
+  // Modal eliminar
+  isDeleteModalOpen = signal(false);
+
+  // Modal importar CSV
+  importModalOpen  = signal(false);
+  importSubmitting = signal(false);
+  importTarget     = signal<'existing' | 'new'>('existing');
+  importRows       = signal<ImportPositionRow[]>([]);
+  importParseError = signal<string | null>(null);
+  importFileName   = signal<string | null>(null);
 
   importNewPortfolio = new FormGroup({
-    name: new FormControl('', [Validators.required, Validators.maxLength(15)]),
+    name:       new FormControl('', [Validators.required, Validators.maxLength(15)]),
     is_default: new FormControl(false),
-    is_public: new FormControl(false)
+    is_public:  new FormControl(false)
   });
 
   importPortfolioId = new FormControl<number | null>(null, [Validators.required]);
 
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Lifecycle
+  // ─────────────────────────────────────────────────────────────────────────
+
   ngOnInit() {
     this.loadPortfolios();
   }
+
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Carteras
+  // ─────────────────────────────────────────────────────────────────────────
 
   loadPortfolios() {
     this.isLoading.set(true);
@@ -96,9 +110,9 @@ export class PortfoliosComponent implements OnInit {
     if (this.portfolioForm.invalid) return;
 
     const data = {
-      name: this.portfolioForm.value.name!,
+      name:       this.portfolioForm.value.name!,
       is_default: this.portfolioForm.value.is_default!,
-      is_public: this.portfolioForm.value.is_public!
+      is_public:  this.portfolioForm.value.is_public!
     };
 
     const request$ = this.formMode() === 'create'
@@ -137,6 +151,66 @@ export class PortfoliosComponent implements OnInit {
     });
   }
 
+  goToPortfolio(portfolioId: number) {
+    this.router.navigate(['/app/wallets', portfolioId]);
+  }
+
+  getGridClass(): string {
+    const len = this.sortedPortfolios().length;
+    if (len === 1) return 'grid-cols-1';
+    if (len === 2) return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2';
+    return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
+  }
+
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Modal crear / editar
+  // ─────────────────────────────────────────────────────────────────────────
+
+  openCreateModal() {
+    this.prepareModal('create', null);
+  }
+
+  openEditModal(portfolio: Portfolio) {
+    this.prepareModal('edit', portfolio);
+  }
+
+  closeModal() {
+    this.isModalOpen.set(false);
+    this.selectedPortfolio.set(null);
+  }
+
+  private prepareModal(mode: 'create' | 'edit', portfolio: Portfolio | null) {
+    this.formMode.set(mode);
+    this.selectedPortfolio.set(portfolio);
+    this.portfolioForm.patchValue({
+      name:       portfolio?.name       ?? '',
+      is_default: portfolio?.is_default ?? false,
+      is_public:  portfolio?.is_public  ?? false
+    });
+    this.isModalOpen.set(true);
+  }
+
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Modal eliminar
+  // ─────────────────────────────────────────────────────────────────────────
+
+  openDeleteModal(portfolio: Portfolio) {
+    this.selectedPortfolio.set(portfolio);
+    this.isDeleteModalOpen.set(true);
+  }
+
+  closeDeleteModal() {
+    this.isDeleteModalOpen.set(false);
+    this.selectedPortfolio.set(null);
+  }
+
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Modal importar CSV
+  // ─────────────────────────────────────────────────────────────────────────
+
   openImportModal() {
     this.importModalOpen.set(true);
     this.importRows.set([]);
@@ -154,15 +228,20 @@ export class PortfoliosComponent implements OnInit {
     if (input) input.value = '';
   }
 
+  triggerCsvSelection() {
+    this.csvFileInput()?.nativeElement.click();
+  }
+
   onCsvSelected(event: Event) {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+    const file  = input.files?.[0];
     if (!file) return;
 
     this.importFileName.set(file.name);
+
     const reader = new FileReader();
     reader.onload = () => {
-      const text = String(reader.result ?? '');
+      const text   = String(reader.result ?? '');
       const parsed = parsePositionsCsv(text);
       if (parsed.error) {
         this.importParseError.set(parsed.error);
@@ -182,13 +261,13 @@ export class PortfoliosComponent implements OnInit {
     this.importSubmitting.set(true);
 
     const positions = rows.map((r) => ({
-      symbol: r.symbol,
-      name: r.name ?? null,
-      image_url: r.image_url ?? null,
-      asset_type: r.asset_type,
-      quantity: r.quantity,
+      symbol:        r.symbol,
+      name:          r.name       ?? null,
+      image_url:     r.image_url  ?? null,
+      asset_type:    r.asset_type,
+      quantity:      r.quantity,
       avg_buy_price: r.avg_buy_price,
-      operated_at: r.operated_at ?? null
+      operated_at:   r.operated_at ?? null
     }));
 
     if (this.importTarget() === 'new') {
@@ -200,76 +279,28 @@ export class PortfoliosComponent implements OnInit {
       this.portfolioService
         .createPortfolio({ name: v.name!, is_default: !!v.is_default, is_public: !!v.is_public })
         .pipe(
-          switchMap((res: any) =>
-            this.investmentService.importPositions(res.portfolio.id, positions)
-          ),
+          switchMap((res: any) => this.investmentService.importPositions(res.portfolio.id, positions)),
           finalize(() => this.importSubmitting.set(false))
         )
         .subscribe({
-          next: () => { this.closeImportModal(); this.loadPortfolios(); },
+          next:  () => { this.closeImportModal(); this.loadPortfolios(); },
           error: (err) => console.error('Import error:', err)
         });
       return;
     }
 
     const pid = this.importPortfolioId.value;
-    if (pid == null) { this.importSubmitting.set(false); return; }
+    if (pid == null) {
+      this.importSubmitting.set(false);
+      return;
+    }
 
     this.investmentService
       .importPositions(pid, positions)
       .pipe(finalize(() => this.importSubmitting.set(false)))
       .subscribe({
-        next: () => { this.closeImportModal(); this.loadPortfolios(); },
+        next:  () => { this.closeImportModal(); this.loadPortfolios(); },
         error: (err) => console.error('Import error:', err)
       });
-  }
-
-  triggerCsvSelection() {
-    this.csvFileInput()?.nativeElement.click();
-  }
-
-  openCreateModal() {
-    this.prepareModal('create', null);
-  }
-
-  openEditModal(portfolio: Portfolio) {
-    this.prepareModal('edit', portfolio);
-  }
-
-  closeModal() {
-    this.isModalOpen.set(false);
-    this.selectedPortfolio.set(null);
-  }
-
-  openDeleteModal(portfolio: Portfolio) {
-    this.selectedPortfolio.set(portfolio);
-    this.isDeleteModalOpen.set(true);
-  }
-
-  closeDeleteModal() {
-    this.isDeleteModalOpen.set(false);
-    this.selectedPortfolio.set(null);
-  }
-
-  goToPortfolio(portfolioId: number) {
-    this.router.navigate(['/app/wallets', portfolioId]);
-  }
-
-  private prepareModal(mode: 'create' | 'edit', portfolio: Portfolio | null) {
-    this.formMode.set(mode);
-    this.selectedPortfolio.set(portfolio);
-    this.portfolioForm.patchValue({
-      name: portfolio ? portfolio.name : '',
-      is_default: portfolio ? portfolio.is_default : false,
-      is_public: portfolio ? portfolio.is_public : false
-    });
-    this.isModalOpen.set(true);
-  }
-
-  getGridClass(): string {
-    const len = this.sortedPortfolios().length;
-    if (len === 1) return 'grid-cols-1';
-    if (len === 2) return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2';
-    return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
   }
 }

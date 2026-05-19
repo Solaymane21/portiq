@@ -1,10 +1,8 @@
 <div class="space-y-6">
-  <div class="flex items-center justify-between gap-3">
+  <div class="flex items-center justify-between">
 
     <!-- TITULO -->
-    <div>
-      <h1 class="text-3xl font-ibm">Carteras</h1>
-    </div>
+    <h1 class="text-3xl font-ibm">Carteras</h1>
 
     <!-- BOTONES IMPORTAR CSV / NUEVA CARTERA -->
     <div class="flex items-center gap-3">
@@ -30,81 +28,81 @@
 
       <!-- BOTON NUEVA CARTERA -->
       <button
+        type="button"
         (click)="openCreateModal()"
         class="bg-orange-500 hover:bg-orange-500/80 h-10 px-3 rounded-md text-white flex items-center justify-center gap-2">
         <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
-        <span class="hidden sm:inline">Nueva Cartera</span>
+        <span class="hidden sm:inline whitespace-nowrap">Nueva Cartera</span>
       </button>
+
     </div>
   </div>
 
   <!-- LISTA DE CARTERAS -->
-  <div>
 
-    <!-- CARGANDO -->
-    @if (isLoading()) {
-      <div class="grid gap-4 auto-rows-fr grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        @for (n of skeletonItems; track n) {
-          <div class="flex flex-col p-4 rounded-xl border border-neutral-600 bg-neutral-950 h-full">
+  <!-- CARGANDO -->
+  @if (isLoading()) {
+    <div class="grid gap-4 auto-rows-fr grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      @for (n of skeletonItems; track n) {
+        <div class="flex flex-col p-4 rounded-xl border border-neutral-600 bg-neutral-950 h-full">
 
-            <div class="flex flex-col gap-1 min-w-0 pr-8 relative">
-              <div class="flex items-center gap-2 min-w-0">
-                <div class="h-5 w-36 bg-neutral-800 rounded animate-pulse"></div>
-              </div>
-              <div class="absolute top-0 right-0 h-5 w-5 bg-neutral-800 rounded animate-pulse"></div>
-              <div class="h-4 w-14 bg-neutral-800 rounded animate-pulse mt-1"></div>
+          <div class="flex flex-col gap-1 min-w-0 pr-8 relative">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="h-5 w-36 bg-neutral-800 rounded animate-pulse"></div>
             </div>
-
-            <div class="flex flex-1 justify-between items-center mt-4">
-              <div class="h-4 w-16 bg-neutral-800 rounded animate-pulse"></div>
-              <div class="h-6 w-20 bg-neutral-800 rounded animate-pulse"></div>
-            </div>
-
+            <div class="absolute top-0 right-0 h-5 w-5 bg-neutral-800 rounded animate-pulse"></div>
+            <div class="h-4 w-14 bg-neutral-800 rounded animate-pulse mt-1"></div>
           </div>
-          
-        }
-      </div>
 
-    <!-- SIN CARTERAS -->
-    } @else if (myPortfolios().length === 0) {
-      <div
-        (click)="openCreateModal()"
-        (mouseenter)="emptyHover.set(true)"
-        (mouseleave)="emptyHover.set(false)"
-        class="group flex flex-col items-center justify-center py-20 px-4 bg-neutral-950 hover:bg-neutral-950/80 border rounded-2xl cursor-pointer transition-colors"
-        [class.border-neutral-600]="!emptyHover()"
-        [class.border-orange-500]="emptyHover()">
-        <div
-          class="h-14 w-14 rounded-full flex items-center justify-center mb-5 transition-colors"
-          [class.bg-neutral-900]="!emptyHover()"
-          [class.text-neutral-500]="!emptyHover()"
-          [class.bg-orange-500]="emptyHover()"
-          [class.text-white]="emptyHover()">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
+          <div class="flex flex-1 justify-between items-center mt-4">
+            <div class="h-4 w-16 bg-neutral-800 rounded animate-pulse"></div>
+            <div class="h-6 w-20 bg-neutral-800 rounded animate-pulse"></div>
+          </div>
+
         </div>
-        <h3 class="text-white font-medium text-lg mb-2">Crear tu primera cartera</h3>
-        <p class="text-neutral-500 text-sm max-w-sm text-center">
-          Configura tu espacio para empezar a trackear tus activos y criptomonedas.
-        </p>
+      }
+    </div>
+
+  <!-- SIN CARTERAS -->
+  } @else if (myPortfolios().length === 0) {
+    <div
+      (click)="openCreateModal()"
+      (mouseenter)="emptyHover.set(true)"
+      (mouseleave)="emptyHover.set(false)"
+      class="group flex flex-col items-center justify-center py-20 px-4 bg-neutral-950 hover:bg-neutral-950/80 border rounded-2xl cursor-pointer"
+      [class.border-neutral-600]="!emptyHover()"
+      [class.border-orange-500]="emptyHover()">
+      <div
+        class="h-14 w-14 rounded-full flex items-center justify-center mb-5"
+        [class.bg-neutral-900]="!emptyHover()"
+        [class.text-neutral-500]="!emptyHover()"
+        [class.bg-orange-500]="emptyHover()"
+        [class.text-white]="emptyHover()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
       </div>
-    
-    <!-- CARTERAS -->
-    } @else {
-      <div class="grid gap-4 auto-rows-fr" [ngClass]="getGridClass()">
-        @for (portfolio of sortedPortfolios(); track portfolio.id) {
+      <h3 class="text-white font-medium text-lg mb-2">Crear tu primera cartera</h3>
+      <p class="text-neutral-500 text-sm max-w-sm text-center">
+        Configura tu espacio para empezar a trackear tus activos y criptomonedas.
+      </p>
+    </div>
+
+  <!-- CARTERAS -->
+  } @else {
+    <div class="grid gap-4 auto-rows-fr" [ngClass]="getGridClass()">
+      @for (portfolio of sortedPortfolios(); track portfolio.id) {
         <div
           (click)="goToPortfolio(portfolio.id)"
-          class="group flex flex-col p-4 rounded-xl border hover:opacity-80 cursor-pointer transition-all duration-200 h-full"
+          class="group flex flex-col p-4 rounded-xl border hover:opacity-80 cursor-pointer h-full"
           [ngClass]="{
-          'border-orange-500 bg-orange-500/20': portfolio.is_default,
-          'border-neutral-600 bg-neutral-950': !portfolio.is_default
-        }">
+            'border-orange-500 bg-orange-500/20': portfolio.is_default,
+            'border-neutral-600 bg-neutral-950': !portfolio.is_default
+          }">
 
-          <div class="flex flex-col gap-1 min-w-0 pr-28 relative">
+          <div class="flex flex-col gap-1 min-w-0 pr-8 relative">
             <div class="flex items-center gap-2 min-w-0">
               <h3 class="text-lg font-medium text-white truncate">{{ portfolio.name }}</h3>
               @if (portfolio.is_default) {
@@ -145,13 +143,13 @@
                 {{ portfolio.asset_count }} activos
               }
             </p>
-            <p class="text-white font-ibm font-medium text-lg">{{ portfolio.total_value }}€</p>
+            <p class="text-white font-ibm font-medium text-lg">{{ portfolio.total_value | number:'1.2-2' }}€</p>
           </div>
+
         </div>
       }
-      </div>
-    }
-  </div>
+    </div>
+  }
 </div>
 
 
@@ -233,7 +231,7 @@
               <button
                 type="button"
                 (click)="portfolioForm.get('is_default')!.setValue(false)"
-                class="flex-1 py-1.5 text-sm rounded-md transition-colors"
+                class="flex-1 py-1.5 text-sm rounded-md"
                 [class.bg-neutral-800]="portfolioIsDefault() === false"
                 [class.bg-orange-500]="portfolioIsDefault() === false"
                 [class.text-neutral-500]="portfolioIsDefault() !== false">
@@ -242,7 +240,7 @@
               <button
                 type="button"
                 (click)="portfolioForm.get('is_default')!.setValue(true)"
-                class="flex-1 py-1.5 text-sm rounded-md transition-colors"
+                class="flex-1 py-1.5 text-sm rounded-md"
                 [class.bg-neutral-800]="portfolioIsDefault() === true"
                 [class.bg-orange-500]="portfolioIsDefault() === true"
                 [class.text-neutral-500]="portfolioIsDefault() !== true">

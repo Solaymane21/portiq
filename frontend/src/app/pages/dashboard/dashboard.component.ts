@@ -121,6 +121,7 @@ export class DashboardComponent implements OnInit {
             this.notificationService.success('¡Bienvenido a PortIQ Pro!');
           }
         });
+        
       }
     });
 
@@ -180,9 +181,20 @@ export class DashboardComponent implements OnInit {
       next: (response: any) => {
         console.log('Response API:', response);
 
+        
+
         const investments = response.investments.filter((inv: any) =>
           parseFloat(inv.quantity || '0') > 0
         );
+
+        console.table(investments.map((inv: any) => ({
+          symbol:        inv.symbol,
+          qty:           inv.quantity,
+          avg_buy_price: inv.avg_buy_price,
+          current_price: inv.current_price,
+          pl:            inv.pl,
+          pl_percentage: inv.pl_percentage,
+        })));
 
         this.hasInvestments.set(investments.length > 0);
         this.dashboardInvestments = investments;

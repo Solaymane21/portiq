@@ -1,5 +1,5 @@
 <!-- HOME PAGE ONLY -->
-<div class="relative overflow-hidden bg-zinc-300 dark:bg-neutral-900">
+<div class="relative overflow-hidden bg-zinc-300 dark:bg-neutral-900 px-6 md:px-14">
 
   <!-- Fondo decorativo SOLO de esta página -->
   <div class="absolute inset-0 pointer-events-none z-0">
@@ -68,7 +68,7 @@
               @for (item of ticker; track item.symbol) {
                 <div
                   (click)="goToSymbol(item.symbol)"
-                  class="flex items-center justify-between py-2 px-3 rounded-xl hover:bg-zinc-200 dark:hover:bg-neutral-800 cursor-pointer transition-colors">
+                  class="flex items-center justify-between py-2 px-3 rounded-xl hover:bg-zinc-200 dark:hover:bg-neutral-800 cursor-pointer">
                   <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-zinc-300 dark:bg-neutral-800 overflow-hidden shrink-0">
                       <img
@@ -110,20 +110,19 @@
   </div>
 
   <!-- SECCIÓN DISPOSITIVOS -->
-  <section class="relative z-10 py-12 md:py-24 px-6 md:px-14 overflow-hidden">
+  <section class="relative z-10 py-12 md:py-24 overflow-hidden">
     <div class="max-w-7xl mx-auto">
 
       <div class="text-center mb-8 md:mb-16">
-        <p class="text-orange-500 font-semibold uppercase tracking-widest mb-3">
+        <p class="bg-zinc-300 dark:bg-transparent py-2 text-orange-500 font-semibold uppercase tracking-widest mb-3">
           Diseñado para todos los dispositivos
         </p>
         <h2 class="text-4xl md:text-5xl font-ibm font-black text-zinc-900 dark:text-white leading-tight">
-          Opera cuando quieras<br>
-          <span class="text-zinc-500 dark:text-neutral-400">donde quieras</span>
+          Opera cuando quieras donde quieras
         </h2>
       </div>
 
-      <div class="flex justify-center items-center h-[340px] sm:h-[480px] md:h-[560px] lg:h-[680px] overflow-hidden">
+      <div class="flex justify-center items-center min-h-[550px] sm:min-h-[600px] lg:min-h-[680px] py-4">
         @if (selectedDevice === 'desktop') {
           <div class="hidden dark:block w-full max-w-[860px]">
             <div class="bg-zinc-200 dark:bg-neutral-800 border border-zinc-300 dark:border-neutral-700 rounded-2xl p-2 shadow-2xl dark:shadow-black/60 shadow-zinc-300">
@@ -145,14 +144,14 @@
           <div class="hidden dark:block w-full max-w-[650px]">
             <div class="bg-zinc-200 dark:bg-neutral-800 border border-zinc-300 dark:border-neutral-700 rounded-2xl p-2 shadow-2xl dark:shadow-black/60 shadow-zinc-300">
               <div class="rounded-xl overflow-hidden">
-                <img src="images/dashboard-tablet-dark.png" alt="PortIQ en desktop" class="w-full h-auto object-cover" />
+                <img src="images/dashboard-tablet-dark.png" alt="PortIQ en tablet" class="w-full h-auto object-cover" />
               </div>
             </div>
           </div>
           <div class="dark:hidden w-full max-w-[650px]">
             <div class="bg-zinc-200 dark:bg-neutral-800 border border-zinc-300 dark:border-neutral-700 rounded-2xl p-2 shadow-2xl dark:shadow-black/60 shadow-zinc-300">
               <div class="rounded-xl overflow-hidden">
-                <img src="images/dashboard-tablet.png" alt="PortIQ en desktop" class="w-full h-auto object-cover" />
+                <img src="images/dashboard-tablet.png" alt="PortIQ en tablet" class="w-full h-auto object-cover" />
               </div>
             </div>
           </div>
@@ -180,12 +179,14 @@
         @for (device of devices; track device.key) {
           <button
             (click)="selectedDevice = device.key"
-            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+            class="px-4 py-1.5 rounded-full text-sm font-medium border"
             [class.bg-orange-500]="selectedDevice === device.key"
             [class.text-white]="selectedDevice === device.key"
             [class.bg-zinc-200]="selectedDevice !== device.key"
-            [class.dark:bg-neutral-800]="selectedDevice !== device.key"
+            [class.border-none]="selectedDevice === device.key"
+            [class.border-zinc-400]="selectedDevice !== device.key"
             [class.text-zinc-600]="selectedDevice !== device.key"
+            [class.dark:bg-neutral-800]="selectedDevice !== device.key"
             [class.dark:text-neutral-400]="selectedDevice !== device.key">
             {{ device.label }}
           </button>
@@ -195,54 +196,136 @@
     </div>
   </section>
 
-  <!-- TICKER -->
-  <div class="relative z-10 bg-zinc-200 dark:bg-neutral-800 p-2 overflow-hidden border-t border-zinc-300 dark:border-neutral-600">
-    @if (ticker.length === 0) {
-      <div class="flex gap-5 px-2">
-        @for (i of skeletonItems; track i) {
-          <div class="flex items-center bg-neutral-950 dark:bg-zinc-300 rounded-full px-3 py-1 gap-2 shrink-0 animate-pulse">
-            <div class="w-7 h-7 rounded-full bg-zinc-400 dark:bg-neutral-600"></div>
-            <div class="w-10 h-3 rounded bg-zinc-400 dark:bg-neutral-600"></div>
-            <div class="w-16 h-3 rounded bg-zinc-400 dark:bg-neutral-600"></div>
-            <div class="w-12 h-3 rounded bg-zinc-400 dark:bg-neutral-600"></div>
+  <section class="relative z-10 pb-12 md:pb-24 px-6 md:px-14">
+    <div class="max-w-7xl mx-auto">
+
+      <div class="text-center mb-8 md:mb-16">
+        <p class="bg-zinc-300 dark:bg-transparent py-2 text-orange-500 font-semibold uppercase tracking-widest mb-3">
+          Todo lo que necesitas
+        </p>
+        <h2 class="text-4xl md:text-5xl font-ibm font-black text-zinc-900 dark:text-white leading-tight">
+          Explora lasfuncionalidades
+        </h2>
+      </div>
+
+      <div class="flex flex-col lg:flex-row gap-6 min-h-fit">
+
+        <!-- MENÚ DESKTOP LATERAL -->
+        <aside class="hidden lg:flex flex-col justify-start min-w-[250px]">
+          <div class="w-full flex flex-col gap-2 bg-zinc-50 dark:bg-neutral-950 p-2 rounded-2xl border border-zinc-400 dark:border-neutral-600 sticky top-24">
+            @for (feature of features; track feature.id) {
+              <div (click)="activeFeature.set(feature.id)"
+                class="group flex items-center text-zinc-500 dark:text-neutral-400 font-normal hover:cursor-pointer hover:bg-zinc-200 dark:hover:bg-neutral-800 p-3 rounded-xl transition-colors"
+                [class.text-zinc-900]="activeFeature() === feature.id"
+                [class.dark:text-white]="activeFeature() === feature.id"
+                [class.font-medium]="activeFeature() === feature.id"
+                [ngClass]="{'bg-orange-500/20': activeFeature() === feature.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" [ngClass]="{'stroke-orange-500': activeFeature() === feature.id}">
+                  <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="feature.svgPath" />
+                </svg>
+                <span class="ms-4">{{ feature.label }}</span>
+              </div>
+            }
+          </div>
+        </aside>
+
+        <!-- MENÚ MOBILE HORIZONTAL -->
+        <div class="lg:hidden w-full mb-2 flex justify-center overflow-x-auto pb-2 scrollbar-hide">
+          <div class="flex justify-center items-center flex-nowrap gap-3 w-max">
+            @for (feature of features; track feature.id) {
+              <button (click)="activeFeature.set(feature.id)"
+                class="px-4 py-1.5 rounded-full text-sm border whitespace-nowrap transition-colors"
+                [class.bg-orange-500]="activeFeature() === feature.id"
+                [class.text-white]="activeFeature() === feature.id"
+                [class.bg-zinc-200]="activeFeature() !== feature.id"
+                [class.border-none]="activeFeature() === feature.id"
+                [class.border-zinc-400]="activeFeature() !== feature.id"
+                [class.text-zinc-600]="activeFeature() !== feature.id"
+                [class.dark:bg-neutral-800]="activeFeature() !== feature.id"
+                [class.dark:text-neutral-400]="activeFeature() !== feature.id">
+                {{ feature.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- CONTENIDO ACTIVO -->
+        <div class="flex-1 flex flex-col gap-4">
+        @for (feature of features; track feature.id) {
+          @if (activeFeature() === feature.id) {
+            <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-6 md:p-8">
+              <h3 class="font-ibm text-2xl mb-4 text-zinc-900 dark:text-white">{{ feature.title }}</h3>
+              <p class="text-zinc-600 dark:text-neutral-400 mb-6 leading-relaxed">
+                {{ feature.description }}
+              </p>
+              <div class="w-full bg-zinc-200 dark:bg-neutral-900 min-h-[300px] rounded-xl border border-zinc-300 dark:border-neutral-700 flex items-center justify-center overflow-hidden">
+
+                <img [src]="feature.images.desktop.light" [alt]="feature.title + ' desktop'" class="w-full h-auto object-cover hidden lg:block dark:hidden" />
+                <img [src]="feature.images.desktop.dark" [alt]="feature.title + ' desktop dark'" class="w-full h-auto object-cover hidden dark:lg:block" />
+
+                <img [src]="feature.images.tablet.light" [alt]="feature.title + ' tablet'" class="w-full h-auto object-cover hidden sm:block lg:hidden dark:hidden" />
+                <img [src]="feature.images.tablet.dark" [alt]="feature.title + ' tablet dark'" class="w-full h-auto object-cover hidden dark:sm:block dark:lg:hidden" />
+
+                <img [src]="feature.images.mobile.light" [alt]="feature.title + ' mobile'" class="w-full h-auto object-cover block sm:hidden dark:hidden" />
+                <img [src]="feature.images.mobile.dark" [alt]="feature.title + ' mobile dark'" class="w-full h-auto object-cover hidden dark:block dark:sm:hidden" />
+
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- TICKERS -->
+<div class="relative z-10 bg-zinc-200 dark:bg-neutral-800 p-2 overflow-hidden border-t border-zinc-300 dark:border-neutral-600">
+  @if (ticker.length === 0) {
+    <div class="flex gap-5 px-2">
+      @for (i of skeletonItems; track i) {
+        <div class="flex items-center bg-neutral-950 dark:bg-zinc-300 rounded-full px-3 py-1 gap-2 shrink-0 animate-pulse">
+          <div class="w-7 h-7 rounded-full bg-zinc-400 dark:bg-neutral-600"></div>
+          <div class="w-10 h-3 rounded bg-zinc-400 dark:bg-neutral-600"></div>
+          <div class="w-16 h-3 rounded bg-zinc-400 dark:bg-neutral-600"></div>
+          <div class="w-12 h-3 rounded bg-zinc-400 dark:bg-neutral-600"></div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="ticker-wrapper">
+      <div class="ticker-track">
+        @for (item of tickerDouble; track $index) {
+          <div
+            (click)="goToSymbol(item.symbol)"
+            class="flex items-center bg-zinc-50 dark:bg-neutral-950 shadow-sm dark:shadow-none border border-zinc-200 dark:border-transparent w-fit rounded-full px-3 py-1 gap-2 shrink-0 cursor-pointer hover:bg-zinc-50 dark:hover:bg-neutral-800">
+            <div class="w-7 h-7 rounded-full overflow-hidden bg-zinc-300 dark:bg-neutral-950 p-0.5">
+              <img
+                [src]="item.logoUrl"
+                [alt]="item.symbol"
+                (error)="onImgError($event)"
+                class="w-full h-full object-contain" />
+            </div>
+            <p class="font-medium text-sm text-zinc-900 dark:text-white">{{ item.symbol }}</p>
+            <p class="font-mono text-sm text-zinc-900 dark:text-white">
+              {{ item.price !== null ? (item.price | number:'1.2-2') + '$' : '—' }}
+            </p>
+            @if (item.change !== null) {
+              <p
+                class="font-mono text-sm"
+                [class.text-emerald-600]="item.change >= 0"
+                [class.dark:text-emerald-500]="item.change >= 0"
+                [class.text-red-600]="item.change < 0"
+                [class.dark:text-red-500]="item.change < 0">
+                {{ item.change >= 0 ? '+' : '' }}{{ item.change | number:'1.2-2' }}%
+              </p>
+            } @else {
+              <p class="font-mono text-sm text-zinc-400 dark:text-neutral-600">—</p>
+            }
           </div>
         }
       </div>
-    } @else {
-      <div class="ticker-wrapper">
-        <div class="ticker-track">
-          @for (item of tickerDouble; track $index) {
-            <div
-              (click)="goToSymbol(item.symbol)"
-              class="flex items-center bg-zinc-50 dark:bg-neutral-950 shadow-sm dark:shadow-none border border-zinc-200 dark:border-transparent w-fit rounded-full px-3 py-1 gap-2 shrink-0 cursor-pointer hover:bg-zinc-50 dark:hover:bg-neutral-800 transition-colors">
-              <div class="w-7 h-7 rounded-full overflow-hidden dark:bg-neutral-950 p-0.5">
-                <img
-                  [src]="item.logoUrl"
-                  [alt]="item.symbol"
-                  (error)="onImgError($event)"
-                  class="w-full h-full object-contain" />
-              </div>
-              <p class="font-medium text-sm text-zinc-900 dark:text-white">{{ item.symbol }}</p>
-              <p class="font-mono text-sm text-zinc-900 dark:text-white">
-                {{ item.price !== null ? (item.price | number:'1.2-2') + '$' : '—' }}
-              </p>
-              @if (item.change !== null) {
-                <p
-                  class="font-mono text-sm"
-                  [class.text-emerald-600]="item.change >= 0"
-                  [class.dark:text-emerald-500]="item.change >= 0"
-                  [class.text-red-600]="item.change < 0"
-                  [class.dark:text-red-500]="item.change < 0">
-                  {{ item.change >= 0 ? '+' : '' }}{{ item.change | number:'1.2-2' }}%
-                </p>
-              } @else {
-                <p class="font-mono text-sm text-zinc-400 dark:text-neutral-600">—</p>
-              }
-            </div>
-          }
-        </div>
-      </div>
-    }
-  </div>
-
+    </div>
+  }
 </div>

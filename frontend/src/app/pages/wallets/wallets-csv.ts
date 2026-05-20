@@ -5,28 +5,18 @@ export type ImportPositionRow = {
   asset_type: 'stock' | 'crypto';
   quantity: number;
   avg_buy_price: number;
-  name?: string;
-  image_url?: string;
-  operated_at?: string;
 };
 
 const HEADER_ALIASES: Record<string, keyof ImportPositionRow> = {
   symbol: 'symbol',
   ticker: 'symbol',
   activo: 'symbol',
-  asset_type: 'asset_type',
-  tipo: 'asset_type',
   quantity: 'quantity',
   cantidad: 'quantity',
   avg_buy_price: 'avg_buy_price',
   precio_medio: 'avg_buy_price',
   price: 'avg_buy_price',
   precio: 'avg_buy_price',
-  name: 'name',
-  nombre: 'name',
-  image_url: 'image_url',
-  operated_at: 'operated_at',
-  fecha: 'operated_at',
 };
 
 function normalizeHeader(h: string): string {
@@ -57,15 +47,8 @@ export function parsePositionsCsv(text: string): { rows: ImportPositionRow[]; er
     let q = false;
     for (let i = 0; i < line.length; i++) {
       const c = line[i];
-      if (c === '"') {
-        q = !q;
-        continue;
-      }
-      if (!q && c === delimiter) {
-        parts.push(cur);
-        cur = '';
-        continue;
-      }
+      if (c === '"') { q = !q; continue; }
+      if (!q && c === delimiter) { parts.push(cur); cur = ''; continue; }
       cur += c;
     }
     parts.push(cur);
@@ -77,15 +60,13 @@ export function parsePositionsCsv(text: string): { rows: ImportPositionRow[]; er
 
   headers.forEach((h, i) => {
     const key = HEADER_ALIASES[h];
-    if (key) {
-      col[key] = i;
-    }
+    if (key) col[key] = i;
   });
 
-  if (col.symbol === undefined || col.asset_type === undefined || col.quantity === undefined || col.avg_buy_price === undefined) {
+  if (col.symbol === undefined || col.quantity === undefined || col.avg_buy_price === undefined) {
     return {
       rows: [],
-      error: 'Faltan columnas. Necesitas: symbol (o ticker), asset_type, quantity y avg_buy_price (o price).',
+      error: 'Faltan columnas. Necesitas: symbol, quantity y avg_buy_price.',
     };
   }
 
@@ -93,44 +74,35 @@ export function parsePositionsCsv(text: string): { rows: ImportPositionRow[]; er
 
   for (let li = 1; li < lines.length; li++) {
     const cells = split(lines[li]);
+
+    // symbol
     const sym = (cells[col.symbol!] ?? '').trim().toUpperCase();
-    if (!sym) continue;
-
-    const atRaw = (cells[col.asset_type!] ?? '').trim().toLowerCase();
-    if (atRaw !== 'stock' && atRaw !== 'crypto') {
-      return { rows: [], error: `Fila ${li + 1}: asset_type debe ser stock o crypto.` };
+    if (!sym) {
+      return { rows: [], error: `Fila ${li + 1}: symbol está vacío.` };
+    }
+    if (!/^[A-Z0-9.\-]{1,20}$/.test(sym)) {
+      return { rows: [], error: `Fila ${li + 1}: symbol "${sym}" no es válido.` };
     }
 
+    // quantity
     const qty = parseNumber(cells[col.quantity!] ?? '');
+    if (qty === null) {
+      return { rows: [], error: `Fila ${li + 1}: quantity está vacío o no es un número.` };
+    }
+    if (qty <= 0) {
+      return { rows: [], error: `Fila ${li + 1}: quantity debe ser mayor que 0.` };
+    }
+
+    // avg_buy_price
     const price = parseNumber(cells[col.avg_buy_price!] ?? '');
-    if (qty === null || qty <= 0) {
-      return { rows: [], error: `Fila ${li + 1}: quantity no válida.` };
-    }
     if (price === null) {
-      return { rows: [], error: `Fila ${li + 1}: precio no válido.` };
+      return { rows: [], error: `Fila ${li + 1}: avg_buy_price está vacío o no es un número.` };
+    }
+    if (price <= 0) {
+      return { rows: [], error: `Fila ${li + 1}: avg_buy_price debe ser mayor que 0.` };
     }
 
-    const row: ImportPositionRow = {
-      symbol: sym,
-      asset_type: atRaw as 'stock' | 'crypto',
-      quantity: qty,
-      avg_buy_price: price,
-    };
-
-    if (col.name !== undefined) {
-      const n = (cells[col.name] ?? '').trim();
-      if (n) row.name = n;
-    }
-    if (col.image_url !== undefined) {
-      const u = (cells[col.image_url] ?? '').trim();
-      if (u) row.image_url = u;
-    }
-    if (col.operated_at !== undefined) {
-      const d = (cells[col.operated_at] ?? '').trim();
-      if (d) row.operated_at = d;
-    }
-
-    rows.push(row);
+    rows.push({ symbol: sym, asset_type: 'crypto', quantity: qty, avg_buy_price: price });
   }
 
   if (rows.length === 0) {
@@ -149,30 +121,31 @@ function escapeCsvCell(v: string | number): string {
 }
 
 export function buildInvestmentsCsv(portfolioName: string, rows: Investment[]): string {
-  const header = [
-    'portfolio_name',
-    'symbol',
-    'name',
-    'asset_type',
-    'quantity',
-    'avg_buy_price',
-    'value_eur',
-    'weight_pct',
-  ];
+  const header = ['symbol', 'quantity', 'avg_buy_price'];
   const lines = [
     header.join(','),
     ...rows.map((r) =>
       [
-        escapeCsvCell(portfolioName),
         escapeCsvCell(r.symbol),
-        escapeCsvCell(r.name ?? ''),
-        escapeCsvCell(r.asset_type ?? ''),
         escapeCsvCell(r.quantity),
         escapeCsvCell(r.avg_buy_price),
-        escapeCsvCell(r.value ?? 0),
-        escapeCsvCell(r.weight ?? 0),
       ].join(',')
     ),
   ];
   return '\uFEFF' + lines.join('\r\n');
+}
+
+export function downloadImportTemplate(): void {
+  const header = ['symbol', 'quantity', 'avg_buy_price'];
+  const exampleRow = ['AAPL', '10', '150.00'];
+
+  const csv = '\uFEFF' + [header.join(','), exampleRow.join(',')].join('\r\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'plantilla_importacion.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }

@@ -9,7 +9,7 @@ import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { PortfolioService } from '../../../services/portfolio.service';
 import { InvestmentService } from '../../../services/investment.service';
 import { Portfolio } from '../../../models/portfolio.model';
-import { ImportPositionRow, parsePositionsCsv } from '../wallets-csv';
+import { ImportPositionRow, parsePositionsCsv, downloadImportTemplate } from '../wallets-csv';
 
 
 @Component({
@@ -211,6 +211,11 @@ export class PortfoliosComponent implements OnInit {
   // Modal importar CSV
   // ─────────────────────────────────────────────────────────────────────────
 
+
+  downloadTemplate() {
+    downloadImportTemplate();
+  }
+  
   openImportModal() {
     this.importModalOpen.set(true);
     this.importRows.set([]);
@@ -262,12 +267,9 @@ export class PortfoliosComponent implements OnInit {
 
     const positions = rows.map((r) => ({
       symbol:        r.symbol,
-      name:          r.name       ?? null,
-      image_url:     r.image_url  ?? null,
       asset_type:    r.asset_type,
       quantity:      r.quantity,
       avg_buy_price: r.avg_buy_price,
-      operated_at:   r.operated_at ?? null
     }));
 
     if (this.importTarget() === 'new') {

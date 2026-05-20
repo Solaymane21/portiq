@@ -52,4 +52,41 @@ export class MarketService {
     return map[symbol] ?? symbol;
   }
 
+  getPortfolioHistory(symbols: string[], quantities: number[], assetTypes: string[], fromDate: string) {
+    return this.http.get<{ data: { x: number; y: number }[] }>(
+      `${this.apiUrl}/portfolio-history`,
+      {
+        params: {
+          symbols:     symbols.join(','),
+          quantities:  quantities.join(','),
+          asset_types: assetTypes.join(','),
+          from_date:   fromDate
+        }
+      }
+    );
+  }
+
+  getPortfolioHistoryWithDetails(
+    symbols: string[], 
+    quantities: number[], 
+    assetTypes: string[], 
+    purchaseDates: string[], 
+    purchasePrices: number[], 
+    fromDate: string
+  ) {
+    return this.http.get<{ data: { x: number; y: number }[] }>(
+      `${this.apiUrl}/portfolio-history`,
+      {
+        params: {
+          symbols:         symbols.join(','),
+          quantities:      quantities.join(','),
+          asset_types:     assetTypes.join(','),
+          purchase_dates:  purchaseDates.join(','),
+          purchase_prices: purchasePrices.join(','),
+          from_date:       fromDate
+        }
+      }
+    );
+  }
+
 }

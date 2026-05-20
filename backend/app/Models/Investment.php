@@ -20,4 +20,8 @@ class Investment extends Model
     public function symbol() {
         return $this->belongsTo(Symbol::class);
     }
+
+    public function trades() {
+        return $this->hasMany(Trade::class);
+    }
 }

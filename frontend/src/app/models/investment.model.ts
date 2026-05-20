@@ -15,6 +15,7 @@ export interface Investment {
   pl: number;
   pl_percentage: number;
   return_7d?: number;
+  purchase_date?: string;
 }
 
 export interface InvestmentsResponse {

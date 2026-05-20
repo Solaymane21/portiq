@@ -357,28 +357,156 @@ export class DashboardComponent implements OnInit {
   }
 
   private loadChart(period: string): void {
-    if (!this.currentPortfolio) return;
-    this.isLoading = true;
-    const symbol = this.currentPortfolio.symbol;
-    const assetType = this.currentPortfolio.assetType ?? 'stock';
+  if (!this.currentPortfolio) return;
+  this.isLoading = true;
 
-    this.marketService.getHistory(symbol, period, assetType).subscribe({
-      next: (response) => {
-        this.buildAreaChart(response.data, period);
+  const investments = this.dashboardInvestments;
+  if (!investments.length) { 
+    this.isLoading = false;
+    return; 
+  }
+
+  // Para período 1D: usar datos intraday (5m) de /history
+  if (period === '1D') {
+    // Obtener histórico de cada activo
+    const promises = investments.map((inv: any) => {
+      const symbol = inv.symbol;
+      const assetType = inv.asset_type || 'stock';
+      const quantity = parseFloat(inv.quantity);
+      
+      return this.marketService.getHistory(symbol, '1D', assetType).toPromise()
+        .then((response: any) => {
+          if (response?.data && response.data.length > 0) {
+            // Multiplicar cada precio por la cantidad
+            return response.data.map((point: any) => ({
+              x: point.x,
+              y: point.y * quantity
+            }));
+          }
+          return [];
+        })
+        .catch((error) => {
+          console.error(`Error loading history for ${symbol}:`, error);
+          return [];
+        });
+    });
+
+    // Esperar a que todos los históricos estén listos
+    Promise.all(promises).then((results: any[]) => {
+      // Combinar todos los activos sumando por timestamp
+      const dataMap = new Map<number, number>();
+      
+      results.forEach(assetData => {
+        assetData.forEach((point: { x: number; y: number }) => {
+          const current = dataMap.get(point.x) || 0;
+          dataMap.set(point.x, current + point.y);
+        });
+      });
+      
+      // Convertir a array y ordenar por timestamp
+      const combinedData = Array.from(dataMap.entries())
+        .map(([x, y]) => ({ x, y: Number(y.toFixed(2)) }))
+        .sort((a, b) => a.x - b.x);
+      
+      console.log(`Combinados ${combinedData.length} puntos para ${investments.length} activos`);
+      
+      if (combinedData.length > 0) {
+        this.buildAreaChart(combinedData, period);
+      } else {
+        console.warn('No se pudieron obtener datos intraday');
+        // Fallback: usar datos diarios
+        this.loadDailyHistory(period);
+      }
+      this.isLoading = false;
+    }).catch((error) => {
+      console.error('Error combinando datos:', error);
+      this.isLoading = false;
+      // Fallback: usar datos diarios
+      this.loadDailyHistory(period);
+    });
+    return;
+  }
+
+  // Para 1M y 1A: usar portfolio-history (datos diarios)
+  this.loadDailyHistory(period);
+}
+
+  private loadDailyHistory(period: string): void {
+    const investments = this.dashboardInvestments;
+    if (!investments.length) {
+      this.isLoading = false;
+      return;
+    }
+
+    const now = new Date();
+    let fromDate: string;
+
+    if (period === '1M') {
+      const d = new Date(now);
+      d.setMonth(d.getMonth() - 1);
+      fromDate = d.toISOString().split('T')[0];
+    } else if (period === '1A') {
+      const d = new Date(now);
+      d.setFullYear(d.getFullYear() - 1);
+      fromDate = d.toISOString().split('T')[0];
+    } else {
+      const d = new Date(now);
+      d.setMonth(d.getMonth() - 1);
+      fromDate = d.toISOString().split('T')[0];
+    }
+
+    const symbols = investments.map((inv: any) => inv.symbol);
+    const quantities = investments.map((inv: any) => parseFloat(inv.quantity));
+    const types = investments.map((inv: any) => inv.asset_type || 'stock');
+    
+    // CAMBIAR: usar purchase_date del backend
+    const purchaseDates = investments.map((inv: any) => {
+      if (inv.purchase_date) return inv.purchase_date;
+      if (inv.created_at) return inv.created_at.split('T')[0];
+      const d = new Date();
+      d.setFullYear(d.getFullYear() - 1);
+      return d.toISOString().split('T')[0];
+    });
+    
+    const purchasePrices = investments.map((inv: any) => inv.avg_buy_price || 0);
+
+    this.marketService.getPortfolioHistoryWithDetails(
+      symbols, quantities, types, purchaseDates, purchasePrices, fromDate
+    ).subscribe({
+      next: (response: any) => {
+        if (response?.data && response.data.length > 0) {
+          this.buildAreaChart(response.data, period);
+        } else {
+          const currentValue = this.currentPortfolio?.totalValue || 0;
+          const fallbackData = [{ x: Date.now(), y: currentValue }];
+          this.buildAreaChart(fallbackData, period);
+        }
         this.isLoading = false;
       },
-      error: () => {
+      error: (error) => {
+        console.error('Error:', error);
         this.isLoading = false;
-        this.buildAreaChart([], period);
       }
     });
   }
 
   private buildAreaChart(data: { x: number; y: number }[], period: string): void {
+    console.log('=== BUILD AREA CHART ===');
+    console.log('Data received:', data?.length);
+    console.log('Is data array?', Array.isArray(data));
+    console.log('Period:', period);
+    
+    if (!data || data.length === 0) {
+      console.warn('No data to build chart');
+      return;
+    }
+
     const tooltipFormat = period === '1D' ? 'HH:mm' : 'dd MMM yyyy';
 
+    console.log('Setting areaOptions with', data.length, 'points');
+    
     this.areaOptions = {
-      series: [{ name: this.currentPortfolio?.name ?? '', data }],
+      series: [{ name: this.currentPortfolio?.name ?? '', data: data }],
       chart: {
         type: 'area',
         height: 250,
@@ -422,6 +550,9 @@ export class DashboardComponent implements OnInit {
         x: { format: tooltipFormat }
       }
     };
+    
+    console.log('areaOptions set successfully:', !!this.areaOptions);
+    console.log('Series data length:', this.areaOptions.series[0].data.length);
   }
 
   private buildTreemap(investments: any[], totalValue: number): void {
@@ -536,4 +667,6 @@ export class DashboardComponent implements OnInit {
       }
     };
   }
+
+  
 }

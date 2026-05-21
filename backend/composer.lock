@@ -1119,16 +1119,16 @@
         },
         {
             "name": "laravel/cashier",
-            "version": "v16.5.1",
+            "version": "v16.5.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/cashier-stripe.git",
-                "reference": "49a581bccb5e56a45e1c8ee94587ce3420203a7a"
+                "reference": "b6bcd6b4d79acead34d00a5a528c904d67c5e08a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/cashier-stripe/zipball/49a581bccb5e56a45e1c8ee94587ce3420203a7a",
-                "reference": "49a581bccb5e56a45e1c8ee94587ce3420203a7a",
+                "url": "https://api.github.com/repos/laravel/cashier-stripe/zipball/b6bcd6b4d79acead34d00a5a528c904d67c5e08a",
+                "reference": "b6bcd6b4d79acead34d00a5a528c904d67c5e08a",
                 "shasum": ""
             },
             "require": {
@@ -1204,7 +1204,7 @@
                 "issues": "https://github.com/laravel/cashier/issues",
                 "source": "https://github.com/laravel/cashier"
             },
-            "time": "2026-04-01T15:57:36+00:00"
+            "time": "2026-05-05T21:18:35+00:00"
         },
         {
             "name": "laravel/framework",
@@ -1613,16 +1613,16 @@
         },
         {
             "name": "laravel/socialite",
-            "version": "v5.26.1",
+            "version": "v5.27.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/socialite.git",
-                "reference": "db6ec2ee967b7f06412c3a0cf1daaf072f4752a4"
+                "reference": "40e0757a75637c7b2dff05d3286b0d8fc25e5c0e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/socialite/zipball/db6ec2ee967b7f06412c3a0cf1daaf072f4752a4",
-                "reference": "db6ec2ee967b7f06412c3a0cf1daaf072f4752a4",
+                "url": "https://api.github.com/repos/laravel/socialite/zipball/40e0757a75637c7b2dff05d3286b0d8fc25e5c0e",
+                "reference": "40e0757a75637c7b2dff05d3286b0d8fc25e5c0e",
                 "shasum": ""
             },
             "require": {
@@ -1681,7 +1681,7 @@
                 "issues": "https://github.com/laravel/socialite/issues",
                 "source": "https://github.com/laravel/socialite"
             },
-            "time": "2026-03-29T14:50:53+00:00"
+            "time": "2026-04-24T14:05:47+00:00"
         },
         {
             "name": "laravel/tinker",

@@ -136,9 +136,7 @@ export class FavoritesComponent implements OnInit {
   }
 
   getPrice(symbol: string): number {
-    const price = this.prices()[symbol];
-    if (price == null) return 0;
-    return Number(price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    return this.prices()[symbol] ?? 0;
   }
 
   getChange(symbol: string): number {

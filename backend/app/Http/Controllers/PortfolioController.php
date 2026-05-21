@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Portfolio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class PortfolioController extends Controller
 {
@@ -39,6 +40,30 @@ class PortfolioController extends Controller
             : $rows->sortBy($sort);
 
         return response()->json($sorted->values());
+    }
+
+    public function follow(Request $request, $portfolioId)
+    {
+        $portfolio = Portfolio::where('id', $portfolioId)
+            ->where('is_public', true)
+            ->firstOrFail();
+
+        if ((int) $portfolio->user_id === (int) $request->user()->id) {
+            return response()->json([
+                'message' => 'No puedes seguir tu propia cartera.'
+            ], 422);
+        }
+
+        DB::table('favorite_portfolios')->insertOrIgnore([
+            'user_id' => $request->user()->id,
+            'portfolio_id' => $portfolio->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Cartera seguida.'
+        ]);
     }
 
     public function index(Request $request)

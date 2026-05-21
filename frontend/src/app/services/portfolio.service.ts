@@ -33,4 +33,8 @@ export class PortfolioService {
     }
     return this.http.get(`${this.apiUrl}/public`, { params });
   }
+
+  followPortfolio(portfolioId: number) {
+    return this.http.post(`${this.apiUrl}/${portfolioId}/follow`, {});
+  }
 }

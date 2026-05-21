@@ -50,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Portfolios
     Route::get('/portfolios/public', [PortfolioController::class, 'publicRanking']);
+    Route::post('/portfolios/{portfolioId}/follow', [PortfolioController::class, 'follow']);
     Route::get('/portfolios', [PortfolioController::class, 'index']);
     Route::post('/portfolios', [PortfolioController::class, 'store']);
     Route::put('/portfolios/{portfolio}', [PortfolioController::class, 'update']);

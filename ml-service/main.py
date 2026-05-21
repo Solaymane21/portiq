@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 import pandas as pd
+    
 
 app = FastAPI()
 
@@ -319,7 +320,7 @@ def get_history(symbol: str, period: str = "1D", asset_type: str = "stock"):
         raise HTTPException(status_code=500, detail=str(e))
 
 """
-Historial de valor total de cartera (multi-activo)
+Historial de valor total de cartera (multiactivo)
 """
 @app.get("/portfolio-history")
 def portfolio_history(
@@ -330,7 +331,6 @@ def portfolio_history(
     purchase_prices: str = "",
     from_date: str = ""
 ):
-    from yfinance import Tickers
     
     symbol_list = [s.strip() for s in symbols.split(",") if s.strip()]
     quantity_list = [float(q) for q in quantities.split(",") if q.strip()]
@@ -344,6 +344,7 @@ def portfolio_history(
     print(f"=== Portfolio History ===")
     print(f"Symbols: {symbol_list}")
     print(f"Purchase dates: {date_list}")
+    print(f"From date: {from_date}")
     
     yf_symbols = []
     for i, sym in enumerate(symbol_list):
@@ -352,18 +353,25 @@ def portfolio_history(
         yf_symbols.append(yf_sym)
 
     end_date = datetime.today()
-    
-    min_date = datetime.today()
-    for purchase_date in date_list:
-        if purchase_date:
-            try:
-                inv_date = datetime.strptime(purchase_date, "%Y-%m-%d")
-                if inv_date < min_date:
-                    min_date = inv_date
-            except:
-                pass
-    
-    start_date = min_date - timedelta(days=30)
+
+    if from_date:
+        try:
+            start_date = datetime.strptime(from_date, "%Y-%m-%d")
+        except Exception:
+            start_date = datetime.today() - timedelta(days=30)
+    elif date_list:
+        min_date = datetime.today()
+        for purchase_date in date_list:
+            if purchase_date:
+                try:
+                    inv_date = datetime.strptime(purchase_date, "%Y-%m-%d")
+                    if inv_date < min_date:
+                        min_date = inv_date
+                except Exception:
+                    pass
+        start_date = min_date - timedelta(days=5)
+    else:
+        start_date = datetime.today() - timedelta(days=30)
     
     print(f"Start date: {start_date.date()}, End date: {end_date.date()}")
 
@@ -377,28 +385,31 @@ def portfolio_history(
             return {"data": []}
         
         closes = data['Close']
+
+        if isinstance(closes, pd.Series):
+            closes = closes.to_frame(name=yf_symbols[0])
         
         portfolio_values = pd.Series(0.0, index=closes.index)
         
         for i, (sym, qty) in enumerate(zip(yf_symbols, quantity_list)):
             if sym not in closes.columns:
-                print(f"Symbol {sym} not found")
+                print(f"Symbol {sym} not found in columns: {list(closes.columns)}")
                 continue
-            
-            purchase_date = None
+
+            col = closes[sym].copy()
+
             if i < len(date_list) and date_list[i]:
                 try:
-                    purchase_date = datetime.strptime(date_list[i], "%Y-%m-%d")
-                    print(f"  {sym}: purchase_date = {purchase_date.date()}, qty = {qty}")
-                except:
-                    pass
-            
-            if purchase_date is None:
-                purchase_date = closes.index[0]
-            
-            for date in closes.index:
-                if date >= purchase_date:
-                    portfolio_values[date] += closes.loc[date, sym] * qty
+                    purchase_dt = datetime.strptime(date_list[i], "%Y-%m-%d")
+                    if col.index.tzinfo is not None:
+                        import pytz
+                        purchase_dt = pytz.utc.localize(purchase_dt)
+                    col = col[col.index >= purchase_dt]
+                    print(f"  {sym}: purchase_date = {date_list[i]}, qty = {qty}, puntos = {len(col)}")
+                except Exception as e:
+                    print(f"  {sym}: error en purchase_date: {e}")
+
+            portfolio_values = portfolio_values.add(col * qty, fill_value=0)
         
         portfolio_values = portfolio_values[portfolio_values > 0]
         
@@ -410,7 +421,6 @@ def portfolio_history(
         print(f"First value: {portfolio_values.iloc[0]:.2f} on {portfolio_values.index[0].date()}")
         print(f"Last value: {portfolio_values.iloc[-1]:.2f}")
         
-        # Formatear para ApexCharts
         result = [
             {"x": int(date.timestamp() * 1000), "y": round(float(val), 2)}
             for date, val in portfolio_values.items()

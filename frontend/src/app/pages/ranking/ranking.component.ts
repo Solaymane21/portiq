@@ -28,6 +28,8 @@ export class RankingComponent implements OnInit {
   order = signal<'asc' | 'desc'>('desc');
   searchInput = '';
 
+  followingIds = signal<Set<number>>(new Set());
+
   sortOptions: { value: string; label: string }[] = [
     { value: 'total_value', label: 'Valor total' },
     { value: 'asset_count', label: 'Nº activos' },
@@ -71,9 +73,32 @@ export class RankingComponent implements OnInit {
     return me !== undefined && me === row.user.id;
   }
 
+  isFollowing(row: PublicPortfolioRanking): boolean {
+    return this.followingIds().has(row.id);
+  }
+
+  followPortfolio(event: Event, row: PublicPortfolioRanking): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (this.isFollowing(row) || this.isOwnPortfolio(row)) return;
+
+    this.portfolioService.followPortfolio(row.id).subscribe({
+      next: () => {
+        const updated = new Set(this.followingIds());
+        updated.add(row.id);
+        this.followingIds.set(updated);
+      },
+      error: (err) => {
+        console.error('Error al seguir cartera', err);
+      }
+    });
+  }
+
   private load() {
     this.isLoading.set(true);
     this.errorMsg.set(null);
+
     this.portfolioService
       .getPublicRanking(
         this.sort(),

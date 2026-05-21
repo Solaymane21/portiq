@@ -153,7 +153,7 @@
               <div class="h-7 w-24 bg-zinc-200 dark:bg-neutral-800 rounded-lg animate-pulse mb-1"></div>
               <div class="h-4 w-16 bg-zinc-200 dark:bg-neutral-800 rounded-lg animate-pulse"></div>
             } @else {
-              <p class="text-xl font-medium truncate text-zinc-900 dark:text-white">{{ getPrice(fav.symbol) }}</p>
+              <p class="text-xl font-medium truncate text-zinc-900 dark:text-white">{{ format(getPrice(fav.symbol)) }}</p>
               <p class="text-sm mt-0.5"
                 [ngClass]="{
                   'text-green-500': getChange(fav.symbol) >= 0,

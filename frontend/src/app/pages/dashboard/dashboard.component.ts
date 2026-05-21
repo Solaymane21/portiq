@@ -157,7 +157,6 @@ export class DashboardComponent implements OnInit {
         this.isLoadingPortfolios = false;
       },
       error: (err) => {
-        console.error('Error cargando carteras', err);
         this.isLoadingPortfolios = false;
       }
     });
@@ -181,20 +180,10 @@ export class DashboardComponent implements OnInit {
 
     this.investmentService.getInvestments(portfolioId).subscribe({
       next: (response: any) => {
-        console.log('Response API:', response);
 
         const investments = response.investments.filter((inv: any) =>
           parseFloat(inv.quantity || '0') > 0
         );
-        
-        console.table(investments.map((inv: any) => ({
-          symbol:        inv.symbol,
-          qty:           inv.quantity,
-          avg_buy_price: inv.avg_buy_price,
-          current_price: inv.current_price,
-          pl:            inv.pl,
-          pl_percentage: inv.pl_percentage,
-        })));
 
         this.hasInvestments.set(investments.length > 0);
         this.dashboardInvestments = investments;
@@ -385,8 +374,7 @@ export class DashboardComponent implements OnInit {
           }
           return [];
         })
-        .catch((error) => {
-          console.error(`Error loading history for ${symbol}:`, error);
+        .catch(() => {
           return [];
         });
     });
@@ -408,18 +396,15 @@ export class DashboardComponent implements OnInit {
         .map(([x, y]) => ({ x, y: Number(y.toFixed(2)) }))
         .sort((a, b) => a.x - b.x);
       
-      console.log(`Combinados ${combinedData.length} puntos para ${investments.length} activos`);
       
       if (combinedData.length > 0) {
         this.buildAreaChart(combinedData, period);
       } else {
-        console.warn('No se pudieron obtener datos intraday');
         // Fallback: usar datos diarios
         this.loadDailyHistory(period);
       }
       this.isLoading = false;
     }).catch((error) => {
-      console.error('Error combinando datos:', error);
       this.isLoading = false;
       // Fallback: usar datos diarios
       this.loadDailyHistory(period);
@@ -483,27 +468,19 @@ export class DashboardComponent implements OnInit {
         }
         this.isLoading = false;
       },
-      error: (error) => {
-        console.error('Error:', error);
+      error: () => {
         this.isLoading = false;
       }
     });
   }
 
   private buildAreaChart(data: { x: number; y: number }[], period: string): void {
-    console.log('=== BUILD AREA CHART ===');
-    console.log('Data received:', data?.length);
-    console.log('Is data array?', Array.isArray(data));
-    console.log('Period:', period);
     
     if (!data || data.length === 0) {
-      console.warn('No data to build chart');
       return;
     }
 
     const tooltipFormat = period === '1D' ? 'HH:mm' : 'dd MMM yyyy';
-
-    console.log('Setting areaOptions with', data.length, 'points');
     
     this.areaOptions = {
       series: [{ name: this.currentPortfolio?.name ?? '', data: data }],
@@ -551,8 +528,6 @@ export class DashboardComponent implements OnInit {
       }
     };
     
-    console.log('areaOptions set successfully:', !!this.areaOptions);
-    console.log('Series data length:', this.areaOptions.series[0].data.length);
   }
 
   private buildTreemap(investments: any[], totalValue: number): void {
@@ -668,5 +643,8 @@ export class DashboardComponent implements OnInit {
     };
   }
 
+  format(value: number) {
+    return this.preferencesService.formatCurrency(value);
+  }
   
 }

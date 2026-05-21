@@ -46,28 +46,37 @@
   </div>
 
   <!-- STATS CARDS -->
-  <div class="grid grid-cols-2 xl:grid-cols-4 gap-3">
+  
 
-    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-4 flex flex-col gap-2">
-      <p class="text-sm text-neutral-400">Valor Total</p>
-      <h3 class="text-xl sm:text-2xl xl:text-3xl font-ibm font-bold text-neutral-100 truncate">{{ formatNumber(valorTotal(), 0) }}€</h3>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5 mb-5 text-zinc-700 dark:text-neutral-300">
+    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3">Valor total</p>
+      <p class="text-2xl md:text-3xl font-ibm font-bold text-zinc-900 dark:text-neutral-100 text-center">
+        {{ format(valorTotal()) }}
+      </p>
     </div>
-
-    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-4 flex flex-col gap-2">
-      <p class="text-sm text-neutral-400">Ganancias</p>
-      <h3 class="text-xl sm:text-2xl xl:text-3xl font-ibm font-bold text-green-500 truncate">+{{ formatNumber(ganancias(), 0) }}€</h3>
+    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3">Ganancias</p>
+      <p class="text-2xl md:text-3xl font-ibm font-bold text-center tabular-nums"
+        [class.text-green-500]="ganancias() > 0"
+        [class.text-red-500]="ganancias() < 0">
+        {{ format(ganancias()) }}
+      </p>
     </div>
-
-    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-4 flex flex-col gap-2">
-      <p class="text-sm text-neutral-400">% Retorno</p>
-      <h3 class="text-xl sm:text-2xl xl:text-3xl font-ibm font-bold text-green-500 truncate">+{{ formatNumber(porcentajeGanancias(), 2) }}%</h3>
+    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3">Rendimiento %</p>
+      <p class="text-2xl md:text-3xl font-ibm font-bold text-center"
+        [class.text-green-500]="porcentajeGanancias() > 0"
+        [class.text-red-500]="porcentajeGanancias() < 0">
+        {{ porcentajeGanancias() }}%
+      </p>
     </div>
-
-    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-4 flex flex-col gap-2">
-      <p class="text-sm text-neutral-400">Activos</p>
-      <h3 class="text-xl sm:text-2xl xl:text-3xl font-ibm font-bold text-neutral-100">{{ totalPosiciones() }}</h3>
+    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5">
+      <p class="mb-3">Total de Posiciones</p>
+      <p class="text-2xl md:text-3xl font-ibm font-bold text-zinc-900 dark:text-neutral-100 text-center">
+        {{ totalPosiciones() }}
+      </p>
     </div>
-
   </div>
 
   <!-- TABLA -->
@@ -116,7 +125,7 @@
                     <span class="font-medium text-white truncate font font-ibm">{{ element.symbol }}</span>
                   </div>
                 }
-                @case ('value') { {{ formatNumber(element.value, 2) }}€ }
+                @case ('value') { {{ format(element.value) }} }
                 @case ('weight') { {{ formatNumber(element.weight, 2) }}% }
                 @case ('return_7d') { {{ (element.return_7d ?? 0) >= 0 ? '+' : '' }}{{ formatNumber(element.return_7d, 2) }}% }
                 @case ('quantity') { {{ formatNumber(element.quantity, 8) }} }

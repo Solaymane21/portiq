@@ -20,6 +20,7 @@ export class PreferencesService {
   colorTheme = signal<ColorTheme>('orange');
   cookies = signal<boolean | null>(null);
   isLoading = signal(true);
+  exchangeRate = signal<number>(1);
 
   colors: { value: ColorTheme; hex: string; label: string }[] = [
     { value: 'orange', hex: '#f97316', label: 'Naranja' },
@@ -49,6 +50,8 @@ export class PreferencesService {
   // carga las preferencias del usuario desde la api
   load() {
     this.isLoading.set(true)
+
+    this.loadExchangeRate()
 
     this.http.get<UserPreferences>(`${this.apiUrl}/preferences`).subscribe({
       next: (res) => {
@@ -142,4 +145,35 @@ export class PreferencesService {
     localStorage.removeItem('portiq_favorites');
   }
 
+  loadExchangeRate() {
+    this.http.get<any>('https://api.coingecko.com/api/v3/simple/price?ids=usd&vs_currencies=eur')
+      .subscribe({
+        next: (res) => this.exchangeRate.set(res.usd.eur),
+        error: () => this.exchangeRate.set(0.92) // fallback si falla
+      });
+  }
+
+  formatCurrency(value: number | null | undefined,inputCurrency: 'EUR' | 'USD' = 'USD', override?: 'EUR' | 'USD'): string {
+    if (value == null) return '—';
+
+    const targetCurrency = override ?? this.currency();
+    let converted = value;
+
+    // Convertir solo si las monedas son distintas
+    if (inputCurrency === 'USD' && targetCurrency === 'EUR') {
+      converted = value * this.exchangeRate();
+    } else if (inputCurrency === 'EUR' && targetCurrency === 'USD') {
+      converted = value / this.exchangeRate();
+    }
+
+    const locale = targetCurrency === 'EUR' ? 'es-ES' : 'en-US';
+
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: targetCurrency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(converted);
+  }
+  
 }

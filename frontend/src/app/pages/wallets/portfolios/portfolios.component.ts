@@ -10,6 +10,7 @@ import { PortfolioService } from '../../../services/portfolio.service';
 import { InvestmentService } from '../../../services/investment.service';
 import { Portfolio } from '../../../models/portfolio.model';
 import { ImportPositionRow, parsePositionsCsv, downloadImportTemplate } from '../wallets-csv';
+import { PreferencesService } from '../../../services/preferences.service';
 
 
 @Component({
@@ -25,6 +26,7 @@ export class PortfoliosComponent implements OnInit {
   private router            = inject(Router);
   private portfolioService  = inject(PortfolioService);
   private investmentService = inject(InvestmentService);
+  private prefs = inject(PreferencesService);
 
   // Referencias del template
   csvFileInput = viewChild<ElementRef<HTMLInputElement>>('csvFileInput');
@@ -79,18 +81,14 @@ export class PortfoliosComponent implements OnInit {
   importPortfolioId = new FormControl<number | null>(null, [Validators.required]);
 
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Lifecycle
-  // ─────────────────────────────────────────────────────────────────────────
 
   ngOnInit() {
     this.loadPortfolios();
   }
 
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Carteras
-  // ─────────────────────────────────────────────────────────────────────────
 
   loadPortfolios() {
     this.isLoading.set(true);
@@ -163,9 +161,7 @@ export class PortfoliosComponent implements OnInit {
   }
 
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Modal crear / editar
-  // ─────────────────────────────────────────────────────────────────────────
 
   openCreateModal() {
     this.prepareModal('create', null);
@@ -192,9 +188,7 @@ export class PortfoliosComponent implements OnInit {
   }
 
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Modal eliminar
-  // ─────────────────────────────────────────────────────────────────────────
 
   openDeleteModal(portfolio: Portfolio) {
     this.selectedPortfolio.set(portfolio);
@@ -207,9 +201,7 @@ export class PortfoliosComponent implements OnInit {
   }
 
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Modal importar CSV
-  // ─────────────────────────────────────────────────────────────────────────
 
 
   downloadTemplate() {
@@ -305,4 +297,9 @@ export class PortfoliosComponent implements OnInit {
         error: (err) => console.error('Import error:', err)
       });
   }
+
+  format(value: number) {
+    return this.prefs.formatCurrency(value);
+  }
+
 }

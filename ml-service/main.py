@@ -345,7 +345,6 @@ def portfolio_history(
     print(f"Symbols: {symbol_list}")
     print(f"Purchase dates: {date_list}")
     
-    # Construir símbolos para yfinance
     yf_symbols = []
     for i, sym in enumerate(symbol_list):
         atype = type_list[i] if i < len(type_list) else "stock"
@@ -354,7 +353,6 @@ def portfolio_history(
 
     end_date = datetime.today()
     
-    # Calcular la fecha más antigua entre todas las fechas de compra
     min_date = datetime.today()
     for purchase_date in date_list:
         if purchase_date:
@@ -365,7 +363,6 @@ def portfolio_history(
             except:
                 pass
     
-    # Restar 30 días extra para tener contexto previo
     start_date = min_date - timedelta(days=30)
     
     print(f"Start date: {start_date.date()}, End date: {end_date.date()}")
@@ -381,7 +378,6 @@ def portfolio_history(
         
         closes = data['Close']
         
-        # Calcular valor del portfolio respetando fechas de compra
         portfolio_values = pd.Series(0.0, index=closes.index)
         
         for i, (sym, qty) in enumerate(zip(yf_symbols, quantity_list)):
@@ -389,7 +385,6 @@ def portfolio_history(
                 print(f"Symbol {sym} not found")
                 continue
             
-            # Fecha de compra de esta inversión
             purchase_date = None
             if i < len(date_list) and date_list[i]:
                 try:
@@ -398,16 +393,13 @@ def portfolio_history(
                 except:
                     pass
             
-            # Si no hay fecha de compra, usar la fecha más antigua del portfolio
             if purchase_date is None:
                 purchase_date = closes.index[0]
             
-            # Sumar valor SOLO desde la fecha de compra en adelante
             for date in closes.index:
                 if date >= purchase_date:
                     portfolio_values[date] += closes.loc[date, sym] * qty
         
-        # Filtrar días con valor 0 (antes de la primera compra)
         portfolio_values = portfolio_values[portfolio_values > 0]
         
         if portfolio_values.empty:

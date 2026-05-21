@@ -1,9 +1,11 @@
 import yfinance as yf
+from yfinance import Tickers
 import re
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 import pandas as pd
+    
 
 app = FastAPI()
 
@@ -268,7 +270,6 @@ def get_history(symbol: str, period: str = "1D", asset_type: str = "stock"):
     if not re.match(r'^[A-Za-z0-9.\-]{1,10}$', symbol):
         raise HTTPException(status_code=422, detail="Símbolo inválido")
 
-    # Sufijo -USD para crypto
     yf_symbol = f"{symbol.upper()}-USD" if asset_type == "crypto" else symbol.upper()
 
     period_map = {
@@ -317,4 +318,118 @@ def get_history(symbol: str, period: str = "1D", asset_type: str = "stock"):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+"""
+Historial de valor total de cartera (multiactivo)
+"""
+@app.get("/portfolio-history")
+def portfolio_history(
+    symbols: str,
+    quantities: str,
+    asset_types: str = "",
+    purchase_dates: str = "",
+    purchase_prices: str = "",
+    from_date: str = ""
+):
+    
+    symbol_list = [s.strip() for s in symbols.split(",") if s.strip()]
+    quantity_list = [float(q) for q in quantities.split(",") if q.strip()]
+    type_list = [t.strip() for t in asset_types.split(",") if t.strip()] if asset_types else []
+    date_list = [d.strip() for d in purchase_dates.split(",") if d.strip()] if purchase_dates else []
+    price_list = [float(p) for p in purchase_prices.split(",") if p.strip()] if purchase_prices else []
+
+    if not symbol_list or not quantity_list:
+        return {"data": []}
+    
+    print(f"=== Portfolio History ===")
+    print(f"Symbols: {symbol_list}")
+    print(f"Purchase dates: {date_list}")
+    print(f"From date: {from_date}")
+    
+    yf_symbols = []
+    for i, sym in enumerate(symbol_list):
+        atype = type_list[i] if i < len(type_list) else "stock"
+        yf_sym = f"{sym.upper()}-USD" if atype == "crypto" else sym.upper()
+        yf_symbols.append(yf_sym)
+
+    end_date = datetime.today()
+
+    if from_date:
+        try:
+            start_date = datetime.strptime(from_date, "%Y-%m-%d")
+        except Exception:
+            start_date = datetime.today() - timedelta(days=30)
+    elif date_list:
+        min_date = datetime.today()
+        for purchase_date in date_list:
+            if purchase_date:
+                try:
+                    inv_date = datetime.strptime(purchase_date, "%Y-%m-%d")
+                    if inv_date < min_date:
+                        min_date = inv_date
+                except Exception:
+                    pass
+        start_date = min_date - timedelta(days=5)
+    else:
+        start_date = datetime.today() - timedelta(days=30)
+    
+    print(f"Start date: {start_date.date()}, End date: {end_date.date()}")
+
+    try:
+        portfolio = Tickers(" ".join(yf_symbols))
+        data = portfolio.history(start=start_date.strftime("%Y-%m-%d"), 
+                                  end=end_date.strftime("%Y-%m-%d"))
         
+        if data.empty:
+            print("Data is empty")
+            return {"data": []}
+        
+        closes = data['Close']
+
+        if isinstance(closes, pd.Series):
+            closes = closes.to_frame(name=yf_symbols[0])
+        
+        portfolio_values = pd.Series(0.0, index=closes.index)
+        
+        for i, (sym, qty) in enumerate(zip(yf_symbols, quantity_list)):
+            if sym not in closes.columns:
+                print(f"Symbol {sym} not found in columns: {list(closes.columns)}")
+                continue
+
+            col = closes[sym].copy()
+
+            if i < len(date_list) and date_list[i]:
+                try:
+                    purchase_dt = datetime.strptime(date_list[i], "%Y-%m-%d")
+                    if col.index.tzinfo is not None:
+                        import pytz
+                        purchase_dt = pytz.utc.localize(purchase_dt)
+                    col = col[col.index >= purchase_dt]
+                    print(f"  {sym}: purchase_date = {date_list[i]}, qty = {qty}, puntos = {len(col)}")
+                except Exception as e:
+                    print(f"  {sym}: error en purchase_date: {e}")
+
+            portfolio_values = portfolio_values.add(col * qty, fill_value=0)
+        
+        portfolio_values = portfolio_values[portfolio_values > 0]
+        
+        if portfolio_values.empty:
+            print("Portfolio values empty")
+            return {"data": []}
+        
+        print(f"Portfolio values: {len(portfolio_values)} points")
+        print(f"First value: {portfolio_values.iloc[0]:.2f} on {portfolio_values.index[0].date()}")
+        print(f"Last value: {portfolio_values.iloc[-1]:.2f}")
+        
+        result = [
+            {"x": int(date.timestamp() * 1000), "y": round(float(val), 2)}
+            for date, val in portfolio_values.items()
+        ]
+        
+        return {"data": result}
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"data": []}

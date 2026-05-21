@@ -63,4 +63,15 @@ class MLService
         }
         return $response->json();
     }
+
+    public function getPortfolioHistory(string $symbols, string $quantities, string $assetTypes, ?string $fromDate){
+        $response = Http::get("{$this->baseUrl}/portfolio-history", [
+            'symbols' => $symbols,
+            'quantities' => $quantities,
+            'asset_types' => $assetTypes,
+            'from_date' => $fromDate
+        ]);
+        return $response->json();
+    }
+
 }

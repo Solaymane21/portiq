@@ -22,7 +22,9 @@ class InvestmentController extends Controller
      */
     public function index(Request $request, $portfolioId): \Illuminate\Http\JsonResponse
     {
-        $portfolio = Portfolio::with(['investments.symbol', 'user'])
+        $portfolio = Portfolio::with(['investments.symbol', 'investments.trades' => function($query) {
+            $query->where('type', 'compra')->orWhere('type', 'nuevaPosicion')->orderBy('operated_at', 'asc');
+        }, 'user'])
             ->where('id', $portfolioId)
             ->firstOrFail();
 
@@ -284,6 +286,17 @@ class InvestmentController extends Controller
             $pl           = $currentValue - $buyValue;
             $plPct        = $buyValue > 0 ? round(($pl / $buyValue) * 100, 2) : 0;
 
+            $firstTrade = $investment->trades->first();
+            $purchaseDate = null;
+            if ($firstTrade && $firstTrade->operated_at) {
+                $purchaseDate = $firstTrade->operated_at instanceof \Carbon\Carbon 
+                    ? $firstTrade->operated_at->format('Y-m-d')
+                    : date('Y-m-d', strtotime($firstTrade->operated_at));
+            } else {
+                $purchaseDate = $investment->created_at instanceof \Carbon\Carbon 
+                    ? $investment->created_at->format('Y-m-d')
+                    : date('Y-m-d');
+            }
             return [
                 'id'            => $investment->id,
                 'symbol_id'     => $investment->symbol_id,
@@ -299,6 +312,7 @@ class InvestmentController extends Controller
                 'pl'            => round($pl, 2),
                 'pl_percentage' => $plPct,
                 'weight'        => 0,
+                'purchase_date' => $purchaseDate,
             ];
         })->filter()->values()->toArray();
     }

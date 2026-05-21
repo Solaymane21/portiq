@@ -10,6 +10,7 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, filter } from 'rxjs/operators';
 import { buildInvestmentsCsv } from '../wallets-csv';
+import { PreferencesService } from '../../../services/preferences.service';
 
 @Component({
   selector: 'app-investments',
@@ -24,6 +25,7 @@ export class InvestmentsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private investmentService = inject(InvestmentService);
   private destroyRef = inject(DestroyRef);
+  private prefs = inject(PreferencesService);
 
   portfolioId = signal<number | null>(null);
   cargando = signal(true);
@@ -331,7 +333,7 @@ export class InvestmentsComponent implements OnInit {
       return Number(value ?? 0) >= 0 ? '!text-green-500 font-ibm' : '!text-red-500 font-ibm';
     }
     if (colDef === 'weight' || colDef === 'value') {
-      return '!text-orange-500 font-medium font-ibm';
+      return '!text-neutral-100 font-medium font-ibm';
     }
     if (colDef === 'symbol' || colDef === 'quantity') {
       return '!text-white font-ibm';
@@ -445,5 +447,9 @@ export class InvestmentsComponent implements OnInit {
     });
 
     this.modalAbierto.set(true);
+  }
+  
+  format(value: number) {
+    return this.prefs.formatCurrency(value);
   }
 }

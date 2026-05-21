@@ -50,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Portfolios
     Route::get('/portfolios/public', [PortfolioController::class, 'publicRanking']);
+    Route::post('/portfolios/{portfolioId}/follow', [PortfolioController::class, 'follow']);
     Route::get('/portfolios', [PortfolioController::class, 'index']);
     Route::post('/portfolios', [PortfolioController::class, 'store']);
     Route::put('/portfolios/{portfolio}', [PortfolioController::class, 'update']);
@@ -98,6 +99,7 @@ Route::get('/search/{symbol}', [MarketController::class, 'search']);
 Route::get('/prices', [MarketController::class, 'prices']);
 Route::get('/portfolio/value', [MarketController::class, 'portfolioValue']);
 Route::get('/history/{symbol}', [MarketController::class, 'history']);
+Route::get('/portfolio-history', [MarketController::class, 'portfolioHistory']);
 
 //Admin
 Route::prefix('admin')->middleware('auth:sanctum')->group(function() {

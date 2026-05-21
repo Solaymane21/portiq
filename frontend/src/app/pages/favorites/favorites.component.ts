@@ -135,10 +135,10 @@ export class FavoritesComponent implements OnInit {
     });
   }
 
-  getPrice(symbol: string): string {
+  getPrice(symbol: string): number {
     const price = this.prices()[symbol];
-    if (price == null) return '—';
-    return price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
+    if (price == null) return 0;
+    return Number(price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
   }
 
   getChange(symbol: string): number {
@@ -273,4 +273,9 @@ export class FavoritesComponent implements OnInit {
     this.showDropdown.set(false);
     this.isSearching.set(false);
   }
+
+  format(value: number) {
+    return this.preferencesService.formatCurrency(value);
+  }
+
 }

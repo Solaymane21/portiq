@@ -40,5 +40,16 @@ class MarketController extends Controller
         return response()->json($this->ml->getHistory($symbol, $period, $assetType));
     }
 
+    public function portfolioHistory(Request $request){
+        $symbols = $request->query('symbols');
+        $quantities = $request->query('quantities');
+        $assetTypes = $request->query('asset_types', '');
+        $fromDate = $request->query('from_date');
+
+        return response()->json(
+            $this->ml->getPortfolioHistory($symbols, $quantities, $assetTypes, $fromDate)
+        );
+    }
+
     
 }

@@ -5,6 +5,7 @@ import { InvestmentService } from '../../../services/investment.service';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { PreferencesService } from '../../../services/preferences.service';
 
 @Component({
   selector: 'app-trades',
@@ -17,6 +18,7 @@ export class TradesComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private investmentService = inject(InvestmentService);
+  private preferencesService = inject(PreferencesService)
 
   portfolioId = signal<number | null>(null);
   nombreCartera = signal('Cargando...');
@@ -50,6 +52,10 @@ export class TradesComponent implements OnInit {
         this.cargarTrades();
       }
     });
+  }
+
+  format(value: number) {
+    return this.preferencesService.formatCurrency(value);
   }
 
   cargarTrades() {

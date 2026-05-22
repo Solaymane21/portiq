@@ -129,6 +129,7 @@ export class AuthService {
       this.saveUserData(res);
 
       if (res.user.is_new_user) {
+        sessionStorage.setItem('portiq_new_user', '1');
         this.cookiesService.isNewUser.set(true);
       }
 

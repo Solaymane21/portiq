@@ -35,7 +35,7 @@ export class CallbackComponent {
       this.authService.saveUserData({ token, user: parsedUser });
 
       if (parsedUser.is_new_user) {
-        this.cookiesService.isNewUser.set(true); // ← antes de run()
+        sessionStorage.setItem('portiq_new_user', '1');
       }
 
       // si es admin redirigir automaticamente

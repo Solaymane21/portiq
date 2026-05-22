@@ -10,7 +10,7 @@ export class CookiesService {
 
   cookiesAllowed = this.preferencesService.cookies
   isLoading = this.preferencesService.isLoading
-  isNewUser = signal<boolean>(false);
+  isNewUser = signal<boolean>(sessionStorage.getItem('portiq_new_user') === '1');
   
   showBanner = computed(() =>
     !this.isLoading() && (this.cookiesAllowed() === null || this.isNewUser())
@@ -18,6 +18,7 @@ export class CookiesService {
 
   setCookiesPreferences(allow: boolean) {
     this.isNewUser.set(false)
+    sessionStorage.removeItem('portiq_new_user')
     this.preferencesService.cookies.set(allow);
     this.preferencesService.saveCookies(allow);
   }

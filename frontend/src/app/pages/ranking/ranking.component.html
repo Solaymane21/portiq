@@ -186,8 +186,8 @@
                     }
                   </p>
                   <div class="text-right">
-                    <p class="text-zinc-900 dark:text-white font-ibm font-medium text-lg">{{ row.total_value | number: '1.2-2' }}€</p>
-                    <p class="text-xs text-zinc-500 dark:text-neutral-500 mt-0.5 hidden sm:block">Actualizado {{ row.updated_at | date: 'short' }}</p>
+                    <p class="text-zinc-900 dark:text-white font-ibm font-medium text-lg">{{ format(row.total_value) }}€</p>
+                    <p class="text-xs text-neutral-500 mt-0.5 hidden sm:block">Actualizado {{ row.updated_at | date: 'short' }}</p>
                   </div>
                 </div>
                 <div class="flex gap-2 md:ml-auto" (click)="$event.stopPropagation()">

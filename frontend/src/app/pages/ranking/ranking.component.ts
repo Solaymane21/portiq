@@ -10,6 +10,7 @@ import { FavoritesService } from '../../services/favorites.service';
 import { NotificationsService } from '../../services/notifications.service';
 import { PublicPortfolioRanking } from '../../models/publicPortfolioRanking.model';
 import { AuthService } from '../../services/auth.service';
+import { PreferencesService } from '../../services/preferences.service';
 
 @Component({
   selector: 'app-ranking',
@@ -23,6 +24,7 @@ export class RankingComponent implements OnInit {
   private favoritesService = inject(FavoritesService);
   private notificationsService = inject(NotificationsService);
   private destroyRef = inject(DestroyRef);
+  private preferencesService = inject(PreferencesService);
 
   rows = signal<PublicPortfolioRanking[]>([]);
   isLoading = signal(true);
@@ -159,5 +161,9 @@ export class RankingComponent implements OnInit {
           this.isLoading.set(false);
         }
       });
+  }
+
+  format(value: number) {
+    return this.preferencesService.formatCurrency(value);
   }
 }

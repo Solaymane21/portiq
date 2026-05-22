@@ -144,7 +144,7 @@
   }
 </div>
 
-<!-- MENU EDITAR/ELIMINAR -->
+<!-- MENU EDITAR/ELIMINAR CARTERA -->
 <ng-template #cardMenu>
   <div
     class="mt-2 min-w-[160px] h-fit bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-xl overflow-hidden shadow-xl"
@@ -152,7 +152,7 @@
     
     <button
       (click)="openEditModal(selectedPortfolio()!)"
-      class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-900 dark:text-white hover:bg-zinc-200 dark:hover:bg-neutral-900 transition-colors"
+      class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-900 dark:text-white hover:bg-zinc-200 dark:hover:bg-neutral-900"
       cdkMenuItem>
       <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
@@ -360,7 +360,7 @@
       @if (importParseError()) {
         <p class="text-red-500 dark:text-red-400 text-sm mb-3">{{ importParseError() }}</p>
       } @else if (importRows().length > 0) {
-        <p class="text-green-600 dark:text-green-500 text-sm mb-3">{{ importRows().length }} filas listas para importar.</p>
+        <p class="text-green-500 text-sm mb-3">{{ importRows().length }} filas listas para importar.</p>
       }
 
       <div class="space-y-3 mb-4 text-sm">

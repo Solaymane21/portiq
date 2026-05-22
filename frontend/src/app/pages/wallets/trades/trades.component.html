@@ -30,7 +30,7 @@
           </svg>
         </div>
       </div>
-      <h3 class="text-3xl font-ibm font-bold text-white text-center">{{ formatNumber(totalDepositado(), 2) }}€</h3>
+      <h3 class="text-3xl font-ibm font-bold text-white text-center">{{ format(totalDepositado()) }}</h3>
       <p class="text-xs text-neutral-500 mt-2 text-center">Total de compras e ingresos</p>
     </div>
 
@@ -44,7 +44,7 @@
           </svg>
         </div>
       </div>
-      <h3 class="text-3xl font-ibm font-bold text-green-500 text-center">{{ formatNumber(totalRetirado(), 2) }}€</h3>
+      <h3 class="text-3xl font-ibm font-bold text-green-500 text-center">{{ format(totalRetirado()) }}</h3>
       <p class="text-xs text-neutral-500 mt-2 text-center">Total de ventas rescatadas</p>
     </div>
 
@@ -59,7 +59,7 @@
         </div>
       </div>
       <h3 class="text-3xl font-ibm font-bold text-center" [class]="exposicionNeta() < 0 ? 'text-green-500' : 'text-white'">
-        {{ exposicionNeta() < 0 ? '+' : '' }}{{ formatNumber(exposicionNeta(), 2) }}€
+        {{ exposicionNeta() < 0 ? '+' : '' }}{{ format(exposicionNeta()) }}
       </h3>
       <p class="text-xs text-neutral-500 mt-2 text-center">
         @if (exposicionNeta() < 0) { Riesgo cero, ganancias netas. } @else { Dinero de tu bolsillo en juego }
@@ -130,7 +130,7 @@
             Precio Ud.
           </th>
           <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b !border-neutral-800 text-right text-white font-ibm">
-            {{ formatNumber(element.price_per_unit, 8) }}€
+            {{ format(element.price_per_unit) }}
           </td>
         </ng-container>
 
@@ -152,7 +152,7 @@
             *matCellDef="let element"
             class="px-4 md:px-6 py-4 border-b !border-neutral-800 text-right font-medium font-ibm"
             [class]="element.type === 'venta' ? 'text-green-500' : 'text-red-500'">
-            {{ element.type === 'venta' ? '+' : '-' }}{{ formatNumber(element.total_value, 2) }}€
+            {{ element.type === 'venta' ? '+' : '-' }}{{ format(element.total_value) }}
           </td>
         </ng-container>
 

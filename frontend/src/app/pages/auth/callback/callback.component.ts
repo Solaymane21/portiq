@@ -40,8 +40,15 @@ export class CallbackComponent {
 
       // cargar datos del usuario (favoriots, portfolios etc)
       this.initialDataService.run().subscribe({
-        next:  () => this.router.navigate(['/app/dashboard']),
-        error: () => this.router.navigate(['/app/dashboard'])
+        next: () => {
+          console.log('[Google Callback] cookies:', this.initialDataService['preferencesService'].cookies());
+          console.log('[Google Callback] isLoading:', this.initialDataService['preferencesService'].isLoading());
+          this.router.navigate(['/app/dashboard']);
+        },
+        error: (err) => {
+          console.error('[Google Callback] ERROR en run():', err);
+          this.router.navigate(['/app/dashboard']);
+        }
       });
 
     } catch {

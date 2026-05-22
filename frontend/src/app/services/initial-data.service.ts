@@ -21,6 +21,7 @@ export class InitialDataService {
   run(): Observable<void> {
     return this.http.get<any>(`${this.apiUrl}/initial-data`).pipe(
       tap((data) => {
+        console.log('[InitialData Google] preferences recibidas:', data.preferences);
         if (data.favorites) this.favoritesService.hydrate(data.favorites);
 
         if (data.preferences) {
@@ -31,6 +32,8 @@ export class InitialDataService {
         }
 
         this.preferencesService.isLoading.set(false);
+        console.log('[InitialData Google] cookies signal:', this.preferencesService.cookies());
+  console.log('[InitialData Google] isLoading signal:', this.preferencesService.isLoading());
         this.ready.set(true);
       }),
       map(() => void 0)

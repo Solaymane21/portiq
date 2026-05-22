@@ -6,6 +6,7 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { AlertsService, Alert, SymbolResult } from '../../services/alerts.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { PreferencesService } from '../../services/preferences.service';
 
 @Component({
   selector: 'app-alerts',
@@ -15,22 +16,23 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 })
 export class AlertsComponent implements OnInit {
   private alertsService = inject(AlertsService);
-  private destroyRef    = inject(DestroyRef);
+  private destroyRef = inject(DestroyRef);
+  private preferencesService = inject(PreferencesService)
 
-  alerts        = signal<Alert[]>([]);
+  alerts   = signal<Alert[]>([]);
   currentPrices = signal<Record<string, number>>({});
-  isLoading     = signal(false);
-  isCreating    = signal(false);
+  isLoading  = signal(false);
+  isCreating  = signal(false);
 
-  showModal           = signal(false);
-  editingAlert        = signal<Alert | null>(null);
-  searchQuery         = '';
-  searchResults       = signal<SymbolResult[]>([]);
-  selectedSymbol      = signal<SymbolResult | null>(null);
+  showModal  = signal(false);
+  editingAlert  = signal<Alert | null>(null);
+  searchQuery = '';
+  searchResults  = signal<SymbolResult[]>([]);
+  selectedSymbol = signal<SymbolResult | null>(null);
   selectedSymbolPrice = signal<number | null>(null);
-  condition           = signal<'above' | 'below'>('above');
+  condition = signal<'above' | 'below'>('above');
   targetPrice: number | null = null;
-  priceError          = signal<string | null>(null);
+  priceError = signal<string | null>(null);
 
   private searchSubject  = new Subject<string>();
   private cachedAlerts: Alert[] | null = null;
@@ -84,7 +86,7 @@ export class AlertsComponent implements OnInit {
       alerts.map(a => [`${a.symbol}:${a.asset_type}`, a])
     ).values()];
 
-    const symbols    = uniquePairs.map(a => a.symbol).join(',');
+    const symbols = uniquePairs.map(a => a.symbol).join(',');
     const assetTypes = uniquePairs.map(a => a.asset_type).join(',');
 
     this.alertsService.getCurrentPrices(symbols, assetTypes).subscribe(results => {
@@ -138,11 +140,11 @@ export class AlertsComponent implements OnInit {
     this.editingAlert.set(alert);
     this.searchQuery = alert.name;
     this.selectedSymbol.set({
-      symbol:     alert.symbol,
-      name:       alert.name,
+      symbol: alert.symbol,
+      name:  alert.name,
       asset_type: alert.asset_type,
-      api_id:     (alert as any).api_id ?? '',
-      image_url:  (alert as any).image_url ?? '',
+      api_id: (alert as any).api_id ?? '',
+      image_url: (alert as any).image_url ?? '',
     });
     this.condition.set(alert.condition);
     this.targetPrice = alert.target_price;
@@ -257,5 +259,9 @@ export class AlertsComponent implements OnInit {
       input.value = '0';
       this.targetPrice = 0;
     }
+  }
+
+  format(value: number) {
+    return this.preferencesService.formatCurrency(value);
   }
 }

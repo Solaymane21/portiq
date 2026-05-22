@@ -8,6 +8,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PortfolioService } from '../../services/portfolio.service';
 import { PublicPortfolioRanking } from '../../models/publicPortfolioRanking.model';
 import { AuthService } from '../../services/auth.service';
+import { PreferencesService } from '../../services/preferences.service';
 
 @Component({
   selector: 'app-ranking',
@@ -19,6 +20,7 @@ export class RankingComponent implements OnInit {
   private portfolioService = inject(PortfolioService);
   private authService = inject(AuthService);
   private destroyRef = inject(DestroyRef);
+  private preferencesService = inject(PreferencesService);
 
   rows = signal<PublicPortfolioRanking[]>([]);
   isLoading = signal(true);
@@ -116,5 +118,9 @@ export class RankingComponent implements OnInit {
           this.isLoading.set(false);
         }
       });
+  }
+
+  format(value: number) {
+    return this.preferencesService.formatCurrency(value);
   }
 }

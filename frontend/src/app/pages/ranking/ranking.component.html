@@ -140,7 +140,7 @@
                       {{ row.asset_count }} activos
                     }
                   </p>
-                  <p class="text-white font-ibm font-medium text-lg">{{ row.total_value | number: '1.2-2' }}€</p>
+                  <p class="text-white font-ibm font-medium text-lg">{{ format(row.total_value) }}</p>
                 </div>
 
                 <div class="flex gap-2 md:ml-auto">
@@ -186,7 +186,7 @@
                     }
                   </p>
                   <div class="text-right">
-                    <p class="text-white font-ibm font-medium text-lg">{{ row.total_value | number: '1.2-2' }}€</p>
+                    <p class="text-white font-ibm font-medium text-lg">{{ format(row.total_value) }}</p>
                     <p class="text-xs text-neutral-500 mt-0.5 hidden sm:block">Actualizado {{ row.updated_at | date: 'short' }}</p>
                   </div>
                 </div>

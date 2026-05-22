@@ -59,7 +59,7 @@ class AuthController extends Controller
         $user->preferences()->create([
             'currency' => 'EUR',
             'theme' => 'dark',
-            'color-theme' => 'orange',
+            'color_theme' => 'orange',
             'cookies' => null
         ]);
 
@@ -110,7 +110,7 @@ class AuthController extends Controller
                 $user->preferences()->create([
                     'currency' => 'EUR',
                     'theme' => 'dark',
-                    'color-theme' => 'orange',
+                    'color_theme' => 'orange',
                     'cookies' => null
                 ]);
             }

@@ -4,7 +4,7 @@
   <app-topbar></app-topbar>
     <main class="relative flex-1 overflow-y-auto my-5 px-6 md:px-12 lg:px-14">
       <router-outlet />
-      @if(this.cookiesService.showBanner() && !this.cookiesService.isLoading()) {
+      @if(this.cookiesService.showBanner()) {
         <app-cookies-banner class="px-6 md:px-12 lg:px-14"></app-cookies-banner>
       }
       <div class="h-16 md:hidden"></div>

@@ -11,7 +11,7 @@ export class CookiesService {
   cookiesAllowed = this.preferencesService.cookies
   isLoading = this.preferencesService.isLoading
   
-  showBanner = computed(() => this.cookiesAllowed() === null);
+  showBanner = computed(() => !this.isLoading() && this.cookiesAllowed() === null);
 
   setCookiesPreferences(allow: boolean) {
     this.preferencesService.cookies.set(allow);

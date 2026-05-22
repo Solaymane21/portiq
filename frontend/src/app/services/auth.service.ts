@@ -61,7 +61,7 @@ export class AuthService {
           this.isLoading.set(false);
         },
         error: (err) => {
-          console.error(err.error.message);
+          // console.error(err.error.message);
           this.msgError.set(err.error.message);
           this.isLoading.set(false);
         }
@@ -93,7 +93,7 @@ export class AuthService {
         }
       },
       error: (err: any) => {
-        console.error(err.error.message);
+        // console.error(err.error.message);
         this.msgError.set(err.error.message);
         this.isLoading.set(false);
       }
@@ -123,31 +123,39 @@ export class AuthService {
       password:          this.password(),
       suscription_type:  'free'
     }).subscribe({
-      next: (res: any) => {
-        this.saveUserData(res);
+    next: (res: any) => {
+      this.saveUserData(res);
 
-        // si eligio premium redirige a stripe, si no va directo al dashboard
-        if (this.suscription_type() === 'premium') {
-          this.http.post(`${this.apiUrl}/subscription/checkout`, {}).subscribe({
-            next: (checkout: any) => {
-              this.isLoading.set(false);
-              window.location.href = checkout.url;
-            },
-            error: () => {
-              this.isLoading.set(false);
-              this.router.navigate(['/app/dashboard']);
-            }
-          });
-        } else {
+      this.initialDataService.run().subscribe({
+        next: () => {
+          if (this.suscription_type() === 'premium') {
+            this.http.post(`${this.apiUrl}/subscription/checkout`, {}).subscribe({
+              next: (checkout: any) => {
+                this.isLoading.set(false);
+                window.location.href = checkout.url;
+              },
+              error: () => {
+                this.isLoading.set(false);
+                this.router.navigate(['/app/dashboard']);
+              }
+            });
+          } else {
+            this.isLoading.set(false);
+            this.router.navigate(['/app/dashboard']);
+          }
+        },
+        error: () => {
+          this.isLoading.set(false);
           this.router.navigate(['/app/dashboard']);
         }
-      },
-      error: (err) => {
-        console.error(err.message);
-        this.isLoading.set(false);
-      }
-    });
-  }
+      });
+    },
+    error: (err) => {
+      // console.error(err.message);
+      this.isLoading.set(false);
+    }
+  });
+}
 
   // inicia sesion y redirige segun si el usuario es admin o no
   onLogin() {
@@ -168,7 +176,6 @@ export class AuthService {
           });
         }
         this.isLoading.set(false);
-
       },
       error: () => {
         this.msgError.set('Credenciales incorrectas o no existe cuenta en PortIQ.');
@@ -198,7 +205,7 @@ export class AuthService {
       next:  (res: any) => {
         window.location.href = res.redirect_url;
       },
-      error: (err: any) => { console.error(err); }
+      // error: (err: any) => { console.error(err); }
     });
   }
 

@@ -1,8 +1,8 @@
-<div class="fixed bottom-20 md:right-16 z-50 flex flex-col me-6 md:me-0 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-xl p-5">
+<div class="fixed bottom-20 md:right-16 z-50 flex flex-col me-6 md:me-0 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 max-w-lg rounded-xl p-5">
     <h3 class="dark:text-neutral-100">Uso de cookies</h3>
     <p class="dark:text-neutral-400">Utilizamos cookies propias y de terceros para analizar el tráfico, mejorar tu experiencia de usuario y personalizar el contenido. Al hacer clic en "Aceptar", consientes el uso de todas las cookies.</p>
-    <div class="flex gap-5">
-        <button (click)="this.cookiesService.setCookiesPreferences(false)" class="w-full py-2 bg-zinc-300 text-zinc-900 hover:opacity-80 cursor-pointer">Rechazar</button>
-        <button (click)="this.cookiesService.setCookiesPreferences(true)" class="w-full py-2 bg-orange-500 text-white hover:opacity-80 cursor-pointer">Aceptar</button>
+    <div class="flex gap-5 mt-2">
+        <button (click)="this.cookiesService.setCookiesPreferences(false)" class="w-full py-2 bg-zinc-300 text-zinc-900 hover:opacity-80 cursor-pointer rounded-md">Rechazar</button>
+        <button (click)="this.cookiesService.setCookiesPreferences(true)" class="w-full py-2 bg-orange-500 text-white hover:opacity-80 cursor-pointer rounded-md">Aceptar</button>
     </div>
 </div>

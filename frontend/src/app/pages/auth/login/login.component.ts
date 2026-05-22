@@ -39,6 +39,8 @@ export class LoginComponent implements OnInit{
     setTimeout(() => {
       this.redirectMessage.set({msg: '', type: 'info'})
     }, 5000);
+
+    this.authService.msgError.set('')
   }
 
   onSubmit() {

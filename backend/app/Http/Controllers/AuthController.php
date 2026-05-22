@@ -59,7 +59,8 @@ class AuthController extends Controller
         $user->preferences()->create([
             'currency' => 'EUR',
             'theme' => 'dark',
-            'color-theme' => 'orange'
+            'color-theme' => 'orange',
+            'cookies' => null
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -109,7 +110,8 @@ class AuthController extends Controller
                 $user->preferences()->create([
                     'currency' => 'EUR',
                     'theme' => 'dark',
-                    'color-theme' => 'orange'
+                    'color-theme' => 'orange',
+                    'cookies' => null
                 ]);
             }
         }

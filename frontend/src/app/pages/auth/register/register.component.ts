@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { AuthService } from '../../../services/auth.service';
 import { RegisterDataComponent } from './steps/register-data/register-data.component';
 import { RegisterVerificationComponent } from './steps/register-verification/register-verification.component';
@@ -11,8 +11,12 @@ import { RegisterPlanComponent } from './steps/register-plan/register-plan.compo
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   authService = inject(AuthService)
 
   progressPercent = computed(() => (this.authService.currentStep() / 4) * 100);
+
+  ngOnInit(): void {
+      this.authService.msgError.set('')
+  }
 }

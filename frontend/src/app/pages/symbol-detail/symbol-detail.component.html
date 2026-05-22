@@ -2,7 +2,7 @@
   <div class="px-4 py-6 md:px-14">
     <!-- Volver -->
     <button (click)="goBack()"
-      class="flex items-center gap-2 text-white mb-6 text-sm">
+      class="flex items-center gap-2 text-zinc-900 dark:text-white hover:opacity-80 transition-opacity mb-6 text-sm">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
         <path fill-rule="evenodd" d="M7.72 12.53a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 1 1 1.06 1.06L9.31 12l6.97 6.97a.75.75 0 1 1-1.06 1.06l-7.5-7.5Z" clip-rule="evenodd" />
       </svg>
@@ -13,12 +13,12 @@
     @if (loadingInfo()) {
       <div class="flex justify-between items-start mb-6 animate-pulse">
         <div class="space-y-2">
-          <div class="h-8 w-32 bg-neutral-600 rounded-lg"></div>
-          <div class="h-4 w-48 bg-neutral-600 rounded"></div>
+          <div class="h-8 w-32 bg-zinc-300 dark:bg-neutral-600 rounded-lg"></div>
+          <div class="h-4 w-48 bg-zinc-300 dark:bg-neutral-600 rounded"></div>
         </div>
         <div class="space-y-2 text-right">
-          <div class="h-9 w-28 bg-neutral-600 rounded-lg ml-auto"></div>
-          <div class="h-4 w-20 bg-neutral-600 rounded ml-auto"></div>
+          <div class="h-9 w-28 bg-zinc-300 dark:bg-neutral-600 rounded-lg ml-auto"></div>
+          <div class="h-4 w-20 bg-zinc-300 dark:bg-neutral-600 rounded ml-auto"></div>
         </div>
       </div>
     } @else if (info()) {
@@ -26,7 +26,7 @@
         <div>
           <div class="flex items-center gap-3 mb-1">
 
-            <div class="w-10 h-10 rounded-full bg-neutral-800 shrink-0 flex items-center justify-center overflow-hidden">
+            <div class="w-10 h-10 rounded-full bg-zinc-200 dark:bg-neutral-800 shrink-0 flex items-center justify-center overflow-hidden border border-zinc-300 dark:border-transparent">
               <img
                 [src]="getLogoUrl(symbol())"
                 [alt]="symbol()"
@@ -35,22 +35,24 @@
               />
             </div>
 
-            <h1 class="font-ibm text-3xl font-bold">{{ symbol() }}</h1>
+            <h1 class="font-ibm text-3xl font-bold text-zinc-900 dark:text-white">{{ symbol() }}</h1>
           </div>
-          <p class="text-neutral-400 text-sm">{{ info()!.name }}</p>
+          <p class="text-zinc-500 dark:text-neutral-400 text-sm">{{ info()!.name }}</p>
           @if (info()!.sector) {
-            <p class="text-neutral-600 text-xs mt-1">{{ info()!.sector }}</p>
+            <p class="text-zinc-400 dark:text-neutral-600 text-xs mt-1">{{ info()!.sector }}</p>
           }
         </div>
         <div class="text-right">
-          <p class="font-ibm text-4xl font-bold tracking-tight">
+          <p class="font-ibm text-4xl font-bold tracking-tight text-zinc-900 dark:text-white">
             {{ info()!.price | number:'1.2-2' }}
-            <span class="text-lg text-neutral-400 ml-1">{{ info()!.currency }}</span>
+            <span class="text-lg text-zinc-500 dark:text-neutral-400 ml-1">{{ info()!.currency }}</span>
           </p>
           @if (chartOptions.series) {
             <p class="text-sm mt-1 font-medium font-ibm"
-              [class.text-green-500]="changeData.positive"
-              [class.text-red-500]="!changeData.positive">
+              [class.text-green-600]="changeData.positive"
+              [class.dark:text-green-500]="changeData.positive"
+              [class.text-red-600]="!changeData.positive"
+              [class.dark:text-red-500]="!changeData.positive">
               {{ changeData.positive ? '+' : '' }}{{ changeData.value }}€
               ({{ changeData.positive ? '+' : '' }}{{ changeData.percent }}%)
               · {{ selectedPeriod() }}
@@ -61,7 +63,7 @@
     }
 
     <!-- Grafica -->
-    <div class="bg-neutral-950 border border-neutral-600 rounded-2xl p-5 mb-5">
+    <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 mb-5 shadow-sm dark:shadow-none">
 
       <div class="flex justify-end gap-1 mb-2">
         @for (p of periods; track p) {
@@ -69,7 +71,10 @@
             class="px-2.5 py-0.5 rounded-md transition-colors"
             [class.bg-orange-600]="selectedPeriod() === p"
             [class.text-white]="selectedPeriod() === p"
-            [class.text-neutral-400]="selectedPeriod() !== p">
+            [class.hover:bg-zinc-200]="selectedPeriod() !== p"
+            [class.dark:hover:bg-neutral-800]="selectedPeriod() !== p"
+            [class.text-zinc-500]="selectedPeriod() !== p"
+            [class.dark:text-neutral-400]="selectedPeriod() !== p">
             {{ p }}
           </button>
         }

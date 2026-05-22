@@ -79,6 +79,8 @@
   }
 </div>
 
+<h2 class="text-xl font-ibm text-zinc-900 dark:text-white mb-4">Activos favoritos</h2>
+
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5 mb-5">
 
   @if (isFetching()) {
@@ -188,3 +190,96 @@
   }
 
 </div>
+
+<!-- Portfolios Favoritos -->
+@if (isFetching() || favoritePortfolios().length >= 0) {
+  <div class="mt-8 mb-5">
+
+    <h2 class="text-xl font-ibm text-zinc-900 dark:text-white mb-4">Portfolios favoritos</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      <!-- Skeleton portfolios -->
+      @if (isFetching()) {
+        @for (n of [1, 2, 3]; track n) {
+          <div
+            class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-200 dark:border-neutral-800 rounded-2xl p-5"
+            [ngClass]="{
+              'hidden md:block': n === 2,
+              'hidden lg:block': n === 3
+            }"
+          >
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-full bg-zinc-300 dark:bg-neutral-800 animate-pulse shrink-0"></div>
+                <div class="flex flex-col gap-1.5">
+                  <div class="h-4 w-32 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
+                  <div class="h-3 w-20 bg-zinc-300 dark:bg-neutral-800 rounded animate-pulse"></div>
+                </div>
+              </div>
+              <div class="h-6 w-6 rounded bg-zinc-300 dark:bg-neutral-800 animate-pulse"></div>
+            </div>
+            <div class="flex gap-2 mt-4">
+              <div class="h-5 w-16 bg-zinc-300 dark:bg-neutral-800 rounded-full animate-pulse"></div>
+              <div class="h-5 w-14 bg-zinc-300 dark:bg-neutral-800 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+        }
+
+      } @else if (favoritePortfolios().length === 0) {
+        <div class="col-span-3 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-10 text-center">
+          <p class="text-2xl text-zinc-900 dark:text-white">
+            <p class="text-2xl">
+              No tienes portfolios favoritos
+            </p>
+          <p class="text-zinc-500 dark:text-neutral-400 mb-3">Puedes añadirlos desde el apartado de clasificación.</p>
+          <button 
+            [routerLink]="['/app/ranking']"
+            class="w-full bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white"
+            >Ver clasificación
+          </button>
+        </div>
+      }@else {
+        @for (portfolio of favoritePortfolios(); track portfolio.portfolio_id) {
+          <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 font-ibm">
+
+            <div class="flex justify-between items-center">
+              <div class="flex items-center">
+                <div>
+                  <p class="text-zinc-900 dark:text-white">{{ portfolio.name }}</p>
+                </div>
+              </div>
+
+              <!-- Botón quitar favorito -->
+              <button
+                class="text-orange-500 cursor-pointer"
+                (click)="removeFromFavoritePortfolios(portfolio.portfolio_id)"
+              >
+                @if (isDeletingPortfolio(portfolio.portfolio_id)) {
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 animate-pulse">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                  </svg>
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                    <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+                  </svg>
+                }
+              </button>
+            </div>
+
+            <!-- Badges de estado -->
+            <div class="flex items-center gap-2 mt-6">
+              <button 
+                [routerLink]="['/app/wallets', portfolio.portfolio_id]"
+                class="w-full bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white"
+                >Ver portfolio
+              </button>
+            </div>
+
+          </div>
+        }
+      }
+
+    </div>
+  </div>
+}

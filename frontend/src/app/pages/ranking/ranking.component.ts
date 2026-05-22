@@ -6,6 +6,8 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PortfolioService } from '../../services/portfolio.service';
+import { FavoritesService } from '../../services/favorites.service';
+import { NotificationsService } from '../../services/notifications.service';
 import { PublicPortfolioRanking } from '../../models/publicPortfolioRanking.model';
 import { AuthService } from '../../services/auth.service';
 
@@ -18,17 +20,21 @@ import { AuthService } from '../../services/auth.service';
 export class RankingComponent implements OnInit {
   private portfolioService = inject(PortfolioService);
   private authService = inject(AuthService);
+  private favoritesService = inject(FavoritesService);
+  private notificationsService = inject(NotificationsService);
   private destroyRef = inject(DestroyRef);
 
   rows = signal<PublicPortfolioRanking[]>([]);
   isLoading = signal(true);
   errorMsg = signal<string | null>(null);
+  togglingIds = signal<Set<number>>(new Set()); // IDs en proceso de petición
 
   sort = signal<string>('total_value');
   order = signal<'asc' | 'desc'>('desc');
   searchInput = '';
 
-  followingIds = signal<Set<number>>(new Set());
+  // Usa el signal del servicio — persiste entre navegaciones
+  followingIds = this.favoritesService.followingPortfolioIds;
 
   sortOptions: { value: string; label: string }[] = [
     { value: 'total_value', label: 'Valor total' },
@@ -42,12 +48,11 @@ export class RankingComponent implements OnInit {
   private search$ = new Subject<string>();
 
   ngOnInit(): void {
+    // Asegura que followingIds esté poblado
+    this.favoritesService.load().subscribe();
+
     this.search$
-      .pipe(
-        debounceTime(300),
-        distinctUntilChanged(),
-        takeUntilDestroyed(this.destroyRef)
-      )
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.load());
 
     this.load();
@@ -77,20 +82,62 @@ export class RankingComponent implements OnInit {
     return this.followingIds().has(row.id);
   }
 
-  followPortfolio(event: Event, row: PublicPortfolioRanking): void {
+  isToggling(row: PublicPortfolioRanking): boolean {
+    return this.togglingIds().has(row.id);
+  }
+
+  toggleFollow(event: Event, row: PublicPortfolioRanking): void {
     event.preventDefault();
     event.stopPropagation();
 
-    if (this.isFollowing(row) || this.isOwnPortfolio(row)) return;
+    if (this.isOwnPortfolio(row) || this.isToggling(row)) return;
 
-    this.portfolioService.followPortfolio(row.id).subscribe({
+    const following = this.isFollowing(row);
+
+    // Marcar como en proceso
+    this.togglingIds.update(ids => new Set(ids).add(row.id));
+
+    // Optimistic update
+    this.followingIds.update(ids => {
+      const next = new Set(ids);
+      following ? next.delete(row.id) : next.add(row.id);
+      return next;
+    });
+
+    const request$ = following
+      ? this.portfolioService.unfollowPortfolio(row.id)
+      : this.portfolioService.followPortfolio(row.id);
+
+    request$.subscribe({
       next: () => {
-        const updated = new Set(this.followingIds());
-        updated.add(row.id);
-        this.followingIds.set(updated);
+        this.togglingIds.update(ids => {
+          const next = new Set(ids);
+          next.delete(row.id);
+          return next;
+        });
+
+        if (following) {
+          this.notificationsService.info(`Has dejado de seguir "${row.name}"`);
+        } else {
+          this.notificationsService.success(`Ahora sigues la cartera "${row.name}"`);
+        }
+
+        // Invalidar caché para que favoritos recargue la próxima visita
+        this.favoritesService.invalidate();
       },
-      error: (err) => {
-        console.error('Error al seguir cartera', err);
+      error: () => {
+        // Revertir optimistic update
+        this.followingIds.update(ids => {
+          const next = new Set(ids);
+          following ? next.add(row.id) : next.delete(row.id);
+          return next;
+        });
+        this.togglingIds.update(ids => {
+          const next = new Set(ids);
+          next.delete(row.id);
+          return next;
+        });
+        this.notificationsService.error(`No se pudo ${following ? 'dejar de seguir' : 'seguir'} la cartera`);
       }
     });
   }
@@ -100,11 +147,7 @@ export class RankingComponent implements OnInit {
     this.errorMsg.set(null);
 
     this.portfolioService
-      .getPublicRanking(
-        this.sort(),
-        this.order(),
-        this.searchInput.trim() || undefined
-      )
+      .getPublicRanking(this.sort(), this.order(), this.searchInput.trim() || undefined)
       .subscribe({
         next: (data) => {
           this.rows.set(data as PublicPortfolioRanking[]);

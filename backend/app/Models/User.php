@@ -81,4 +81,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\Notification::class);
     }
+
+    public function favoritePortfolios(): HasMany
+    {
+        return $this->hasMany(FavoritePortfolio::class);
+    }
 }

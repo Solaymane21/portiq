@@ -66,6 +66,16 @@ class PortfolioController extends Controller
         ]);
     }
 
+    public function unfollow(Request $request, int $portfolioId): \Illuminate\Http\JsonResponse
+    {
+        DB::table('favorite_portfolios')
+            ->where('user_id', $request->user()->id)
+            ->where('portfolio_id', $portfolioId)
+            ->delete();
+
+        return response()->json(['message' => 'Has dejado de seguir la cartera.']);
+    }
+
     public function index(Request $request)
     {
         $portfolios = $request->user()->portfolios()

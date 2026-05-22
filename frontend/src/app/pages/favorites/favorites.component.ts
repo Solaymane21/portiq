@@ -11,11 +11,12 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NotificationsService } from '../../services/notifications.service';
 import { PreferencesService } from '../../services/preferences.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-favorites',
   standalone: true,
-  imports: [NgApexchartsModule, FormsModule, NgClass, MatProgressSpinnerModule],
+  imports: [NgApexchartsModule, FormsModule, NgClass, MatProgressSpinnerModule, RouterLink],
   templateUrl: './favorites.component.html',
   styleUrl: './favorites.component.css'
 })
@@ -29,6 +30,9 @@ export class FavoritesComponent implements OnInit {
   notificationService = inject(NotificationsService)
 
   favorites = this.favoritesService.favorites;
+  favoritePortfolios = this.favoritesService.favoritePortfolios;
+  deletingPortfolioIds = signal<Set<number>>(new Set());
+
   sparklines = new Map<number, any>();
   prices = signal<Record<string, number>>({});
   loadingPrices = signal<boolean>(false);
@@ -63,9 +67,11 @@ export class FavoritesComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    console.log(this.favoritePortfolios())
+
     this.favoritesService.load().subscribe(favs => {
-      this.loadPrices(favs);
-      this.loadSparklines(favs);
+      this.loadPrices(favs.assets);
+      this.loadSparklines(favs.assets);
     });
 
     interval(30000).pipe(
@@ -274,6 +280,33 @@ export class FavoritesComponent implements OnInit {
 
   format(value: number) {
     return this.preferencesService.formatCurrency(value);
+  }
+
+  isDeletingPortfolio(portfolioId: number): boolean {
+    return this.deletingPortfolioIds().has(portfolioId);
+  }
+
+  removeFromFavoritePortfolios(portfolioId: number): void {
+    const portfolio = this.favoritePortfolios().find(p => p.portfolio_id === portfolioId);
+
+    this.deletingPortfolioIds.update(ids => new Set(ids).add(portfolioId));
+
+    this.favoritesService.removePortfolio(portfolioId, portfolio?.name).subscribe({
+      next: () => {
+        this.deletingPortfolioIds.update(ids => {
+          const next = new Set(ids);
+          next.delete(portfolioId);
+          return next;
+        });
+      },
+      error: () => {
+        this.deletingPortfolioIds.update(ids => {
+          const next = new Set(ids);
+          next.delete(portfolioId);
+          return next;
+        });
+      }
+    });
   }
 
 }

@@ -86,8 +86,6 @@ export class TopbarComponent implements OnInit {
     });
   }
 
-  // ── Notifications logic ───────────────────────
-
   loadNotifications(): void {
     this.notificationService.getAll().subscribe(data => this.notifications.set(data));
   }
@@ -123,7 +121,6 @@ export class TopbarComponent implements OnInit {
     this.preferencesService.applyTheme(next);
   }
 
-  // ── Search state ──────────────────────────────
   selectedIndex = 0;
   assetQuery = '';
 
@@ -133,7 +130,6 @@ export class TopbarComponent implements OnInit {
 
   private searchSubject = new Subject<string>();
 
-  // ── Open / close ─────────────────────────────
   openAssetSearch() {
     this.isAssetSearchOpen.set(true);
     this.assetQuery = '';
@@ -146,7 +142,6 @@ export class TopbarComponent implements OnInit {
     this.isAssetSearchOpen.set(false);
   }
 
-  // ── Keyboard global ───────────────────────────
   @HostListener('document:keydown', ['$event'])
   handleKeyboard(event: KeyboardEvent) {
     const isK = event.key.toLowerCase() === 'k';

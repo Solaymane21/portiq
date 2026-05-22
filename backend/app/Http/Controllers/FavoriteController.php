@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Favorite;
+use App\Models\FavoritePortfolio;
 use App\Models\Symbol;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -12,7 +13,10 @@ class FavoriteController extends Controller
 {
     public function index(Request $request)
     {
-        $favorites = Favorite::where('user_id', $request->user()->id)
+        $userId = $request->user()->id;
+
+        // Activos favoritos
+        $assets = Favorite::where('user_id', $userId)
             ->with('symbol')
             ->get()
             ->map(fn($f) => [
@@ -25,7 +29,25 @@ class FavoriteController extends Controller
                 'api_id' => $f->symbol->api_id,
             ]);
 
-        return response()->json($favorites);
+        // Portfolios favoritos
+        $portfolios = FavoritePortfolio::where('favorite_portfolios.user_id', $userId)
+            ->join('portfolios', 'portfolios.id', '=', 'favorite_portfolios.portfolio_id')
+            ->select(
+                'favorite_portfolios.id as favorite_id',
+                'portfolios.id as portfolio_id',
+                'portfolios.name',
+                'portfolios.is_public',
+                'portfolios.is_default',
+                'portfolios.user_id as owner_id',
+                'portfolios.created_at',
+                'portfolios.updated_at'
+            )
+            ->get();
+
+        return response()->json([
+            'assets'     => $assets,
+            'portfolios' => $portfolios,
+        ]);
     }
 
     public function store(Request $request)
@@ -89,5 +111,14 @@ class FavoriteController extends Controller
             ->delete();
 
         return response()->json(['message' => 'Eliminado']);
+    }
+
+    public function destroyPortfolio(Request $request, int $portfolioId)
+    {
+        FavoritePortfolio::where('user_id', $request->user()->id)
+            ->where('portfolio_id', $portfolioId)
+            ->delete();
+
+        return response()->json(['message' => 'Portfolio eliminado de favoritos']);
     }
 }

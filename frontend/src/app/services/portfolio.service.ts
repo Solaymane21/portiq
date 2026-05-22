@@ -37,4 +37,8 @@ export class PortfolioService {
   followPortfolio(portfolioId: number) {
     return this.http.post(`${this.apiUrl}/${portfolioId}/follow`, {});
   }
+
+  unfollowPortfolio(portfolioId: number) {
+    return this.http.delete(`${this.apiUrl}/${portfolioId}/unfollow`);
+  }
 }

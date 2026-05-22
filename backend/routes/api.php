@@ -51,6 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //Portfolios
     Route::get('/portfolios/public', [PortfolioController::class, 'publicRanking']);
     Route::post('/portfolios/{portfolioId}/follow', [PortfolioController::class, 'follow']);
+    Route::delete('/portfolios/{portfolioId}/unfollow', [PortfolioController::class, 'unfollow']);
     Route::get('/portfolios', [PortfolioController::class, 'index']);
     Route::post('/portfolios', [PortfolioController::class, 'store']);
     Route::put('/portfolios/{portfolio}', [PortfolioController::class, 'update']);
@@ -86,6 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/favorites', [FavoriteController::class, 'store']);
     Route::delete('/favorites/{symbolId}', [FavoriteController::class, 'destroy']);
+    Route::delete('/favorites/portfolios/{portfolioId}', [FavoriteController::class, 'destroyPortfolio']);
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index']);

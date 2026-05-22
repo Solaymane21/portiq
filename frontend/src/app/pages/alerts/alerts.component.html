@@ -58,9 +58,12 @@
 
         <!-- Header -->
         <div class="flex items-center justify-between font-ibm">
-          <div class="flex items-center gap-2">
-            <p class="font-medium text-zinc-900 dark:text-neutral-100">{{ alert.name }}</p>
-            <p class="text-sm text-zinc-500 dark:text-neutral-400">({{ alert.symbol }})</p>
+          <div class="flex items-center gap-3">
+            <img [src]="alert.image_url" class="h-7 w-7 rounded-full object-cover" />
+            <div class="flex flex-col">
+              <p class="font-medium text-zinc-900 dark:text-neutral-100">{{ alert.name }}</p>
+              <p class="text-sm text-zinc-500 dark:text-neutral-400">({{ alert.symbol }})</p>
+            </div>
           </div>
           <div>
             <button [cdkMenuTriggerFor]="menu" class="text-orange-500 hover:text-orange-600 transition-colors">
@@ -130,7 +133,7 @@
 
         <!-- Footer -->
         <div class="flex items-center justify-between mt-auto pt-2">
-          <p class="text-xs text-zinc-500 dark:text-neutral-500">
+          <p class="text-zinc-500 dark:text-neutral-500">
             Creada el {{ alert.created_at | date:'dd/MM/yyyy' }}
           </p>
           <button

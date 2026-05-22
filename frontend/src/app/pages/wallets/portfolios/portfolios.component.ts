@@ -175,7 +175,9 @@ export class PortfoliosComponent implements OnInit {
   }
 
   goToPortfolio(portfolioId: number) {
-    this.router.navigate(['/app/wallets', portfolioId]);
+    this.router.navigate(['/app/wallets', portfolioId], {
+      state: { returnUrl: this.router.url }
+    });
   }
 
   getGridClass(): string {

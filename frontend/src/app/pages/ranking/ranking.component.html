@@ -222,6 +222,7 @@
 
                   <a
                     [routerLink]="['/app/wallets', row.id]"
+                    [queryParams]="{ returnUrl: '/app/ranking' }"
                     (click)="$event.stopPropagation()"
                     class="inline-flex items-center gap-2 bg-orange-500 group-hover:bg-orange-500/80 text-white text-sm px-3 h-8 rounded transition-colors"
                   >

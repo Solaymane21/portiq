@@ -271,6 +271,7 @@
             <div class="flex items-center gap-2 mt-6">
               <button 
                 [routerLink]="['/app/wallets', portfolio.portfolio_id]"
+                [queryParams]="{ returnUrl: '/app/favorites' }"
                 class="w-full bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white"
                 >Ver portfolio
               </button>

@@ -23,6 +23,7 @@ export class TradesComponent implements OnInit {
   portfolioId = signal<number | null>(null);
   nombreCartera = signal('Cargando...');
   cargando = signal(true);
+  returnUrl = '';
 
   totalDepositado = signal(0);
   totalRetirado = signal(0);
@@ -52,6 +53,8 @@ export class TradesComponent implements OnInit {
         this.cargarTrades();
       }
     });
+
+    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/app/wallets';
   }
 
   format(value: number) {
@@ -84,8 +87,8 @@ export class TradesComponent implements OnInit {
     });
   }
 
-  volverAInversiones() {
-    this.router.navigate(['/app/wallets', this.portfolioId()]);
+  volver() {
+    this.router.navigateByUrl(this.returnUrl);
   }
 
   getInitial(value: string | null | undefined): string {
@@ -100,7 +103,7 @@ export class TradesComponent implements OnInit {
     switch (type) {
       case 'compra': return 'bg-green-500/10 text-green-500 border border-green-500/20';
       case 'venta': return 'bg-red-500/10 text-red-500 border border-red-500/20';
-      case 'nuevaPosicion': return 'bg-orange-500/10 text-orange-500 border border-orange-500/20';
+      case 'nuevaPosicion': return 'bg-orange-500/20 text-orange-500 border border-orange-500';
       default: return 'bg-neutral-800 text-neutral-400 border border-neutral-700';
     }
   }

@@ -67,8 +67,6 @@ export class FavoritesComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log(this.favoritePortfolios())
-
     this.favoritesService.load().subscribe(favs => {
       this.loadPrices(favs.assets);
       this.loadSparklines(favs.assets);

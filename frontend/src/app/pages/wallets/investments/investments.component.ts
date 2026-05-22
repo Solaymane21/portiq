@@ -28,6 +28,7 @@ export class InvestmentsComponent implements OnInit {
   private prefs = inject(PreferencesService);
 
   portfolioId = signal<number | null>(null);
+  returnUrl = '/app/wallets';
   cargando = signal(true);
   nombreCartera = signal('Cargando...');
   valorTotal = signal(0);
@@ -106,6 +107,8 @@ export class InvestmentsComponent implements OnInit {
         this.cargarInversiones();
       }
     });
+
+    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/app/wallets';
 
     this.inicializarBuscador();
     this.posicionForm
@@ -305,14 +308,22 @@ export class InvestmentsComponent implements OnInit {
     }
   }
 
-  irAWallets() {
-    window.history.back()
+  volver() {
+    this.router.navigateByUrl(this.returnUrl);
   }
 
-  verHistorialTrades() {
+  verHistorialTrades(): void {
     const currentId = this.portfolioId();
+
     if (currentId !== null) {
-      this.router.navigate(['/app/wallets', currentId, 'trades']);
+      this.router.navigate(
+        ['/app/wallets', currentId, 'trades'],
+        {
+          queryParams: {
+            returnUrl: this.router.url
+          }
+        }
+      );
     }
   }
 

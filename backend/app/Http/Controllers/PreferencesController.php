@@ -25,7 +25,7 @@ class PreferencesController extends Controller
 
         $preferences = $request->user()->preferences()->updateOrCreate(
             ['user_id' => $request->user()->id],
-            $request->only(['currency', 'theme', 'color_theme'])
+            $request->only(['currency', 'theme', 'color_theme', 'cookies'])
         );
 
         return response()->json($preferences);

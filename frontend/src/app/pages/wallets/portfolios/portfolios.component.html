@@ -152,7 +152,7 @@
   }
 </div>
 
-<!-- MENU EDITAR/ELIMINAR -->
+<!-- MENU EDITAR/ELIMINAR CARTERA -->
 <ng-template #cardMenu>
   <div
     class="mt-2 min-w-[160px] h-fit bg-neutral-950 border border-neutral-600 rounded-xl overflow-hidden"
@@ -160,7 +160,7 @@
     
     <button
       (click)="openEditModal(selectedPortfolio()!)"
-      class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-white hover:bg-neutral-900 hover:text-neutral-200/80"
+      class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-white hover:bg-neutral-900 hover:text-white/80"
       cdkMenuItem>
       <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
@@ -339,14 +339,14 @@
       <button
         type="button"
         (click)="triggerCsvSelection()"
-        class="w-full mb-2 bg-neutral-900 border border-neutral-700 hover:opacity-80 text-white rounded-md py-2 text-sm">
+        class="w-full mb-2 bg-neutral-900 border border-neutral-600 hover:opacity-80 text-white rounded-md py-2 text-sm">
         {{ importFileName() ? 'Cambiar archivo: ' + importFileName() : 'Elegir archivo .csv' }}
       </button>
 
       <button
         type="button"
         (click)="downloadTemplate()"
-        class="w-full mb-3 flex items-center justify-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors">
+        class="w-full mb-3 flex items-center justify-center gap-2 text-sm text-neutral-400 hover:text-white">
         <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
         </svg>
@@ -356,7 +356,9 @@
       @if (importParseError()) {
         <p class="text-red-400 text-sm mb-3">{{ importParseError() }}</p>
       } @else if (importRows().length > 0) {
-        <p class="text-green-500 text-sm mb-3">{{ importRows().length }} filas listas para importar.</p>
+        <p class="text-green-500 text-sm mb-3">
+          {{ importRows().length }} {{ importRows().length === 1 ? 'fila lista' : 'filas listas' }} para importar.
+        </p>
       }
 
       <div class="space-y-3 mb-4 text-white text-sm">

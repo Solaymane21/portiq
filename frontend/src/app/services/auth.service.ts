@@ -8,6 +8,7 @@ import { InitialDataService } from './initial-data.service';
 import { FavoritesService } from './favorites.service';
 import { environment } from '../../environments/environment';
 import { PreferencesService } from './preferences.service';
+import { CookiesService } from './cookies.service';
 
 @Injectable({
   providedIn: 'root'
@@ -29,6 +30,7 @@ export class AuthService {
   private initialDataService = inject(InitialDataService)
   private favoritesService = inject(FavoritesService)
   private preferencesService = inject(PreferencesService);
+  private cookiesService = inject(CookiesService)
 
   // signals de los campos del formulario
   username = signal<User['name']>('');
@@ -125,6 +127,10 @@ export class AuthService {
     }).subscribe({
     next: (res: any) => {
       this.saveUserData(res);
+
+      if (res.user.is_new_user) {
+        this.cookiesService.isNewUser.set(true);
+      }
 
       this.initialDataService.run().subscribe({
         next: () => {

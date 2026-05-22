@@ -1,4 +1,4 @@
-import { computed, inject, Injectable } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { PreferencesService } from './preferences.service';
 
 @Injectable({
@@ -10,10 +10,14 @@ export class CookiesService {
 
   cookiesAllowed = this.preferencesService.cookies
   isLoading = this.preferencesService.isLoading
+  isNewUser = signal<boolean>(false);
   
-  showBanner = computed(() => !this.isLoading() && this.cookiesAllowed() === null);
+  showBanner = computed(() =>
+    !this.isLoading() && (this.cookiesAllowed() === null || this.isNewUser())
+  );
 
   setCookiesPreferences(allow: boolean) {
+    this.isNewUser.set(false)
     this.preferencesService.cookies.set(allow);
     this.preferencesService.saveCookies(allow);
   }

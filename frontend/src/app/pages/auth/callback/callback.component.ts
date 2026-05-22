@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { InitialDataService } from '../../../services/initial-data.service';
+import { CookiesService } from '../../../services/cookies.service';
 
 @Component({
   selector: 'app-callback',
@@ -13,6 +14,7 @@ export class CallbackComponent {
   router = inject(Router);
   authService = inject(AuthService);
   initialDataService = inject(InitialDataService)
+  cookiesService = inject(CookiesService)
 
   ngOnInit(): void {
     const fragment = window.location.hash.substring(1);
@@ -32,6 +34,10 @@ export class CallbackComponent {
       // guarda el token siempre
       this.authService.saveUserData({ token, user: parsedUser });
 
+      if (parsedUser.is_new_user) {
+        this.cookiesService.isNewUser.set(true); // ← antes de run()
+      }
+
       // si es admin redirigir automaticamente
       if (parsedUser.is_admin) {
         this.router.navigate(['/admin/dashboard']);
@@ -41,12 +47,9 @@ export class CallbackComponent {
       // cargar datos del usuario (favoriots, portfolios etc)
       this.initialDataService.run().subscribe({
         next: () => {
-          console.log('[Google Callback] cookies:', this.initialDataService['preferencesService'].cookies());
-          console.log('[Google Callback] isLoading:', this.initialDataService['preferencesService'].isLoading());
           this.router.navigate(['/app/dashboard']);
         },
         error: (err) => {
-          console.error('[Google Callback] ERROR en run():', err);
           this.router.navigate(['/app/dashboard']);
         }
       });

@@ -65,7 +65,7 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json(['token' => $token, 'user' => $this->formatUser($user)], 201);
+        return response()->json(['token' => $token, 'user' => $this->formatUser($user, true)], 201);
     }
 
     // devuelve la url de redireccion de google oauth
@@ -83,6 +83,8 @@ class AuthController extends Controller
         /** @var AbstractProvider $driver */
         $driver = Socialite::driver('google');
         $googleUser = $driver->stateless()->user();
+
+        $isNewUser = false;
 
         $user = User::where('google_id', $googleUser->getId())->first();
 
@@ -113,6 +115,8 @@ class AuthController extends Controller
                     'color_theme' => 'orange',
                     'cookies' => null
                 ]);
+
+                $isNewUser = true;
             }
         }
 
@@ -120,7 +124,7 @@ class AuthController extends Controller
 
         $token = $user->createToken('google-oauth')->plainTextToken;
 
-        $userData = base64_encode(json_encode($this->formatUser($user)));
+        $userData = base64_encode(json_encode($this->formatUser($user, $isNewUser)));
 
         // redirege al frontend y envia por parametros el token y informacion de usuario para guardarla en el localstorage
         $frontend = env('FRONTEND_URL');
@@ -158,7 +162,7 @@ class AuthController extends Controller
     }
 
     // formatea los datos del usuario para la respuesta json
-    function formatUser(User $user): array
+    function formatUser(User $user, bool $isNewUser = false): array
     {
         return [
             'id' => $user->id,
@@ -166,7 +170,8 @@ class AuthController extends Controller
             'email' => $user->email,
             'avatar' => $user->avatar,
             'suscription_type' => $user->suscription_type,
-            'is_admin' => $user->email === 'portiqinfo@gmail.com'
+            'is_admin' => $user->email === 'portiqinfo@gmail.com',
+            'is_new_user' => $isNewUser
         ];
     }
 

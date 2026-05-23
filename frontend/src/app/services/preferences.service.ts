@@ -107,15 +107,10 @@ export class PreferencesService {
   applyTheme(theme: 'dark' | 'light') {
     this.theme.set(theme);
     this.setLocal('portiq_theme', theme);
-    
+
     const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-      root.classList.remove('light');
-    } else {
-      root.classList.add('light');
-      root.classList.remove('dark');
-    }
+    root.classList.remove('dark', 'light');
+    root.classList.add(theme);
   }
 
   saveCookies(allow: boolean) {

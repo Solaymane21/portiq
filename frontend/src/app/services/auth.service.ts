@@ -9,6 +9,7 @@ import { FavoritesService } from './favorites.service';
 import { environment } from '../../environments/environment';
 import { PreferencesService } from './preferences.service';
 import { CookiesService } from './cookies.service';
+import { NotificationsService } from './notifications.service';
 
 @Injectable({
   providedIn: 'root'
@@ -31,6 +32,7 @@ export class AuthService {
   private favoritesService = inject(FavoritesService)
   private preferencesService = inject(PreferencesService);
   private cookiesService = inject(CookiesService)
+  private notificationsService = inject(NotificationsService)
 
   // signals de los campos del formulario
   username = signal<User['name']>('');
@@ -140,20 +142,28 @@ export class AuthService {
               next: (checkout: any) => {
                 this.isLoading.set(false);
                 window.location.href = checkout.url;
+                this.notificationsService.info('Bienvenido a PortIQ')
+                this.currentStep.set(1)
               },
               error: () => {
                 this.isLoading.set(false);
                 this.router.navigate(['/app/dashboard']);
+                this.notificationsService.info('Bienvenido a PortIQ')
+                this.currentStep.set(1)
               }
             });
           } else {
             this.isLoading.set(false);
             this.router.navigate(['/app/dashboard']);
+            this.notificationsService.info('Bienvenido a PortIQ')
+            this.currentStep.set(1)
           }
         },
         error: () => {
           this.isLoading.set(false);
           this.router.navigate(['/app/dashboard']);
+          this.notificationsService.info('Bienvenido a PortIQ')
+          this.currentStep.set(1)
         }
       });
     },
@@ -164,7 +174,7 @@ export class AuthService {
   });
 }
 
-  // inicia sesion y redirige segun si el usuario es admin o no
+  // inicia sesion y redirige segun el rol
   onLogin() {
     this.isLoading.set(true);
     this.msgError.set('');
@@ -178,9 +188,8 @@ export class AuthService {
         if(res.user.is_admin) {
           this.router.navigate(['/admin/dashboard'])
         } else {
-          this.initialDataService.run().subscribe({
-            next: () => this.router.navigate(['/app/dashboard'])
-          });
+          this.router.navigate(['/app/dashboard'])
+          this.notificationsService.info('Bienvenido de nuevo a PortIQ')
         }
         this.isLoading.set(false);
       },

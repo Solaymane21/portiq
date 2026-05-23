@@ -15,6 +15,7 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\AlertController;
+use App\Http\Controllers\InvestorProfileController;
 use App\Http\Controllers\NotificationController;
 
 
@@ -93,6 +94,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+
+    // Investor Profile
+    Route::get('/investor-profile',  [InvestorProfileController::class, 'show']);
+    Route::post('/investor-profile', [InvestorProfileController::class, 'store']);
 
 });
 

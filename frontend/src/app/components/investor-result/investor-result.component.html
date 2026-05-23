@@ -1,0 +1,76 @@
+<div class="mt-5 flex flex-col gap-5">
+
+  <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-8 flex flex-col items-center text-center gap-3">
+
+    <h2 class="text-4xl font-ibm font-bold text-zinc-900 dark:text-white">
+      {{ result.label }}
+    </h2>
+
+    <p class="text-zinc-500 dark:text-neutral-400 text-sm">{{ config.tagline }}</p>
+
+    <p class="text-zinc-600 dark:text-neutral-300 mt-1">
+      {{ result.description }}
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+    <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 flex flex-col">
+      <p class="text-sm font-medium text-zinc-700 dark:text-neutral-300 mb-0.5">Puntuación global</p>
+      <p class="text-xs text-zinc-400 dark:text-neutral-500 mb-2">
+        {{ result.score }} de {{ result.max_score }} puntos posibles
+      </p>
+
+      @if (isBrowser && radialOptions) {
+        <apx-chart
+          [series]="radialOptions.series"
+          [chart]="radialOptions.chart"
+          [plotOptions]="radialOptions.plotOptions"
+          [dataLabels]="radialOptions.dataLabels"
+          [colors]="radialOptions.colors"
+          [labels]="radialOptions.labels"
+          [legend]="radialOptions.legend"
+          [tooltip]="radialOptions.tooltip">
+        </apx-chart>
+      }
+
+      <div class="flex justify-between text-xs mt-2 px-2">
+        <span class="text-green-500">Conservador</span>
+        <span class="text-orange-500">Moderado</span>
+        <span class="text-red-500">Agresivo</span>
+      </div>
+    </div>
+
+    <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 flex flex-col">
+      <p class="text-sm font-medium text-zinc-700 dark:text-neutral-300 mb-0.5">Respuestas por categoría</p>
+      <p class="text-xs text-zinc-400 dark:text-neutral-500 mb-2">
+        Detalle de tus 9 respuestas
+      </p>
+
+      @if (isBrowser && barOptions) {
+        <apx-chart
+          [series]="barOptions.series"
+          [chart]="barOptions.chart"
+          [colors]="barOptions.colors"
+          [plotOptions]="barOptions.plotOptions"
+          [dataLabels]="barOptions.dataLabels"
+          [xaxis]="barOptions.xaxis"
+          [yaxis]="barOptions.yaxis"
+          [stroke]="barOptions.stroke"
+          [fill]="barOptions.fill"
+          [grid]="barOptions.grid"
+          [tooltip]="barOptions.tooltip">
+        </apx-chart>
+      }
+    </div>
+  </div>
+
+  <div class="flex flex-col sm:flex-row gap-3">
+    <button
+      (click)="retake.emit()"
+      class="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:opacity-80 text-white py-3 rounded-xl transition-opacity font-medium">
+      Repetir cuestionario
+    </button>
+  </div>
+
+</div>

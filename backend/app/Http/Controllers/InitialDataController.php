@@ -11,7 +11,7 @@ class InitialDataController extends Controller
     {
         $user = $request->user();
 
-        $favorites = Favorite::where('user_id', $user->id)
+        $assets = Favorite::where('user_id', $user->id)
             ->with('symbol')
             ->get()
             ->map(fn($f) => [
@@ -41,7 +41,10 @@ class InitialDataController extends Controller
             ];
 
         return response()->json([
-            'favorites'   => $favorites,
+            'favorites' => [
+                'assets' => $assets,
+                'portfolios' => [],
+            ],
             'preferences' => $preferences,
         ]);
     }

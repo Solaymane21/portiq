@@ -52,11 +52,14 @@ export class FavoritesService {
 
   // Llamado desde InitialDataService tras login
   hydrate(data: FavoritesResponse): void {
-    this.favorites.set(data.assets);
-    this.favoritePortfolios.set(data.portfolios);
-    this.syncFollowingIds(data.portfolios);
+    const assets = data?.assets ?? [];
+    const portfolios = data?.portfolios ?? [];
+  
+    this.favorites.set(assets);
+    this.favoritePortfolios.set(portfolios);
+    this.syncFollowingIds(portfolios);
     this.loaded.set(true);
-    this.saveCache(data);
+    this.saveCache({ assets, portfolios });
   }
 
   load(): Observable<FavoritesResponse> {
@@ -81,12 +84,15 @@ export class FavoritesService {
     return this.http.get<FavoritesResponse>(`${this.apiUrl}/favorites`).pipe(
       tap({
         next: (data) => {
-          this.favorites.set(data.assets);
-          this.favoritePortfolios.set(data.portfolios);
-          this.syncFollowingIds(data.portfolios);
+          const assets = data?.assets ?? [];
+          const portfolios = data?.portfolios ?? [];
+
+          this.favorites.set(assets);
+          this.favoritePortfolios.set(portfolios);
+          this.syncFollowingIds(portfolios);
           this.loaded.set(true);
           this.fetching.set(false);
-          this.saveCache(data);
+          this.saveCache({ assets, portfolios });
         },
         error: () => {
           this.fetching.set(false);
@@ -189,8 +195,9 @@ export class FavoritesService {
     this.clearCache();
   }
 
-  syncFollowingIds(portfolios: FavoritePortfolio[]): void {
-    this.followingPortfolioIds.set(new Set(portfolios.map(p => p.portfolio_id)));
+  syncFollowingIds(portfolios: FavoritePortfolio[] | undefined | null): void {
+    const list = portfolios ?? [];
+    this.followingPortfolioIds.set(new Set(list.map(p => p.portfolio_id)));
   }
 
 }

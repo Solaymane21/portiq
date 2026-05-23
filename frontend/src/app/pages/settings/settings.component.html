@@ -303,19 +303,59 @@
           @if (user()?.suscription_type !== 'premium') {
             <div class="bg-zinc-200 dark:bg-neutral-800 border border-zinc-300 dark:border-neutral-700 rounded-xl p-4">
               <p class="text-sm text-zinc-800 dark:text-neutral-300 mb-3">Desbloquea con Premium:</p>
-              <div class="flex flex-col gap-2">
-                <div class="flex items-center gap-2 text-zinc-500 dark:text-neutral-400">
-                  <span class="text-orange-500">✓</span> Alertas ilimitadas
-                </div>
-                <div class="flex items-center gap-2 text-zinc-500 dark:text-neutral-400">
-                  <span class="text-orange-500">✓</span> Análisis ML avanzado
-                </div>
-                <div class="flex items-center gap-2 text-zinc-500 dark:text-neutral-400">
-                  <span class="text-orange-500">✓</span> Portfolios ilimitados
-                </div>
-                <div class="flex items-center gap-2 text-zinc-500 dark:text-neutral-400">
-                  <span class="text-orange-500">✓</span> Exportación de datos
-                </div>
+              <div class="flex flex-col md:flex-row justify-around gap-2">
+                  <div class="flex flex-col gap-2">
+                    <div class="flex gap-2 items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0 text-orange-500">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        <p class="text-sm">Carteras ilimitadas</p>
+                    </div>
+  
+                    <div class="flex gap-2 items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0 text-orange-500">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        <p class="text-sm">Activos por cartera ilimitados</p>
+                    </div>
+  
+                    <div class="flex gap-2 items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0 text-orange-500">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        <p class="text-sm">Favoritos ilimitados</p>
+                    </div>
+  
+                    <div class="flex gap-2 items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0 text-orange-500">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        <p class="text-sm">Alertas de precio ilimitadas</p>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col gap-2">
+                    <div class="flex gap-2 items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0 text-orange-500">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        <p class="text-sm">Análisis de perfil inversor (IA)</p>
+                    </div>
+  
+                    <div class="flex gap-2 items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0 text-orange-500">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        <p class="text-sm">Exportación CSV / PDF</p>
+                    </div>
+  
+                    <div class="flex gap-2 items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0 text-orange-500">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        <p class="text-sm">Importación de cartera</p>
+                    </div>
+                  </div>
               </div>
             </div>
             <button (click)="upgradePremium()"

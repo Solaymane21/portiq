@@ -185,17 +185,27 @@ export class AuthService {
     }).subscribe({
       next: (res: any) => {
         this.saveUserData(res);
-        if(res.user.is_admin) {
-          this.router.navigate(['/admin/dashboard'])
-        } else {
-          this.router.navigate(['/app/dashboard'])
-          this.notificationsService.info('Bienvenido de nuevo a PortIQ')
-        }
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.msgError.set('Credenciales incorrectas o no existe cuenta en PortIQ.');
-        this.isLoading.set(false);
+
+        this.initialDataService.run().subscribe({
+          next: () => {
+            if (res.user.is_admin) {
+              this.router.navigate(['/admin/dashboard']);
+            } else {
+              this.router.navigate(['/app/dashboard']);
+              this.notificationsService.info('Bienvenido de nuevo a PortIQ');
+            }
+            this.isLoading.set(false);
+          },
+          error: () => {
+            if (res.user.is_admin) {
+              this.router.navigate(['/admin/dashboard']);
+            } else {
+              this.router.navigate(['/app/dashboard']);
+              this.notificationsService.info('Bienvenido de nuevo a PortIQ');
+            }
+            this.isLoading.set(false);
+          }
+        });
       }
     });
   }

@@ -28,6 +28,12 @@ export class InitialDataService {
           this.preferencesService.theme.set(data.preferences.theme ?? 'dark');
           this.preferencesService.cookies.set(data.preferences.cookies ?? null);
           this.preferencesService.applyColor(data.preferences.color_theme ?? 'orange');
+
+          if (data.preferences.cookies === true) {
+            localStorage.setItem('portiq_color_theme', data.preferences.color_theme ?? 'orange');
+            localStorage.setItem('portiq_theme', data.preferences.theme ?? 'dark');
+            localStorage.setItem('portiq_currency', data.preferences.currency ?? 'EUR');
+          }
         }
 
         this.preferencesService.isLoading.set(false);

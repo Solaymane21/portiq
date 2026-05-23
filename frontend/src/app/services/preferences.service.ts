@@ -94,11 +94,14 @@ export class PreferencesService {
     });
   }
 
-  // aplica el color al html sin guardar en BD
+  // aplica el color
   applyColor(color: ColorTheme) {
     this.colorTheme.set(color);
-    this.setLocal('portiq_color_theme', color);
     document.documentElement.setAttribute('data-color', color);
+
+    if (this.cookies() === true) {
+      localStorage.setItem('portiq_color_theme', color);
+    }
   }
 
   applyTheme(theme: 'dark' | 'light') {

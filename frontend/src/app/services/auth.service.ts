@@ -263,7 +263,6 @@ export class AuthService {
 
   // elimina token y datos del usuario de localstorage y limpia el signal
   removeUserData() {
-    this.preferencesService.clearLocalStorage()
     localStorage.removeItem('token');
     this.currentUser.set(null);
   }

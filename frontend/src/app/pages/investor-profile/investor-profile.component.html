@@ -1,89 +1,110 @@
 <h1 class="text-3xl font-ibm text-zinc-900 dark:text-white">Perfil Inversor</h1>
 
-@if (service.viewState() === 'questionnaire') {
-  <div class="mt-5 flex flex-col gap-2">
-    <div class="flex justify-between text-zinc-900 dark:text-white">
-      <p>Progreso</p>
-      <p class="text-zinc-500 dark:text-neutral-400">
-        Pregunta {{ service.currentQuestion() + 1 }} de 9
+<!-- mensaje si no es premium -->
+@if (!subscriptionService.isPremium()) {
+  <div class="mt-5 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-10 text-center">
+    <p class="text-2xl text-zinc-900 dark:text-white">
+      <p class="text-2xl">
+        Función exclusiva Premium
       </p>
-    </div>
-
-    <div class="h-2 bg-zinc-50 dark:bg-neutral-600 rounded-full overflow-hidden">
-      <div
-        class="bg-orange-500 h-full rounded-full"
-        [style.width.%]="((service.currentQuestion() + 1) / 9) * 100">
-      </div>
-    </div>
-
-    <div class="bg-zinc-50 dark:bg-neutral-950 flex flex-col justify-center rounded-xl py-8 px-10 mt-5 border border-zinc-200 dark:border-transparent">
-      <p class="text-center text-xl pb-8 text-zinc-900 dark:text-white">
-        {{ service.questions[service.currentQuestion()].text }}
-      </p>
-
-      <div class="flex flex-col gap-3">
-        @for (option of service.questions[service.currentQuestion()].options; track $index) {
-          <button
-            class="py-3 rounded hover:opacity-80 transition-opacity"
-            [class]="service.answers()[service.currentQuestion()] === option.score
-              ? 'bg-orange-500 text-white'
-              : 'bg-zinc-300 dark:bg-neutral-600 text-zinc-900 dark:text-white'"
-            (click)="service.selectAnswer(option.score)">
-            {{ option.label }}
-          </button>
-        }
-      </div>
-    </div>
-
-    <div class="flex justify-between gap-3 mt-5">
-      @if (service.currentQuestion() !== 0) {
-        <button
-          class="flex items-center justify-center gap-2 w-full bg-zinc-50 dark:bg-neutral-600 text-zinc-900 dark:text-white py-3 rounded-xl hover:opacity-80"
-          (click)="service.back()">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-            <path fill-rule="evenodd" d="M7.72 12.53a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 1 1 1.06 1.06L9.31 12l6.97 6.97a.75.75 0 1 1-1.06 1.06l-7.5-7.5Z" clip-rule="evenodd" />
-          </svg>
-          Anterior
-        </button>
-      }
-
-      <button
-        class="flex items-center justify-center gap-2 w-full py-3 rounded-xl transition-opacity text-white"
-        [class]="service.canGoNext() ? 'bg-orange-500 hover:opacity-80' : 'bg-orange-500 opacity-50 cursor-not-allowed'"
-        [disabled]="!service.canGoNext()"
-        (click)="service.next()">
-        {{ service.currentQuestion() === service.lastQuestion() ? 'Ver mi perfil' : 'Siguiente' }}
-        @if (service.currentQuestion() !== service.lastQuestion()) {
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-            <path fill-rule="evenodd" d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z" clip-rule="evenodd" />
-          </svg>
-        }
-      </button>
-    </div>
-  </div>
-}
-
-@if (service.viewState() === 'loading') {
-  <div class="mt-10 flex items-center justify-center gap-5 py-20">
-    <p class="text-zinc-900 dark:text-neutral-100 text">Cargando...</p>
-  </div>
-}
-
-@if (service.viewState() === 'result' && service.profileResult()) {
-  <app-investor-result
-    [result]="service.profileResult()!"
-    (retake)="service.reset()">
-  </app-investor-result>
-}
-
-@if (service.viewState() === 'error') {
-  <div class="mt-10 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-10 flex flex-col items-center text-center">
-    <h2 class="text-xl font-ibm text-zinc-900 dark:text-white mb-2">Algo salió mal</h2>
-    <p class="text-zinc-500 dark:text-neutral-400 mb-6 max-w-sm">{{ service.errorMessage() }}</p>
-    <button
-      class="bg-orange-500 hover:opacity-80 text-white px-6 py-2.5 rounded-xl transition-opacity"
-      (click)="service.reset()">
-      Volver a intentar
+    <p class="text-zinc-500 dark:text-neutral-400 mb-3">El análisis de perfil inversor solo está disponible en el Plan Premium. Descubre si eres conservador, moderado o agresivo.</p>
+    <button 
+      routerLink="/app/settings"
+      fragment="subscription"
+      class="w-full bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white"
+      >Hacerte Premium
     </button>
   </div>
+}
+
+<!-- contenido solo si es premium -->
+@if (subscriptionService.isPremium()) {
+
+  @if (service.viewState() === 'questionnaire') {
+    <div class="mt-5 flex flex-col gap-2">
+      <div class="flex justify-between text-zinc-900 dark:text-white">
+        <p>Progreso</p>
+        <p class="text-zinc-500 dark:text-neutral-400">
+          Pregunta {{ service.currentQuestion() + 1 }} de 9
+        </p>
+      </div>
+
+      <div class="h-2 bg-zinc-50 dark:bg-neutral-600 rounded-full overflow-hidden">
+        <div
+          class="bg-orange-500 h-full rounded-full"
+          [style.width.%]="((service.currentQuestion() + 1) / 9) * 100">
+        </div>
+      </div>
+
+      <div class="bg-zinc-50 dark:bg-neutral-950 flex flex-col justify-center rounded-xl py-8 px-10 mt-5 border border-zinc-200 dark:border-transparent">
+        <p class="text-center text-xl pb-8 text-zinc-900 dark:text-white">
+          {{ service.questions[service.currentQuestion()].text }}
+        </p>
+
+        <div class="flex flex-col gap-3">
+          @for (option of service.questions[service.currentQuestion()].options; track $index) {
+            <button
+              class="py-3 rounded hover:opacity-80 transition-opacity"
+              [class]="service.answers()[service.currentQuestion()] === option.score
+                ? 'bg-orange-500 text-white'
+                : 'bg-zinc-300 dark:bg-neutral-600 text-zinc-900 dark:text-white'"
+              (click)="service.selectAnswer(option.score)">
+              {{ option.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="flex justify-between gap-3 mt-5">
+        @if (service.currentQuestion() !== 0) {
+          <button
+            class="flex items-center justify-center gap-2 w-full bg-zinc-50 dark:bg-neutral-600 text-zinc-900 dark:text-white py-3 rounded-xl hover:opacity-80"
+            (click)="service.back()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+              <path fill-rule="evenodd" d="M7.72 12.53a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 1 1 1.06 1.06L9.31 12l6.97 6.97a.75.75 0 1 1-1.06 1.06l-7.5-7.5Z" clip-rule="evenodd" />
+            </svg>
+            Anterior
+          </button>
+        }
+
+        <button
+          class="flex items-center justify-center gap-2 w-full py-3 rounded-xl transition-opacity text-white"
+          [class]="service.canGoNext() ? 'bg-orange-500 hover:opacity-80' : 'bg-orange-500 opacity-50 cursor-not-allowed'"
+          [disabled]="!service.canGoNext()"
+          (click)="service.next()">
+          {{ service.currentQuestion() === service.lastQuestion() ? 'Ver mi perfil' : 'Siguiente' }}
+          @if (service.currentQuestion() !== service.lastQuestion()) {
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+              <path fill-rule="evenodd" d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z" clip-rule="evenodd" />
+            </svg>
+          }
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (service.viewState() === 'loading') {
+    <div class="mt-10 flex items-center justify-center gap-5 py-20">
+      <p class="text-zinc-900 dark:text-neutral-100 text">Cargando...</p>
+    </div>
+  }
+
+  @if (service.viewState() === 'result' && service.profileResult()) {
+    <app-investor-result
+      [result]="service.profileResult()!"
+      (retake)="service.reset()">
+    </app-investor-result>
+  }
+
+  @if (service.viewState() === 'error') {
+    <div class="mt-10 bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-10 flex flex-col items-center text-center">
+      <h2 class="text-xl font-ibm text-zinc-900 dark:text-white mb-2">Algo salió mal</h2>
+      <p class="text-zinc-500 dark:text-neutral-400 mb-6 max-w-sm">{{ service.errorMessage() }}</p>
+      <button
+        class="bg-orange-500 hover:opacity-80 text-white px-6 py-2.5 rounded-xl transition-opacity"
+        (click)="service.reset()">
+        Volver a intentar
+      </button>
+    </div>
+  }
 }

@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { NotificationsService } from './notifications.service';
 import { environment } from '../../environments/environment';
 
@@ -9,6 +9,20 @@ export interface SubscriptionStatus {
   ends_at: string | null;
   on_grace: boolean;
   next_billing_date: number | null;
+}
+
+export interface PlanLimits {
+  is_premium: boolean;
+  limits: {
+    portfolios: { used: number; max: number | null };
+    favorites:  { used: number; max: number | null };
+    alerts:     { used: number; max: number | null };
+  };
+  features: {
+    import: boolean;
+    export: boolean;
+    ml_analysis: boolean;
+  };
 }
 
 @Injectable({
@@ -23,6 +37,8 @@ export class SubscriptionService {
   isLoading = signal(false);
   isCancelling = signal(false);
   status = signal<SubscriptionStatus | null>(null);
+  planLimits = signal<PlanLimits | null>(null);
+  isPremium = computed(() => this.status()?.plan === 'premium');
 
   getStatus() {
     this.isLoading.set(true);
@@ -90,6 +106,30 @@ export class SubscriptionService {
         this.isLoading.set(false);
       }
     });
+  }
+
+  loadPlanLimits() {
+    this.http.get<PlanLimits>(`${this.apiUrl}/subscription/plan-limits`).subscribe({
+      next: (data) => this.planLimits.set(data),
+    });
+  }
+
+  canCreate(resource: 'portfolios' | 'favorites' | 'alerts'): boolean {
+    if (this.isPremium()) return true;
+    const limit = this.planLimits()?.limits[resource];
+    if (!limit?.max) return true;
+    return limit.used < limit.max;
+  }
+
+  remainingSlots(resource: 'portfolios' | 'favorites' | 'alerts'): number | null {
+    if (this.isPremium()) return null;
+    const limit = this.planLimits()?.limits[resource];
+    if (!limit?.max) return null;
+    return Math.max(0, limit.max - limit.used);
+  }
+
+  canUseFeature(feature: 'import' | 'export' | 'ml_analysis'): boolean {
+    return this.planLimits()?.features[feature] ?? false;
   }
 
 }

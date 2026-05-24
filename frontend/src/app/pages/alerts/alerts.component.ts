@@ -1,4 +1,4 @@
-import { Component, signal, inject, OnInit, HostListener, DestroyRef } from '@angular/core';
+import { Component, signal, inject, OnInit, HostListener, DestroyRef, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe, DecimalPipe, NgClass } from '@angular/common';
 import { Subject, interval } from 'rxjs';
@@ -7,17 +7,27 @@ import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { AlertsService, Alert, SymbolResult } from '../../services/alerts.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PreferencesService } from '../../services/preferences.service';
+import { SubscriptionService } from '../../services/subscription.service';
+import { NotificationsService } from '../../services/notifications.service';
+import { PlanLimitBannerComponent } from '../../components/plan-limit-banner/plan-limit-banner.component';
 
 @Component({
   selector: 'app-alerts',
   standalone: true,
-  imports: [FormsModule, DatePipe, DecimalPipe, CdkMenuTrigger, CdkMenu, CdkMenuItem, NgClass],
+  imports: [FormsModule, DatePipe, DecimalPipe, CdkMenuTrigger, CdkMenu, CdkMenuItem, NgClass, PlanLimitBannerComponent],
   templateUrl: './alerts.component.html',
 })
 export class AlertsComponent implements OnInit {
   private alertsService = inject(AlertsService);
   private destroyRef = inject(DestroyRef);
   private preferencesService = inject(PreferencesService)
+  subscriptionService = inject(SubscriptionService);
+  notifications = inject(NotificationsService)
+
+  isAtAlertLimit = computed(() => {
+    if (this.subscriptionService.isPremium()) return false;
+    return this.alerts().length >= 2;
+  });
 
   alerts   = signal<Alert[]>([]);
   currentPrices = signal<Record<string, number>>({});
@@ -132,6 +142,12 @@ export class AlertsComponent implements OnInit {
   }
 
   openCreateModal(): void {
+    // verificar límite antes de abrir el modal
+    if (this.isAtAlertLimit()) {
+      this.notifications.warning('Has alcanzado el límite de 2 alertas del plan gratuito.');
+      return;
+    }
+
     this.editingAlert.set(null);
     this.showModal.set(true);
   }
@@ -164,6 +180,13 @@ export class AlertsComponent implements OnInit {
     if (!this.validatePrice()) return;
 
     const editing = this.editingAlert();
+
+    if (!editing && this.isAtAlertLimit()) {
+      this.notifications.warning('Has alcanzado el límite de 2 alertas del plan gratuito.');
+      this.closeModal();
+      return;
+    }
+
     this.isCreating.set(true);
 
     if (editing) {
@@ -195,6 +218,7 @@ export class AlertsComponent implements OnInit {
           this.loadCurrentPrices([alert]);
           this.closeModal();
           this.isCreating.set(false);
+          this.subscriptionService.loadPlanLimits(); 
         },
         error: () => this.isCreating.set(false),
       });
@@ -227,6 +251,7 @@ export class AlertsComponent implements OnInit {
     this.cachedAlerts = this.alerts();
 
     this.alertsService.deleteAlert(id).subscribe({
+      next: () => this.subscriptionService.loadPlanLimits(), 
       error: () => this.loadAlerts(),
     });
   }

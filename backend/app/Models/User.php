@@ -86,4 +86,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(FavoritePortfolio::class);
     }
+
+    public function isPremium(): bool
+    {
+        return $this->suscription_type === 'premium';
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(Favorite::class);
+    }
 }

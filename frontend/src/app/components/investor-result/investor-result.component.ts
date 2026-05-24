@@ -40,7 +40,7 @@ interface BarOptions {
 
 @Component({
   selector: 'app-investor-result',
-  imports: [NgApexchartsModule, RouterLink, NgClass],
+  imports: [NgApexchartsModule],
   templateUrl: './investor-result.component.html',
   styleUrl: './investor-result.component.css'
 })

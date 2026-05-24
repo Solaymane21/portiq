@@ -4,6 +4,7 @@ import { FavoritesService } from './favorites.service';
 import { map, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { PreferencesService } from './preferences.service';
+import { SubscriptionService } from './subscription.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +14,7 @@ export class InitialDataService {
   private http = inject(HttpClient);
   private favoritesService = inject(FavoritesService);
   private preferencesService = inject(PreferencesService);
+  private subscriptionService = inject(SubscriptionService);
 
   private apiUrl = environment.apiUrl;
 
@@ -36,6 +38,7 @@ export class InitialDataService {
           }
         }
 
+        this.subscriptionService.loadPlanLimits();
         this.preferencesService.isLoading.set(false);
         this.ready.set(true);
       }),

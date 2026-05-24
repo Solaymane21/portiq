@@ -11,6 +11,8 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, filter } from 'rxjs/operators';
 import { buildInvestmentsCsv } from '../wallets-csv';
 import { PreferencesService } from '../../../services/preferences.service';
+import { NotificationsService } from '../../../services/notifications.service';
+import { SubscriptionService } from '../../../services/subscription.service';
 
 @Component({
   selector: 'app-investments',
@@ -26,6 +28,13 @@ export class InvestmentsComponent implements OnInit {
   private investmentService = inject(InvestmentService);
   private destroyRef = inject(DestroyRef);
   private prefs = inject(PreferencesService);
+  subscriptionService = inject(SubscriptionService);
+  private notifications = inject(NotificationsService);
+
+  isAtAssetLimit = computed(() => {
+    if (this.subscriptionService.isPremium()) return false;
+    return this.totalPosiciones() >= 10;
+  });
 
   portfolioId = signal<number | null>(null);
   returnUrl = '/app/wallets';
@@ -177,6 +186,12 @@ export class InvestmentsComponent implements OnInit {
   }
 
   exportarCsv() {
+    // solo premium
+    if (!this.subscriptionService.canUseFeature('export')) {
+      this.notifications.warning('La exportación CSV requiere el Plan Premium');
+      return;
+    }
+
     const id = this.portfolioId();
     if (!id || this.soloLectura()) return;
 
@@ -194,6 +209,12 @@ export class InvestmentsComponent implements OnInit {
 
   guardarPosicion() {
     if (this.posicionForm.invalid || !this.portfolioId()) return;
+
+    if (this.modalModo() === 'create' && this.isAtAssetLimit()) {
+      this.notifications.warning('Has alcanzado el límite de 10 activos del plan gratuito.');
+      this.cerrarModal();
+      return;
+    }
 
     const formValues = this.posicionForm.value;
     this.guardando.set(true);
@@ -255,6 +276,12 @@ export class InvestmentsComponent implements OnInit {
 
   abrirModalNuevaPosicion() {
     if (this.soloLectura()) return;
+
+    if (this.isAtAssetLimit()) {
+      this.notifications.warning('Has alcanzado el límite de 10 activos del plan gratuito.');
+      return;
+    }
+
     this.prepararModal('create');
   }
 

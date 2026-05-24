@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Favorite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -76,5 +77,35 @@ class SubscriptionController extends Controller
 
         $subscription->resume();
         return response()->json(['message' => 'Suscripción reanudada correctamente.']);
+    }
+
+    // devuelve informacion del uso de su plan de suscripcion
+    public function planLimits(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user    = $request->user();
+        $isPrem  = $user->isPremium();
+
+        return response()->json([
+            'is_premium' => $isPrem,
+            'limits' => [
+                'portfolios' => [
+                    'used' => $user->portfolios()->count(),
+                    'max'  => $isPrem ? null : 1,
+                ],
+                'favorites' => [
+                    'used' => Favorite::where('user_id', $user->id)->count(),
+                    'max'  => $isPrem ? null : 6,
+                ],
+                'alerts' => [
+                    'used' => $user->alerts()->count(),
+                    'max'  => $isPrem ? null : 2,
+                ],
+            ],
+            'features' => [
+                'import'      => $isPrem,
+                'export'      => $isPrem,
+                'ml_analysis' => $isPrem,
+            ],
+        ]);
     }
 }

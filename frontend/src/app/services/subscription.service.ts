@@ -122,6 +122,7 @@ export class SubscriptionService {
 
   canCreate(resource: 'portfolios' | 'favorites' | 'alerts'): boolean {
     if (this.isPremium()) return true;
+    if (this.planLimits() === null) return true;
     const limit = this.planLimits()?.limits[resource];
     if (!limit?.max) return true;
     return limit.used < limit.max;
@@ -135,6 +136,7 @@ export class SubscriptionService {
   }
 
   canUseFeature(feature: 'import' | 'export' | 'ml_analysis'): boolean {
+    if (this.planLimits() === null) return this.isPremium();
     return this.planLimits()?.features[feature] ?? false;
   }
 

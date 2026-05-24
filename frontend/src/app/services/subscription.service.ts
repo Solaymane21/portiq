@@ -38,7 +38,13 @@ export class SubscriptionService {
   isCancelling = signal(false);
   status = signal<SubscriptionStatus | null>(null);
   planLimits = signal<PlanLimits | null>(null);
-  isPremium = computed(() => this.status()?.plan === 'premium');
+  isPremium = computed(() => {
+    const fromLimits = this.planLimits()?.is_premium;
+    if (fromLimits !== undefined) return fromLimits;
+
+    // Fallback al status
+    return this.status()?.plan === 'premium';
+  });
 
   getStatus() {
     this.isLoading.set(true);

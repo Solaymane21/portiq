@@ -13,6 +13,7 @@ import { NotificationsService } from '../../services/notifications.service';
 import { PortfolioService } from '../../services/portfolio.service';
 import { InvestmentService } from '../../services/investment.service';
 import { PreferencesService } from '../../services/preferences.service';
+import { SubscriptionService } from '../../services/subscription.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -31,6 +32,7 @@ export class DashboardComponent implements OnInit {
   private portfolioService = inject(PortfolioService);
   private investmentService = inject(InvestmentService);
   preferencesService = inject(PreferencesService);
+  private subscriptionService = inject(SubscriptionService)
 
   hasInvestments = signal<boolean>(false);
   isLoadingInvestments = signal<boolean>(true);
@@ -121,6 +123,8 @@ export class DashboardComponent implements OnInit {
         this.authService.refreshUser().subscribe(user => {
           if (user?.suscription_type === 'premium') {
             this.notificationService.success('¡Bienvenido a PortIQ Pro!');
+            this.subscriptionService.getStatus();
+            this.subscriptionService.loadPlanLimits();
           }
         });
         

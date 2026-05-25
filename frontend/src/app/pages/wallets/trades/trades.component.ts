@@ -18,7 +18,7 @@ export class TradesComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private investmentService = inject(InvestmentService);
-  private preferencesService = inject(PreferencesService)
+  private preferencesService = inject(PreferencesService);
 
   portfolioId = signal<number | null>(null);
   nombreCartera = signal('Cargando...');
@@ -29,6 +29,8 @@ export class TradesComponent implements OnInit {
   totalRetirado = signal(0);
   exposicionNeta = signal(0);
   totalOperaciones = signal(0);
+
+  skeletonItems = [1, 2, 3, 4, 5, 6, 7, 8];
 
   dataSource = new MatTableDataSource<any>([]);
   paginator = viewChild(MatPaginator);
@@ -77,7 +79,7 @@ export class TradesComponent implements OnInit {
           this.totalOperaciones.set(res.stats.total_operaciones);
         }
 
-        this.dataSource.data = res.trades;
+        this.dataSource.data = res.trades ?? [];
         this.cargando.set(false);
       },
       error: (err: any) => {
@@ -112,8 +114,16 @@ export class TradesComponent implements OnInit {
     switch (type) {
       case 'compra': return 'Compra';
       case 'venta': return 'Venta';
-      case 'nuevaPosicion': return 'Posición Inicial';
+      case 'nuevaPosicion': return 'Inicial';
       default: return type;
     }
+  }
+
+  getExposicionNetaDisplay(): string {
+    const value = this.exposicionNeta();
+
+    if (value > 0) return `-${this.format(Math.abs(value))}`;
+    if (value < 0) return `+${this.format(Math.abs(value))}`;
+    return this.format(0);
   }
 }

@@ -79,7 +79,10 @@
   }
 </div>
 
-<h2 class="text-xl font-ibm text-zinc-900 dark:text-white mb-4">Activos favoritos</h2>
+<!-- BANNER LÍMITE DE PLAN -->
+<app-plan-limit-banner resource="favorites" limitText="6 favoritos" />
+
+<h2 class="text-xl font-ibm text-zinc-900 dark:text-white my-4">Activos favoritos</h2>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5 mb-5">
 
@@ -127,9 +130,9 @@
     @for (fav of filteredFavorites(); track fav.symbol_id) {
       <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 font-ibm">
         <div class="flex justify-between items-center">
-          <div class="flex items-center gap-2">
+          <div [routerLink]="['/public/symbol', fav.symbol]" class="flex items-center gap-2 cursor-pointer">
             @if (fav.image_url) {
-              <img [src]="fav.image_url" class="h-10 w-10 bg-neutral-950 p-0.5 dark:bg-none rounded-full object-cover" />
+              <img [src]="fav.image_url" class="h-10 w-10 bg-zinc-300 dark:bg-neutral-800 dark:bg-none rounded-full object-cover" />
             }
             <div>
               <p class="text-zinc-900 dark:text-white">{{ fav.name }}</p>

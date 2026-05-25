@@ -31,7 +31,7 @@
             </div>
             <div class="flex justify-between">
                 <button (click)="authService.back()" class="flex items-center w-fit hover:cursor-pointer"><span class="hover:underline">Volver</span></button>
-                <button (click)="next()" [disabled]="this.authService.isLoading()" type="submit" class="w-1/2 bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white disabled:bg-orange-500/80 disabled:cursor-not-allowed">
+                <button (click)="next()" [disabled]="this.authService.isLoading()" [disabled]="this.registerForm.invalid" type="submit" class="w-1/2 bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white disabled:opacity-50 disabled:cursor-not-allowed">
                   @if (authService.isLoading()) {
                     <mat-spinner diameter="20"></mat-spinner>
                   } @else {

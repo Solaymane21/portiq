@@ -12,11 +12,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NotificationsService } from '../../services/notifications.service';
 import { PreferencesService } from '../../services/preferences.service';
 import { RouterLink } from '@angular/router';
+import { SubscriptionService } from '../../services/subscription.service';
+import { PlanLimitBannerComponent } from '../../components/plan-limit-banner/plan-limit-banner.component';
 
 @Component({
   selector: 'app-favorites',
   standalone: true,
-  imports: [NgApexchartsModule, FormsModule, NgClass, MatProgressSpinnerModule, RouterLink],
+  imports: [NgApexchartsModule, FormsModule, NgClass, MatProgressSpinnerModule, RouterLink, PlanLimitBannerComponent],
   templateUrl: './favorites.component.html',
   styleUrl: './favorites.component.css'
 })
@@ -28,6 +30,7 @@ export class FavoritesComponent implements OnInit {
   searchSubject = new Subject<string>();
   destroyRef = inject(DestroyRef);
   notificationService = inject(NotificationsService)
+  subscriptionService = inject(SubscriptionService);
 
   favorites = this.favoritesService.favorites;
   favoritePortfolios = this.favoritesService.favoritePortfolios;
@@ -222,11 +225,20 @@ export class FavoritesComponent implements OnInit {
   }
 
   addToFavorites(result: SearchResult): void {
+    // verificar límite antes de abrir el modal
+    if (!this.subscriptionService.canCreate('favorites')) {
+      this.notificationService.warning(
+        'Has alcanzado el límite de favoritos. Mejora al Plan Premium.'
+      );
+      return;
+    }
+
     this.favoritesService.add(result).subscribe({
       next: (newFav) => {
         // Solo carga precio y sparkline del nuevo
         this.loadPrices([newFav], false);
         this.loadSparklines([newFav]);
+        this.subscriptionService.loadPlanLimits();
       }
     });
 
@@ -252,6 +264,7 @@ export class FavoritesComponent implements OnInit {
           next.delete(symbolId);
           return next;
         });
+        this.subscriptionService.loadPlanLimits();
       },
       error: () => {
         this.deletingIds.update(ids => {

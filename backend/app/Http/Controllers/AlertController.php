@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Alert;
 use App\Models\Symbol;
+use App\Services\PlanLimitService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -34,6 +35,19 @@ class AlertController extends Controller
             'target_price' => 'required|numeric|min:0',
             'condition' => 'required|in:above,below',
         ]);
+
+        // comprobar limites de suscripcion
+        $count = $request->user()->alerts()->count();
+        $check = app(PlanLimitService::class)->check($request->user(), 'alerts', $count);
+
+        if (!$check['allowed']) {
+            return response()->json([
+                'message'  => $check['message'],
+                'code'     => 'PLAN_LIMIT_EXCEEDED',
+                'resource' => 'alerts',
+                'limit'    => $check['limit'],
+            ], 403);
+        } 
 
         $symbol = Symbol::firstOrCreate(
             ['symbol' => strtoupper($data['symbol'])],

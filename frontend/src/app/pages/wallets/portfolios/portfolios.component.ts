@@ -11,11 +11,14 @@ import { InvestmentService } from '../../../services/investment.service';
 import { PreferencesService } from '../../../services/preferences.service';
 import { Portfolio } from '../../../models/portfolio.model';
 import { ImportPositionRow, parsePositionsCsv, downloadImportTemplate } from '../wallets-csv';
+import { SubscriptionService } from '../../../services/subscription.service';
+import { NotificationsService } from '../../../services/notifications.service';
+import { PlanLimitBannerComponent } from '../../../components/plan-limit-banner/plan-limit-banner.component';
 
 @Component({
   selector: 'app-portfolios',
   standalone: true,
-  imports: [ReactiveFormsModule, NgClass, CdkMenuTrigger, CdkMenu, CdkMenuItem],
+  imports: [ReactiveFormsModule, NgClass, CdkMenuTrigger, CdkMenu, CdkMenuItem, PlanLimitBannerComponent],
   templateUrl: './portfolios.component.html',
   styleUrl: './portfolios.component.css'
 })
@@ -26,6 +29,8 @@ export class PortfoliosComponent implements OnInit {
   private portfolioService = inject(PortfolioService);
   private investmentService = inject(InvestmentService);
   private prefs = inject(PreferencesService);
+  subscriptionService = inject(SubscriptionService);
+  notifications = inject(NotificationsService)
 
   // Referencias del HTML
   csvFileInput = viewChild<ElementRef<HTMLInputElement>>('csvFileInput');
@@ -128,6 +133,8 @@ export class PortfoliosComponent implements OnInit {
           next: () => {
             this.closeModal();
             this.loadPortfolios();
+            this.notifications.success('Cartera creada.');
+            this.subscriptionService.loadPlanLimits();
           },
           error: (err) => {
             console.error('Error saving portfolio:', err);
@@ -167,6 +174,8 @@ export class PortfoliosComponent implements OnInit {
         next: () => {
           this.closeDeleteModal();
           this.loadPortfolios();
+          this.notifications.info('Cartera eliminada.');
+          this.subscriptionService.loadPlanLimits();
         },
         error: (err) => {
           console.error('Error deleting portfolio:', err);
@@ -201,6 +210,14 @@ export class PortfoliosComponent implements OnInit {
   // MODAL CREAR / EDITAR
 
   openCreateModal() {
+    // verificar límite antes de abrir el modal
+    if (!this.subscriptionService.canCreate('portfolios')) {
+      this.notifications.warning(
+        'Has alcanzado el límite de carteras. Mejora al Plan Premium.'
+      );
+      return;
+    }
+
     this.formMode.set('create');
     this.selectedPortfolio.set(null);
 
@@ -246,6 +263,12 @@ export class PortfoliosComponent implements OnInit {
   // IMPORTAR CSV
 
   openImportModal() {
+    // solo premium
+    if (!this.subscriptionService.canUseFeature('import')) {
+      this.notifications.warning('La importación CSV requiere el Plan Premium');
+      return;
+    }
+
     this.importModalOpen.set(true);
     this.importRows.set([]);
     this.importParseError.set(null);

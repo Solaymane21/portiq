@@ -3,12 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Portfolio;
+use App\Services\PlanLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class PortfolioController extends Controller
 {
+
+    private PlanLimitService $planLimit;
+
+    public function __construct(PlanLimitService $planLimit)
+    {
+        $this->planLimit = $planLimit;
+    }
+
     public function publicRanking(Request $request)
     {
         $sort = (string) $request->query('sort', 'total_value');
@@ -91,6 +100,19 @@ class PortfolioController extends Controller
 
     public function store(Request $request)
     {
+        // comprobar limites de suscripcion
+        $count = $request->user()->portfolios()->count();
+        $check = $this->planLimit->check($request->user(), 'portfolios', $count);
+
+        if (!$check['allowed']) {
+            return response()->json([
+                'message'  => $check['message'],
+                'code'     => 'PLAN_LIMIT_EXCEEDED',
+                'resource' => 'portfolios',
+                'limit'    => $check['limit'],
+            ], 403);
+        }
+
         $isDefault = $request->is_default ?? false;
 
         if ($isDefault) {

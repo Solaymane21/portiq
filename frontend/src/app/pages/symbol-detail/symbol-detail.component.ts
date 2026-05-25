@@ -42,6 +42,8 @@ export class SymbolDetailComponent implements OnInit {
   chartOptions: any = {};
   changeData = { value: 0, percent: 0, positive: true };
 
+  isLoading = signal(false)
+
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       const sym = (this.route.snapshot.paramMap.get('symbol') ?? '').toUpperCase();
@@ -201,6 +203,7 @@ export class SymbolDetailComponent implements OnInit {
   }
 
   goBack(): void {
+    this.isLoading.set(true)
     window.history.back()
   }
 

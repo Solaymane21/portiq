@@ -48,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/subscription/cancel', [SubscriptionController::class, 'cancel']);
     Route::get('/subscription/portal', [SubscriptionController::class, 'portal']);
     Route::post('/subscription/resume', [SubscriptionController::class, 'resume']);
+    Route::get('/subscription/plan-limits', [SubscriptionController::class, 'planLimits']);
 
     //Portfolios
     Route::get('/portfolios/public', [PortfolioController::class, 'publicRanking']);
@@ -65,11 +66,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/portfolios/{portfolioId}/investments/{investmentId}', [InvestmentController::class, 'destroy']);
     Route::post('/portfolios/{portfolioId}/investments/{investmentId}/buy', [InvestmentController::class, 'buy']);
     Route::post('/portfolios/{portfolioId}/investments/{investmentId}/sell', [InvestmentController::class, 'sell']);
-    Route::post('/portfolios/{portfolioId}/investments/import', [InvestmentController::class, 'importPositions']);
-
+    
     //Trades
     Route::get('/portfolios/{portfolioId}/trades', [\App\Http\Controllers\TradeController::class, 'index']);
-
+    
     // Settings
     Route::post('/change-name', [SettingsController::class, 'changeName']);
     Route::post('/change-password', [SettingsController::class, 'changePassword']);
@@ -77,30 +77,34 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/preferences', [PreferencesController::class, 'show']);
     Route::patch('/preferences', [PreferencesController::class, 'update']);
     Route::patch('/preferences/cookies', [PreferencesController::class, 'setCookiesPreference']);
-
+    
     //Alerts
     Route::get('/alerts',          [AlertController::class, 'index']);
     Route::post('/alerts',         [AlertController::class, 'store']);
     Route::patch('/alerts/{alert}',[AlertController::class, 'update']);
     Route::delete('/alerts/{alert}',[AlertController::class, 'destroy']);
-
+    
     // Favorites
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/favorites', [FavoriteController::class, 'store']);
     Route::delete('/favorites/{symbolId}', [FavoriteController::class, 'destroy']);
     Route::delete('/favorites/portfolios/{portfolioId}', [FavoriteController::class, 'destroyPortfolio']);
-
+    
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
-
+    
     // Investor Profile
     Route::get('/investor-profile',  [InvestorProfileController::class, 'show']);
+    
+    // Only premium
     Route::post('/investor-profile', [InvestorProfileController::class, 'store']);
-
-});
-
+    Route::post('/portfolios/{portfolioId}/investments/import', [InvestmentController::class, 'importPositions']);
+    
+    
+    });
+    
 //Prices
 Route::get('/search/{symbol}', [MarketController::class, 'search']);
 Route::get('/prices', [MarketController::class, 'prices']);

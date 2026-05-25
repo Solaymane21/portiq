@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Favorite;
 use App\Models\FavoritePortfolio;
 use App\Models\Symbol;
+use App\Services\PlanLimitService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -59,6 +60,19 @@ class FavoriteController extends Controller
             'image_url' => 'nullable|string',
             'asset_type' => 'required|in:crypto,stock,etf',
         ]);
+
+        // comprobar limites de suscripcion
+        $count = Favorite::where('user_id', $request->user()->id)->count();
+        $check = app(PlanLimitService::class)->check($request->user(), 'favorites', $count);
+
+        if (!$check['allowed']) {
+            return response()->json([
+                'message'  => $check['message'],
+                'code'     => 'PLAN_LIMIT_EXCEEDED',
+                'resource' => 'favorites',
+                'limit'    => $check['limit'],
+            ], 403);
+        }
 
         $imageUrl = $request->image_url;
 

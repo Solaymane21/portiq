@@ -14,6 +14,9 @@ import { InvestmentService } from '../../../services/investment.service';
 import {AssetSearchResult, Investment, InvestmentsResponse, TradeActionPayload, UpsertPositionPayload} from '../../../models/investment.model';
 import { buildInvestmentsCsv } from '../wallets-csv';
 
+import { NotificationsService } from '../../../services/notifications.service';
+import { SubscriptionService } from '../../../services/subscription.service';
+
 @Component({
   selector: 'app-investments',
   standalone: true,
@@ -23,13 +26,12 @@ import { buildInvestmentsCsv } from '../wallets-csv';
 })
 
 export class InvestmentsComponent implements OnInit {
-  // Servicios e inyecciones
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
-  private readonly formBuilder = inject(FormBuilder);
-  private readonly investmentService = inject(InvestmentService);
-  private readonly preferencesService = inject(PreferencesService);
-  private readonly destroyRef = inject(DestroyRef);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private fb = inject(FormBuilder);
+  private investmentService = inject(InvestmentService);
+  private destroyRef = inject(DestroyRef);
+  private prefs = inject(PreferencesService);
 
   // Navegación
   portfolioId = signal<number | null>(null);
@@ -204,13 +206,9 @@ export class InvestmentsComponent implements OnInit {
       });
   }
 
-  // Exporta la cartera actual a CSV
-  exportCsv(): void {
-    const portfolioId = this.portfolioId();
-
-    if (!portfolioId || this.isReadOnly()) {
-      return;
-    }
+  exportarCsv() {
+    const id = this.portfolioId();
+    if (!id || this.soloLectura()) return;
 
     const portfolioName = this.portfolioName();
     const csv = buildInvestmentsCsv(portfolioName, this.dataSource.data);
@@ -228,9 +226,11 @@ export class InvestmentsComponent implements OnInit {
     URL.revokeObjectURL(url);
   }
 
-  // Guarda una nueva posición o procesa una compra/venta
-  savePosition(): void {
-    const portfolioId = this.portfolioId();
+  guardarPosicion() {
+    if (this.posicionForm.invalid || !this.portfolioId()) return;
+
+    const formValues = this.posicionForm.value;
+    this.guardando.set(true);
 
     if (!portfolioId || this.positionForm.invalid) {
       return;
@@ -260,20 +260,33 @@ export class InvestmentsComponent implements OnInit {
       return;
     }
 
-    this.router.navigate(['/app/wallets', currentPortfolioId, 'trades'], {
-      queryParams: {
-        returnUrl: this.router.url,
+    const tradePayload = {
+      quantity: Number(formValues.quantity),
+      price_per_unit: Number(formValues.price),
+      operated_at: formValues.operated_at
+    };
+
+    const request$ =
+      this.modalModo() === 'buy'
+        ? this.investmentService.buyInvestment(this.portfolioId()!, inversion.id, tradePayload)
+        : this.investmentService.sellInvestment(this.portfolioId()!, inversion.id, tradePayload);
+
+    request$.subscribe({
+      next: () => {
+        this.guardando.set(false);
+        this.cerrarModal();
+        this.cargarInversiones();
       },
+      error: (err) => {
+        console.error('Error procesando operación:', err);
+        this.guardando.set(false);
+      }
     });
   }
 
-  // Abre el modal para crear una posición nueva
-  openNewPositionModal(): void {
-    if (this.isReadOnly()) {
-      return;
-    }
-
-    this.prepareModal('create');
+  abrirModalNuevaPosicion() {
+    if (this.soloLectura()) return;
+    this.prepararModal('create');
   }
 
   // Abre el modal en modo compra

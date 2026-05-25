@@ -7,7 +7,7 @@
       [ngClass]="{
         '  text-green-500': toast.type === 'success',
         '      text-red-500':     toast.type === 'error',
-        '   text-orange-500':  toast.type === 'warning',
+        '   text-orange-400':  toast.type === 'warning',
         '     text-blue-500':    toast.type === 'info'
       }">
 
@@ -53,7 +53,7 @@
         [ngClass]="{
           'bg-green-500': toast.type === 'success',
           'bg-red-500':     toast.type === 'error',
-          'bg-orange-500':  toast.type === 'warning',
+          'bg-orange-400':  toast.type === 'warning',
           'bg-blue-500':    toast.type === 'info'
         }"
         [style.animation-duration]="(toast.duration ?? 5000) + 'ms'">

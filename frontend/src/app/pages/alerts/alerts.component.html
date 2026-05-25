@@ -3,7 +3,9 @@
   <button
     type="button"
     (click)="openCreateModal()"
-    class="bg-orange-500 hover:bg-orange-500/80 p-2 rounded-md text-white flex items-center justify-center gap-2 transition-colors"
+    [disabled]="isAtAlertLimit()"
+    [title]="isAtAlertLimit() ? 'Límite de 2 alertas alcanzado · Plan Premium' : ''"
+    class="bg-orange-500 hover:bg-orange-500/80 p-2 rounded-md text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
   >
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
       <path fill-rule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd" />
@@ -47,7 +49,11 @@
     <p class="text-zinc-500 dark:text-neutral-400 mt-1">Pulsa "Nueva alerta" para crear tu primera alerta</p>
   </div>
 } @else {
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4"
+
+  <!-- BANNER LÍMITE DE PLAN -->
+  <app-plan-limit-banner resource="alerts" limitText="2 alertas" />
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5"
     [class.lg:grid-cols-1]="alerts().length === 1"
     [class.lg:grid-cols-2]="alerts().length === 2"
     [class.lg:grid-cols-3]="alerts().length >= 3"

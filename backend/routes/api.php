@@ -99,8 +99,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/investor-profile',  [InvestorProfileController::class, 'show']);
     
     // Only premium
-    Route::post('/investor-profile', [InvestorProfileController::class, 'store'])->middleware('requires.premium:ml_analysis');
-    Route::post('/portfolios/{portfolioId}/investments/import', [InvestmentController::class, 'importPositions'])->middleware('requires.premium:import');
+    Route::post('/investor-profile', [InvestorProfileController::class, 'store']);
+    Route::post('/portfolios/{portfolioId}/investments/import', [InvestmentController::class, 'importPositions']);
     
     
     });

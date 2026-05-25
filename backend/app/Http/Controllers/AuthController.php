@@ -22,7 +22,7 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
-                'message' => 'Credencials incorrectes'
+                'message' => 'Credencials incorrectes o el usuario no existe en PortIQ.'
             ], 401);
         }
 

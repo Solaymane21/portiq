@@ -206,6 +206,10 @@ export class AuthService {
             this.isLoading.set(false);
           }
         });
+      },
+      error: (err) => {
+        this.isLoading.set(false)
+        this.msgError.set(err.error?.message || 'Credenciales incorrectas')
       }
     });
   }

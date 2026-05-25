@@ -25,6 +25,10 @@ import { TradesComponent } from './pages/wallets/trades/trades.component';
 import { SymbolDetailComponent } from './pages/symbol-detail/symbol-detail.component';
 import { PublicLayoutComponent } from './layout/public-layout/public-layout.component';
 import { HomeComponent } from './pages/home/home.component';
+import { TermsComponent } from './pages/legal/terms/terms.component';
+import { LegalComponent } from './pages/legal/legal/legal.component';
+import { PrivacyComponent } from './pages/legal/privacy/privacy.component';
+import { CookiesComponent } from './pages/legal/cookies/cookies.component';
 
 export const routes: Routes = [
     {
@@ -141,6 +145,26 @@ export const routes: Routes = [
                 path: 'symbol/:symbol',
                 component: SymbolDetailComponent,
                 data: { title: 'Precio  de activos' }
+            },
+            {
+                path: 'legal',
+                component: LegalComponent,
+                data: { title: 'Aviso legal' }
+            },
+            {
+                path: 'privacy',
+                component: PrivacyComponent,
+                data: { title: 'Politica de privacidad' }
+            },
+            {
+                path: 'cookies',
+                component: CookiesComponent,
+                data: { title: 'Cookies' }
+            },
+            {
+                path: 'terms',
+                component: TermsComponent,
+                data: { title: 'Condiciones de venta' }
             }
         ]
     },

@@ -110,7 +110,7 @@ Route::get('/search/{symbol}', [MarketController::class, 'search']);
 Route::get('/prices', [MarketController::class, 'prices']);
 Route::get('/portfolio/value', [MarketController::class, 'portfolioValue']);
 Route::get('/history/{symbol}', [MarketController::class, 'history']);
-Route::get('/portfolio-history', [MarketController::class, 'portfolioHistory']);
+Route::post('/portfolio-history', [MarketController::class, 'portfolioHistory']);
 
 //Admin
 Route::prefix('admin')->middleware('auth:sanctum')->group(function() {

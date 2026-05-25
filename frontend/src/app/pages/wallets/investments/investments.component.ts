@@ -26,12 +26,20 @@ import { SubscriptionService } from '../../../services/subscription.service';
 })
 
 export class InvestmentsComponent implements OnInit {
+  // Servicios e inyecciones
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private fb = inject(FormBuilder);
+  private formBuilder = inject(FormBuilder);
   private investmentService = inject(InvestmentService);
   private destroyRef = inject(DestroyRef);
-  private prefs = inject(PreferencesService);
+  private preferencesService = inject(PreferencesService);
+  subscriptionService = inject(SubscriptionService);
+  private notifications = inject(NotificationsService);
+
+  isAtAssetLimit = computed(() => {
+    if (this.subscriptionService.isPremium()) return false;
+    return this.totalPositions() >= 10;
+  });
 
   // Navegación
   portfolioId = signal<number | null>(null);
@@ -206,9 +214,21 @@ export class InvestmentsComponent implements OnInit {
       });
   }
 
-  exportarCsv() {
-    const id = this.portfolioId();
-    if (!id || this.soloLectura()) return;
+  // Exporta la cartera actual a CSV
+  exportCsv(): void {
+
+    // solo premium
+    if (!this.subscriptionService.canUseFeature('export')) {
+      this.notifications.warning('La exportación CSV requiere el Plan Premium');
+
+      return;
+    }
+
+    const portfolioId = this.portfolioId();
+
+    if (!portfolioId || this.isReadOnly()) {
+      return;
+    }
 
     const portfolioName = this.portfolioName();
     const csv = buildInvestmentsCsv(portfolioName, this.dataSource.data);
@@ -226,14 +246,19 @@ export class InvestmentsComponent implements OnInit {
     URL.revokeObjectURL(url);
   }
 
-  guardarPosicion() {
-    if (this.posicionForm.invalid || !this.portfolioId()) return;
-
-    const formValues = this.posicionForm.value;
-    this.guardando.set(true);
+  // Guarda una nueva posición o procesa una compra/venta
+  savePosition(): void {
+    const portfolioId = this.portfolioId();
 
     if (!portfolioId || this.positionForm.invalid) {
       return;
+    }
+
+    if (this.modalMode() === 'create' && this.isAtAssetLimit()) {
+      this.notifications.warning('Has alcanzado el límite de 10 activos del plan gratuito.');
+      this.closeModal();
+      return;
+
     }
 
     const formValue = this.positionForm.value;
@@ -260,33 +285,26 @@ export class InvestmentsComponent implements OnInit {
       return;
     }
 
-    const tradePayload = {
-      quantity: Number(formValues.quantity),
-      price_per_unit: Number(formValues.price),
-      operated_at: formValues.operated_at
-    };
-
-    const request$ =
-      this.modalModo() === 'buy'
-        ? this.investmentService.buyInvestment(this.portfolioId()!, inversion.id, tradePayload)
-        : this.investmentService.sellInvestment(this.portfolioId()!, inversion.id, tradePayload);
-
-    request$.subscribe({
-      next: () => {
-        this.guardando.set(false);
-        this.cerrarModal();
-        this.cargarInversiones();
+    this.router.navigate(['/app/wallets', currentPortfolioId, 'trades'], {
+      queryParams: {
+        returnUrl: this.router.url,
       },
-      error: (err) => {
-        console.error('Error procesando operación:', err);
-        this.guardando.set(false);
-      }
     });
   }
 
-  abrirModalNuevaPosicion() {
-    if (this.soloLectura()) return;
-    this.prepararModal('create');
+  // Abre el modal para crear una posición nueva
+  openNewPositionModal(): void {
+    if (this.isReadOnly()) {
+      return;
+    }
+
+    if (this.isAtAssetLimit()) {
+      this.notifications.warning('Has alcanzado el límite de 10 activos del plan gratuito.');
+
+      return;
+    }
+
+    this.prepareModal('create');
   }
 
   // Abre el modal en modo compra

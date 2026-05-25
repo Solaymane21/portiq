@@ -20,6 +20,7 @@
         <button
           type="button"
           (click)="exportCsv()"
+          [class.opacity-50]="!subscriptionService.canUseFeature('export')"
           class="bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-neutral-200/80 transition-colors h-10 px-3 rounded-md text-white dark:text-black flex items-center gap-2 cursor-pointer">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
@@ -43,7 +44,7 @@
   </div>
 
   <!-- banner limite plan -->
-  @if (!soloLectura() && isAtAssetLimit()) {
+  @if (!isReadOnly() && isAtAssetLimit()) {
     <div class="flex items-center gap-3 p-3 rounded-xl border border-red-500 bg-red-500/10 text-sm">
       <svg class="size-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round"
@@ -61,25 +62,7 @@
     </div>
   }
 
-  <!-- banner limite plan -->
-  @if (!soloLectura() && isAtAssetLimit()) {
-    <div class="flex items-center gap-3 p-3 rounded-xl border border-red-500 bg-red-500/10 text-sm">
-      <svg class="size-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-      </svg>
-      <p class="flex-1 text-zinc-900 dark:text-neutral-100">
-        Has alcanzado el límite de 10 activos por cartera del plan gratuito.
-      </p>
-      <a
-        routerLink="/app/settings"
-        fragment="subscription"
-        class="px-3 py-1 bg-red-500 hover:bg-red-500/80 text-white rounded-md whitespace-nowrap cursor-pointer">
-        Hazte Pro
-      </a>
-    </div>
-  }
-
+  <!-- STATS CARDS -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5 mb-5 text-zinc-800 dark:text-neutral-300">
     <div class="min-w-0 bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 shadow-sm dark:shadow-none">
       <p class="mb-3">Valor total</p>

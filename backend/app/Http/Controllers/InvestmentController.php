@@ -6,6 +6,7 @@ use App\Models\Investment;
 use App\Models\Portfolio;
 use App\Models\Symbol;
 use App\Models\Trade;
+use App\Services\PlanLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -83,6 +84,19 @@ class InvestmentController extends Controller
         ]);
 
         $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
+
+        // comprobar limites de suscripcion
+        $activeCount = $portfolio->investments()->where('quantity', '>', 0)->count();
+        $check = app(PlanLimitService::class)->check($request->user(), 'assets_per_portfolio', $activeCount);
+
+        if (!$check['allowed']) {
+            return response()->json([
+                'message'  => $check['message'],
+                'code'     => 'PLAN_LIMIT_EXCEEDED',
+                'resource' => 'assets_per_portfolio',
+                'limit'    => $check['limit'],
+            ], 403);
+        }
 
         $investment = $this->applyBuyLot($portfolio, strtoupper($validated['symbol']), $validated);
 

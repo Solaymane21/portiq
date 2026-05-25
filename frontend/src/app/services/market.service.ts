@@ -10,39 +10,42 @@ export class MarketService {
   private apiUrl = environment.apiUrl;
   private http = inject(HttpClient)
 
-  // Historial de precios
+  // Obtiene histórico de precios de un activo (1D, 1W, 1M, 1Y)
   getHistory(symbol: string, period: string, assetType: string = 'stock') {
     return this.http.get<any>(
       `${this.apiUrl}/history/${symbol}?period=${period}&asset_type=${assetType}`
     );
   }
 
-  // Precios en tiempo real
+  // Obtiene precios en tiempo real de varios activos
   getPrices(symbols: string, assetTypes: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/prices`, {
       params: { symbols, asset_types: assetTypes }
     });
   }
 
-  // Búsqueda de symbols
+  // Busca activos por nombre o símbolo
   search(query: string): Observable<SearchResult[]> {
     return this.http.get<SearchResult[]>(`${this.apiUrl}/assets/search`, {
       params: { q: query }
     });
   }
 
-  // Guardar symbols
+  // Guarda un símbolo en la base de datos
   storeSymbol(result: SearchResult): Observable<any> {
     return this.http.post(`${this.apiUrl}/assets/store`, result);
   }
 
+  // Lista de criptos soportadas
   private CRYPTO_SYMBOLS = ['BTC', 'ETH', 'SOL', 'ADA', 'DOGE', 'XRP', 'BNB', 'AVAX', 'MATIC', 'DOT'];
 
+  // Detecta si un símbolo es cripto
   isCrypto(symbol: string): boolean {
     const clean = symbol.replace(/-USD$/i, '').toUpperCase();
     return this.CRYPTO_SYMBOLS.includes(clean) || symbol.toUpperCase().endsWith('-USD');
   }
 
+  // Convierte símbolo a ID de CoinGecko
   coinGeckoId(symbol: string): string {
     const map: Record<string, string> = {
       btc: 'bitcoin', eth: 'ethereum', sol: 'solana',
@@ -52,20 +55,22 @@ export class MarketService {
     return map[symbol] ?? symbol;
   }
 
+  // Historial de cartera (versión simple) - usa GET
   getPortfolioHistory(symbols: string[], quantities: number[], assetTypes: string[], fromDate: string) {
     return this.http.get<{ data: { x: number; y: number }[] }>(
       `${this.apiUrl}/portfolio-history`,
       {
         params: {
-          symbols:symbols.join(','),
+          symbols: symbols.join(','),
           quantities: quantities.join(','),
           asset_types: assetTypes.join(','),
-          from_date:fromDate
+          from_date: fromDate
         }
       }
     );
   }
 
+  // Historial de cartera con datos de compra (precio medio y fecha) - usa POST
   getPortfolioHistoryWithDetails(
     symbols: string[], 
     quantities: number[], 
@@ -77,14 +82,12 @@ export class MarketService {
     return this.http.post<{ data: { x: number; y: number }[] }>(
       `${this.apiUrl}/portfolio-history`,
       {
-        params: {
-          symbols:         symbols.join(','),
-          quantities:      quantities.join(','),
-          asset_types:     assetTypes.join(','),
-          purchase_dates:  purchaseDates.join(','),
-          purchase_prices: purchasePrices.join(','),
-          from_date:       fromDate
-        }
+        symbols: symbols,
+        quantities: quantities,
+        asset_types: assetTypes,
+        purchase_dates: purchaseDates,
+        purchase_prices: purchasePrices,
+        from_date: fromDate
       }
     );
   }

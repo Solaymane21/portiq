@@ -53,14 +53,14 @@ export class MarketService {
   }
 
   getPortfolioHistory(symbols: string[], quantities: number[], assetTypes: string[], fromDate: string) {
-    return this.http.get<{ data: { x: number; y: number }[] }>(
+    return this.http.post<{ data: { x: number; y: number }[] }>(
       `${this.apiUrl}/portfolio-history`,
       {
         params: {
-          symbols:     symbols.join(','),
-          quantities:  quantities.join(','),
+          symbols:symbols.join(','),
+          quantities: quantities.join(','),
           asset_types: assetTypes.join(','),
-          from_date:   fromDate
+          from_date: fromDate
         }
       }
     );

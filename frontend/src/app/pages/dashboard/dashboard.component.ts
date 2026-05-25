@@ -439,16 +439,14 @@ export class DashboardComponent implements OnInit {
       d.setFullYear(d.getFullYear() - 1);
       fromDate = d.toISOString().split('T')[0];
     } else {
-      const d = new Date(now);
-      d.setMonth(d.getMonth() - 1);
-      fromDate = d.toISOString().split('T')[0];
+      // Para 1D no debería llegar aquí
+      this.isLoading = false;
+      return;
     }
 
     const symbols = investments.map((inv: any) => inv.symbol);
     const quantities = investments.map((inv: any) => parseFloat(inv.quantity));
     const types = investments.map((inv: any) => inv.asset_type || 'stock');
-    
-    // CAMBIAR: usar purchase_date del backend
     const purchaseDates = investments.map((inv: any) => {
       if (inv.purchase_date) return inv.purchase_date;
       if (inv.created_at) return inv.created_at.split('T')[0];
@@ -456,7 +454,6 @@ export class DashboardComponent implements OnInit {
       d.setFullYear(d.getFullYear() - 1);
       return d.toISOString().split('T')[0];
     });
-    
     const purchasePrices = investments.map((inv: any) => inv.avg_buy_price || 0);
 
     this.marketService.getPortfolioHistoryWithDetails(
@@ -466,13 +463,14 @@ export class DashboardComponent implements OnInit {
         if (response?.data && response.data.length > 0) {
           this.buildAreaChart(response.data, period);
         } else {
+          // Crear un punto con el valor actual como fallback
           const currentValue = this.currentPortfolio?.totalValue || 0;
           const fallbackData = [{ x: Date.now(), y: currentValue }];
           this.buildAreaChart(fallbackData, period);
         }
         this.isLoading = false;
       },
-      error: () => {
+      error: (error) => {
         this.isLoading = false;
       }
     });

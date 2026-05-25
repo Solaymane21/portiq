@@ -1,30 +1,25 @@
 <div class="space-y-6">
-
-  <!-- HEADER -->
   <div class="flex flex-row items-center justify-between gap-3">
-    <!-- Botón back (izquierda) -->
     <button
-      (click)="volver()"
+      (click)="goBack()"
       class="inline-flex items-center justify-center p-2 rounded-md bg-zinc-50 dark:bg-neutral-950 text-zinc-500 dark:text-neutral-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer shrink-0 transition-colors">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
       </svg>
     </button>
 
-    <!-- Título (centro) -->
     <div class="flex-1 min-w-0">
-      <h1 class="text-3xl font-ibm text-zinc-900 dark:text-white truncate">{{ nombreCartera() }}</h1>
-      @if (soloLectura() && ownerName()) {
+      <h1 class="text-3xl font-ibm text-zinc-900 dark:text-white truncate">{{ portfolioName() }}</h1>
+      @if (isReadOnly() && ownerName()) {
         <p class="text-sm text-orange-500 mt-1">Cartera pública de {{ ownerName() }} · solo lectura</p>
       }
     </div>
 
-    <!-- Botones (derecha) -->
-    @if (!soloLectura()) {
+    @if (!isReadOnly()) {
       <div class="flex items-center gap-2 shrink-0">
         <button
           type="button"
-          (click)="exportarCsv()"
+          (click)="exportCsv()"
           class="bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-neutral-200/80 transition-colors h-10 px-3 rounded-md text-white dark:text-black flex items-center gap-2 cursor-pointer">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
@@ -34,7 +29,7 @@
 
         <button
           type="button"
-          (click)="abrirModalNuevaPosicion()"
+          (click)="openNewPositionModal()"
           class="bg-orange-500 hover:bg-orange-500/80 transition-colors h-10 px-3 rounded-md text-white flex items-center gap-2 cursor-pointer">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -45,49 +40,52 @@
     }
   </div>
 
-  <!-- STATS CARDS -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5 mb-5 text-zinc-800 dark:text-neutral-300">
-    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 shadow-sm dark:shadow-none">
+    <div class="min-w-0 bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 shadow-sm dark:shadow-none">
       <p class="mb-3">Valor total</p>
-      <p class="text-2xl md:text-3xl font-ibm font-bold text-zinc-900 dark:text-neutral-100 text-center">
-        {{ format(valorTotal()) }}
+      <p class="min-w-0 text-[clamp(1rem,2vw,1.875rem)] font-ibm font-bold text-zinc-900 dark:text-neutral-100 text-center leading-tight">
+        {{ formatCurrency(totalValue()) }}
       </p>
     </div>
-    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 shadow-sm dark:shadow-none">
+
+    <div class="min-w-0 bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 shadow-sm dark:shadow-none">
       <p class="mb-3">Ganancias</p>
-      <p class="text-2xl md:text-3xl font-ibm font-bold text-center tabular-nums"
-        [class.text-green-500]="ganancias() > 0"
-        [class.dark:text-green-500]="ganancias() > 0"
-        [class.text-red-600]="ganancias() < 0"
-        [class.dark:text-red-500]="ganancias() < 0">
-        {{ format(ganancias()) }}
+      <p
+        class="min-w-0 text-[clamp(1rem,2vw,1.875rem)] font-ibm font-bold text-center tabular-nums leading-tight"
+        [class.text-green-500]="totalProfit() > 0"
+        [class.dark:text-green-500]="totalProfit() > 0"
+        [class.text-red-600]="totalProfit() < 0"
+        [class.dark:text-red-500]="totalProfit() < 0">
+        {{ formatCurrency(totalProfit()) }}
       </p>
     </div>
-    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 shadow-sm dark:shadow-none">
+
+    <div class="min-w-0 bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 shadow-sm dark:shadow-none">
       <p class="mb-3">Rendimiento %</p>
-      <p class="text-2xl md:text-3xl font-ibm font-bold text-center"
-        [class.text-green-500]="porcentajeGanancias() > 0"
-        [class.dark:text-green-500]="porcentajeGanancias() > 0"
-        [class.text-red-600]="porcentajeGanancias() < 0"
-        [class.dark:text-red-500]="porcentajeGanancias() < 0">
-        {{ porcentajeGanancias() }}%
+      <p
+        class="min-w-0 text-[clamp(1rem,2vw,1.875rem)] font-ibm font-bold text-center leading-tight"
+        [class.text-green-500]="totalProfitPercentage() > 0"
+        [class.dark:text-green-500]="totalProfitPercentage() > 0"
+        [class.text-red-600]="totalProfitPercentage() < 0"
+        [class.dark:text-red-500]="totalProfitPercentage() < 0">
+        {{ formatNumber(totalProfitPercentage(), 2) }}%
       </p>
     </div>
-    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 shadow-sm dark:shadow-none">
-      <p class="mb-3">Total de Posiciones</p>
-      <p class="text-2xl md:text-3xl font-ibm font-bold text-zinc-900 dark:text-neutral-100 text-center">
-        {{ totalPosiciones() }}
+
+    <div class="min-w-0 bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 shadow-sm dark:shadow-none">
+      <p class="mb-3">Coste total</p>
+      <p class="min-w-0 text-[clamp(1rem,2vw,1.875rem)] font-ibm font-bold text-zinc-900 dark:text-neutral-100 text-center leading-tight">
+        {{ formatCurrency(totalCost()) }}
       </p>
     </div>
   </div>
 
-  <!-- TABLA -->
   <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-xl overflow-hidden shadow-sm dark:shadow-none">
     <div class="px-4 md:px-6 py-4 border-b border-zinc-400 dark:border-neutral-600 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h2 class="text-base font-medium text-zinc-900 dark:text-white">Rendimiento de Activos</h2>
 
       <button
-        (click)="verHistorialTrades()"
+        (click)="viewTradeHistory()"
         class="bg-orange-500 hover:bg-orange-500/80 transition-colors h-9 px-3 rounded-md text-white flex items-center justify-center gap-2 cursor-pointer text-sm">
         <svg xmlns="http://www.w3.org/2000/svg" class="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -96,144 +94,185 @@
       </button>
     </div>
 
-    <div class="w-full overflow-x-auto">
-      <table mat-table [dataSource]="dataSource" matSort class="w-full min-w-[760px] !bg-transparent text-zinc-900 dark:text-white">
-        @for (col of columnasDef; track col.def) {
-          <ng-container [matColumnDef]="col.def">
-            <th
-              mat-header-cell
-              *matHeaderCellDef
-              mat-sort-header
-              class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-400 text-sm font-medium align-middle hover:!text-zinc-900 dark:hover:!text-white transition-colors"
-              [class]="getTextAlignClass(col.align)">
-              {{ col.title }}
-            </th>
+    @if (isLoading()) {
+      <div class="w-full overflow-x-auto">
+        <div class="min-w-[760px]">
+          <div class="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_140px] px-4 md:px-6 py-4 border-b !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 gap-4">
+            <div class="h-4 w-20 bg-zinc-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+            <div class="h-4 w-16 bg-zinc-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+            <div class="h-4 w-24 bg-zinc-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+            <div class="h-4 w-16 bg-zinc-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+            <div class="h-4 w-20 bg-zinc-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+            <div class="h-4 w-12 bg-zinc-200 dark:bg-neutral-800 rounded animate-pulse ml-auto"></div>
+          </div>
 
-            <td
-              mat-cell
-              *matCellDef="let element"
-              class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 align-middle text-zinc-900 dark:text-white"
-              [class]="getTextAlignClass(col.align) + ' ' + getCellClass(col.def, element[col.def])">
-              @switch (col.def) {
-                @case ('symbol') {
-                  <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-8 h-8 rounded-full overflow-hidden bg-zinc-200 dark:bg-neutral-800 flex items-center justify-center border border-zinc-400 dark:border-neutral-600">
-                      @if (element.image_url) {
-                        <img [src]="element.image_url" [alt]="element.symbol" class="w-full h-full object-cover" />
-                      } @else {
-                        <span class="text-xs font-bold text-zinc-900 dark:text-white">{{ getInitial(element.symbol) }}</span>
-                      }
+          @for (n of skeletonItems; track n) {
+            <div class="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_140px] items-center px-4 md:px-6 py-4 border-b !border-zinc-300 dark:!border-neutral-800 gap-4 bg-zinc-50 dark:bg-neutral-950">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-8 h-8 rounded-full bg-zinc-200 dark:bg-neutral-800 animate-pulse shrink-0"></div>
+                <div class="h-5 w-24 bg-zinc-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+              </div>
+
+              <div class="h-5 w-14 bg-zinc-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+              <div class="h-5 w-20 bg-zinc-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+              <div class="h-5 w-24 bg-zinc-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+              <div class="h-5 w-20 bg-zinc-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+
+              <div class="flex justify-end gap-2">
+                <div class="h-8 w-16 bg-zinc-200 dark:bg-neutral-800 rounded-md animate-pulse"></div>
+                <div class="h-8 w-16 bg-zinc-200 dark:bg-neutral-800 rounded-md animate-pulse"></div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="w-full overflow-x-auto">
+        <table mat-table [dataSource]="dataSource" matSort class="w-full min-w-[760px] !bg-transparent text-zinc-900 dark:text-white">
+          @for (col of columns; track col.def) {
+            <ng-container [matColumnDef]="col.def">
+              <th
+                mat-header-cell
+                *matHeaderCellDef
+                mat-sort-header
+                class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-400 text-sm font-medium align-middle hover:!text-zinc-900 dark:hover:!text-white transition-colors"
+                [class]="getTextAlignClass(col.align)">
+                {{ col.title }}
+              </th>
+
+              <td
+                mat-cell
+                *matCellDef="let element"
+                class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 align-middle text-zinc-900 dark:text-white"
+                [class]="getTextAlignClass(col.align) + ' ' + getCellClass(col.def)">
+                @switch (col.def) {
+                  @case ('symbol') {
+                    <div class="flex items-center gap-3 min-w-0">
+                      <div class="w-8 h-8 rounded-full overflow-hidden bg-zinc-200 dark:bg-neutral-800 flex items-center justify-center border border-zinc-400 dark:border-neutral-600">
+                        @if (element.image_url) {
+                          <img [src]="element.image_url" [alt]="element.symbol" class="w-full h-full object-cover" />
+                        } @else {
+                          <span class="text-xs font-bold text-zinc-900 dark:text-white">{{ getInitial(element.symbol) }}</span>
+                        }
+                      </div>
+                      <span class="font-medium text-zinc-900 dark:text-white truncate font-ibm">{{ element.symbol }}</span>
                     </div>
-                    <span class="font-medium text-zinc-900 dark:text-white truncate font-ibm">{{ element.symbol }}</span>
-                  </div>
+                  }
+
+                  @case ('value') {
+                    <span class="text-zinc-900 dark:text-white">{{ formatValue(element.value) }}</span>
+                  }
+
+                  @case ('weight') {
+                    <span class="text-zinc-900 dark:text-white">{{ formatNumber(element.weight, 2) }}%</span>
+                  }
+
+                  @case ('return_7d') {
+                    <span
+                      [class.text-green-500]="(element.pl_percentage ?? 0) >= 0"
+                      [class.dark:text-green-500]="(element.pl_percentage ?? 0) >= 0"
+                      [class.text-red-600]="(element.pl_percentage ?? 0) < 0"
+                      [class.dark:text-red-500]="(element.pl_percentage ?? 0) < 0">
+                      {{ (element.pl_percentage ?? 0) >= 0 ? '+' : '' }}{{ formatNumber(element.pl_percentage ?? 0, 2) }}%
+                    </span>
+                  }
+
+                  @case ('quantity') {
+                    <span class="text-zinc-900 dark:text-white">{{ formatNumber(element.quantity, 8) }}</span>
+                  }
+
+                  @default {
+                    {{ element[col.def] }}
+                  }
                 }
-                @case ('value') { <span class="text-zinc-900 dark:text-white">{{ format(element.value) }}</span> }
-                @case ('weight') { <span class="text-zinc-900 dark:text-white">{{ formatNumber(element.weight, 2) }}%</span> }
-                @case ('return_7d') { 
-                  <span [class.text-green-500]="(element.return_7d ?? 0) >= 0" [class.dark:text-green-500]="(element.return_7d ?? 0) >= 0" [class.text-red-600]="(element.return_7d ?? 0) < 0" [class.dark:text-red-500]="(element.return_7d ?? 0) < 0">
-                    {{ (element.return_7d ?? 0) >= 0 ? '+' : '' }}{{ formatNumber(element.return_7d, 2) }}% 
-                  </span>
-                }
-                @case ('quantity') { <span class="text-zinc-900 dark:text-white">{{ formatNumber(element.quantity, 8) }}</span> }
-                @default { {{ element[col.def] }} }
-              }
+              </td>
+            </ng-container>
+          }
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 w-32"></th>
+            <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 text-right align-middle">
+              <div class="flex justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                <button
+                  (click)="$event.stopPropagation(); buyAsset(element)"
+                  class="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-500/10 text-green-500 dark:text-green-500 hover:bg-green-200 dark:hover:bg-green-500/20 rounded-md transition-colors cursor-pointer">
+                  Comprar
+                </button>
+                <button
+                  (click)="$event.stopPropagation(); sellAsset(element)"
+                  class="px-3 py-1.5 text-xs font-medium bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-500 hover:bg-red-200 dark:hover:bg-red-500/20 rounded-md transition-colors cursor-pointer">
+                  Vender
+                </button>
+              </div>
             </td>
           </ng-container>
-        }
 
-        <ng-container matColumnDef="opciones">
-          <th mat-header-cell *matHeaderCellDef class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 w-32"></th>
-          <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 text-right align-middle">
-            <div class="flex justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-              <button
-                (click)="$event.stopPropagation(); comprarActivo(element)"
-                class="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-500/10 text-green-500 dark:text-green-500 hover:bg-green-200 dark:hover:bg-green-500/20 rounded-md transition-colors cursor-pointer">
-                Comprar
-              </button>
-              <button
-                (click)="$event.stopPropagation(); venderActivo(element)"
-                class="px-3 py-1.5 text-xs font-medium bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-500 hover:bg-red-200 dark:hover:bg-red-500/20 rounded-md transition-colors cursor-pointer">
-                Vender
-              </button>
-            </div>
-          </td>
-        </ng-container>
+          <tr mat-header-row *matHeaderRowDef="visibleColumns()"></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: visibleColumns();"
+            class="hover:!bg-zinc-100 dark:hover:!bg-neutral-900/80 transition-colors group cursor-pointer"
+            [routerLink]="['/public/symbol', row.symbol]"></tr>
 
-        <tr mat-header-row *matHeaderRowDef="columnasVisibles()"></tr>
-        <tr
-          mat-row
-          *matRowDef="let row; columns: columnasVisibles();"
-          class="hover:!bg-zinc-100 dark:hover:!bg-neutral-900/80 transition-colors group"
-          [class.cursor-pointer]="!soloLectura()"></tr>
-
-        <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell text-center py-12 !text-zinc-500 dark:!text-neutral-500 border-none" [attr.colspan]="columnasVisibles().length">
-            @if (cargando()) {
-              <div class="flex flex-col items-center justify-center">
-                <svg class="animate-spin h-6 w-6 text-orange-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                <span>Cargando activos...</span>
-              </div>
-            } @else {
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell text-center py-12 !text-zinc-500 dark:!text-neutral-500 border-none" [attr.colspan]="visibleColumns().length">
               No hay activos en esta cartera
-            }
-          </td>
-        </tr>
-      </table>
-    </div>
+            </td>
+          </tr>
+        </table>
+      </div>
 
-    <mat-paginator
-      [pageSize]="5"
-      class="border-t !border-zinc-300 dark:!border-neutral-600 !bg-zinc-50 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-500">
-    </mat-paginator>
+      <mat-paginator
+        [pageSize]="5"
+        class="border-t !border-zinc-300 dark:!border-neutral-600 !bg-zinc-50 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-500">
+      </mat-paginator>
+    }
   </div>
-
 </div>
 
-<!-- MODAL -->
-@if (modalAbierto()) {
+@if (isModalOpen()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
     <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-lg w-full max-w-md overflow-hidden shadow-2xl">
       <div class="flex justify-between items-center p-6 border-b border-zinc-300 dark:border-neutral-600">
         <div>
           <h3 class="text-xl font-medium text-zinc-900 dark:text-white">{{ getModalTitle() }}</h3>
-          @if (modalModo() === 'create' && modalPaso() === 'search') {
+          @if (modalMode() === 'create' && modalStep() === 'search') {
             <p class="text-sm text-zinc-500 dark:text-neutral-500 mt-1">Busca el activo para crear una nueva posición</p>
           } @else {
             <p class="text-sm text-zinc-500 dark:text-neutral-500 mt-1">Completa la operación y se registrará en trades</p>
           }
         </div>
 
-        <button (click)="cerrarModal()" class="text-zinc-500 dark:text-neutral-500 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer">
+        <button (click)="closeModal()" class="text-zinc-500 dark:text-neutral-500 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
 
-      @if (modalModo() === 'create' && modalPaso() === 'search') {
+      @if (modalMode() === 'create' && modalStep() === 'search') {
         <div class="p-6 space-y-4">
           <div class="flex gap-2">
             <button
               type="button"
-              (click)="setFiltro('all')"
-              [class]="filtroTipo() === 'all' ? 'bg-orange-500 text-white' : 'bg-zinc-200 dark:bg-neutral-800 text-zinc-600 dark:text-neutral-500 hover:text-zinc-900 dark:hover:text-white'"
+              (click)="setAssetTypeFilter('all')"
+              [class]="assetTypeFilter() === 'all' ? 'bg-orange-500 text-white' : 'bg-zinc-200 dark:bg-neutral-800 text-zinc-600 dark:text-neutral-500 hover:text-zinc-900 dark:hover:text-white'"
               class="px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer">
               Todos
             </button>
+
             <button
               type="button"
-              (click)="setFiltro('crypto')"
-              [class]="filtroTipo() === 'crypto' ? 'bg-orange-500 text-white' : 'bg-zinc-200 dark:bg-neutral-800 text-zinc-600 dark:text-neutral-500 hover:text-zinc-900 dark:hover:text-white'"
+              (click)="setAssetTypeFilter('crypto')"
+              [class]="assetTypeFilter() === 'crypto' ? 'bg-orange-500 text-white' : 'bg-zinc-200 dark:bg-neutral-800 text-zinc-600 dark:text-neutral-500 hover:text-zinc-900 dark:hover:text-white'"
               class="px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer">
               Crypto
             </button>
+
             <button
               type="button"
-              (click)="setFiltro('stock')"
-              [class]="filtroTipo() === 'stock' ? 'bg-orange-500 text-white' : 'bg-zinc-200 dark:bg-neutral-800 text-zinc-600 dark:text-neutral-500 hover:text-zinc-900 dark:hover:text-white'"
+              (click)="setAssetTypeFilter('stock')"
+              [class]="assetTypeFilter() === 'stock' ? 'bg-orange-500 text-white' : 'bg-zinc-200 dark:bg-neutral-800 text-zinc-600 dark:text-neutral-500 hover:text-zinc-900 dark:hover:text-white'"
               class="px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer">
               Stock
             </button>
@@ -250,14 +289,14 @@
 
               <input
                 type="text"
-                [value]="busqueda()"
-                (input)="onSearchInput($event)"
+                [value]="searchQuery()"
+                (input)="onAssetSearchInput($event)"
                 placeholder="BTC, XRP, AAPL, NVDA"
                 class="w-full bg-zinc-100 dark:bg-neutral-950 border border-zinc-300 dark:border-neutral-600 rounded-lg pl-10 pr-4 py-3 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-neutral-600 focus:outline-none focus:border-orange-500 transition-colors" />
             </div>
           </div>
 
-          @if (buscandoActivos()) {
+          @if (isSearchingAssets()) {
             <div class="text-sm text-zinc-500 dark:text-neutral-500 flex items-center gap-2">
               <svg class="animate-spin h-4 w-4 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -265,52 +304,52 @@
               </svg>
               Buscando activos...
             </div>
-          } @else if (resultadosFiltrados().length > 0) {
+          } @else if (filteredSearchResults().length > 0) {
             <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
-              @for (activo of resultadosFiltrados(); track activo.symbol + activo.asset_type) {
+              @for (asset of filteredSearchResults(); track asset.symbol + asset.asset_type) {
                 <button
                   type="button"
-                  (click)="seleccionarActivo(activo)"
+                  (click)="selectAsset(asset)"
                   class="w-full text-left bg-zinc-50 dark:bg-neutral-950 border border-zinc-300 dark:border-neutral-600 rounded-xl p-4 hover:border-orange-500 dark:hover:border-orange-500 transition-colors cursor-pointer">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full overflow-hidden bg-zinc-200 dark:bg-neutral-800 flex items-center justify-center border border-zinc-300 dark:border-neutral-600">
-                      @if (activo.image_url) {
-                        <img [src]="activo.image_url" [alt]="activo.symbol" class="w-full h-full object-cover" />
+                      @if (asset.image_url) {
+                        <img [src]="asset.image_url" [alt]="asset.symbol" class="w-full h-full object-cover" />
                       } @else {
-                        <span class="text-sm font-bold text-zinc-900 dark:text-white">{{ getInitial(activo.symbol) }}</span>
+                        <span class="text-sm font-bold text-zinc-900 dark:text-white">{{ getInitial(asset.symbol) }}</span>
                       }
                     </div>
 
                     <div class="min-w-0">
-                      <p class="text-zinc-900 dark:text-white font-medium truncate">{{ activo.name }}</p>
+                      <p class="text-zinc-900 dark:text-white font-medium truncate">{{ asset.name }}</p>
                       <p class="text-xs font-ibm text-zinc-500 dark:text-neutral-500">
-                        {{ activo.symbol }} · <span class="uppercase">{{ activo.asset_type }}</span>
+                        {{ asset.symbol }} · <span class="uppercase">{{ asset.asset_type }}</span>
                       </p>
                     </div>
                   </div>
                 </button>
               }
             </div>
-          } @else if (busqueda().length >= 2) {
-            <div class="text-sm text-zinc-500 dark:text-neutral-500">No se encontraron resultados para "{{ busqueda() }}".</div>
+          } @else if (searchQuery().length >= 2) {
+            <div class="text-sm text-zinc-500 dark:text-neutral-500">No se encontraron resultados para "{{ searchQuery() }}".</div>
           }
         </div>
       } @else {
-        <form [formGroup]="posicionForm" (ngSubmit)="guardarPosicion()" class="p-6 space-y-5">
-          @if (activoSeleccionado()) {
+        <form [formGroup]="positionForm" (ngSubmit)="savePosition()" class="p-6 space-y-5">
+          @if (selectedAsset()) {
             <div class="flex items-center gap-3 p-4 rounded-xl bg-zinc-100 dark:bg-neutral-950 border border-zinc-300 dark:border-neutral-800">
               <div class="w-10 h-10 rounded-full overflow-hidden bg-zinc-200 dark:bg-neutral-800 flex items-center justify-center border border-zinc-300 dark:border-neutral-600">
-                @if (activoSeleccionado()!.image_url) {
-                  <img [src]="activoSeleccionado()!.image_url!" [alt]="activoSeleccionado()!.symbol" class="w-full h-full object-cover" />
+                @if (selectedAsset()!.image_url) {
+                  <img [src]="selectedAsset()!.image_url!" [alt]="selectedAsset()!.symbol" class="w-full h-full object-cover" />
                 } @else {
-                  <span class="text-sm font-bold text-zinc-900 dark:text-white">{{ getInitial(activoSeleccionado()!.symbol) }}</span>
+                  <span class="text-sm font-bold text-zinc-900 dark:text-white">{{ getInitial(selectedAsset()!.symbol) }}</span>
                 }
               </div>
 
               <div>
-                <p class="text-zinc-900 dark:text-white font-medium">{{ activoSeleccionado()!.name }}</p>
+                <p class="text-zinc-900 dark:text-white font-medium">{{ selectedAsset()!.name }}</p>
                 <p class="text-sm text-zinc-500 dark:text-neutral-500">
-                  {{ activoSeleccionado()!.symbol }} · <span class="uppercase">{{ activoSeleccionado()!.asset_type }}</span>
+                  {{ selectedAsset()!.symbol }} · <span class="uppercase">{{ selectedAsset()!.asset_type }}</span>
                 </p>
               </div>
             </div>
@@ -332,7 +371,7 @@
                 type="number"
                 step="any"
                 formControlName="quantity"
-                (input)="validarCantidadMaxima()"
+                (input)="validateMaxSellQuantity()"
                 placeholder="0.00"
                 class="w-full bg-zinc-100 dark:bg-neutral-950 border border-zinc-300 dark:border-neutral-600 rounded-lg px-4 py-3 text-zinc-900 dark:text-white font-ibm placeholder-zinc-400 dark:placeholder-neutral-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all [&::-webkit-inner-spin-button]:appearance-none" />
             </div>
@@ -340,7 +379,7 @@
             <div>
               <label class="flex text-sm font-medium text-zinc-500 dark:text-neutral-500 mb-1.5 justify-between items-center">
                 <span>Precio por unidad</span>
-                @if (buscandoPrecio()) {
+                @if (isLoadingHistoricalPrice()) {
                   <div class="flex items-center gap-1.5 text-orange-500">
                     <svg class="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -349,27 +388,28 @@
                   </div>
                 }
               </label>
+
               <input
                 type="number"
                 step="any"
                 formControlName="price"
                 placeholder="0.00"
-                class="w-full bg-neutral-950 border border-neutral-600 rounded-lg px-4 py-3 text-white font-ibm placeholder-neutral-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" />
+                class="w-full bg-zinc-100 dark:bg-neutral-950 border border-zinc-300 dark:border-neutral-600 rounded-lg px-4 py-3 text-zinc-900 dark:text-white font-ibm placeholder-zinc-400 dark:placeholder-neutral-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" />
             </div>
           </div>
 
           <div class="flex flex-col-reverse sm:flex-row gap-3 pt-2">
-            @if (modalModo() === 'create') {
+            @if (modalMode() === 'create') {
               <button
                 type="button"
-                (click)="volverABusqueda()"
+                (click)="goBackToSearch()"
                 class="w-full bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-neutral-200/80 flex justify-center rounded-md py-2 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
                 Volver
               </button>
             } @else {
               <button
                 type="button"
-                (click)="cerrarModal()"
+                (click)="closeModal()"
                 class="w-full bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-neutral-200/80 flex justify-center rounded-md py-2 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
                 Cancelar
               </button>
@@ -377,9 +417,9 @@
 
             <button
               type="submit"
-              [disabled]="posicionForm.invalid || guardando()"
+              [disabled]="positionForm.invalid || isSaving()"
               class="w-full bg-orange-500 hover:bg-orange-500/80 flex justify-center items-center gap-2 rounded-md py-2 text-white transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
-              @if (guardando()) {
+              @if (isSaving()) {
                 <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />

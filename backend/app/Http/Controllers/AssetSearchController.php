@@ -169,16 +169,18 @@ class AssetSearchController extends Controller
         $request->validate([
             'api_id' => 'required|string',
             'asset_type' => 'required|in:crypto,stock',
-            'date' => 'required|date_format:Y-m-d'
+            'date' => 'required|date_format:Y-m-d',
+            'convert_to_eur' => 'nullable|boolean',
         ]);
 
         $pythonApi = env('PYTHON_API_URL');
-        
+        $convertToEur = $request->boolean('convert_to_eur');
+
         try {
             $response = Http::timeout(10)->get("{$pythonApi}/historical-price/{$request->api_id}", [
                 'date' => $request->date,
                 'asset_type' => $request->asset_type,
-                'convert_to_eur' => 'false'
+                'convert_to_eur' => $convertToEur ? 'true' : 'false',
             ]);
 
             if ($response->successful() && isset($response->json()['price'])) {
@@ -186,7 +188,7 @@ class AssetSearchController extends Controller
                     'price' => (float) $response->json()['price']
                 ]);
             }
-            
+
             return response()->json(['price' => null]);
         } catch (\Exception $e) {
             Log::error('Error FastAPI [' . $request->api_id . ']: ' . $e->getMessage());

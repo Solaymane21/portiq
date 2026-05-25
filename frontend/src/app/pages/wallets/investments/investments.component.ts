@@ -1,466 +1,624 @@
-import {Component, signal, computed, inject, OnInit, effect, viewChild, DestroyRef} from '@angular/core';
+import {Component, DestroyRef, OnInit, computed, effect, inject, signal, viewChild} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router, ActivatedRoute } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { InvestmentService } from '../../../services/investment.service';
-import { AssetSearchResult, Investment } from '../../../models/investment.model';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, filter } from 'rxjs/operators';
-import { buildInvestmentsCsv } from '../wallets-csv';
+import {debounceTime, distinctUntilChanged, filter, switchMap} from 'rxjs/operators';
+
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+
 import { PreferencesService } from '../../../services/preferences.service';
+import { InvestmentService } from '../../../services/investment.service';
+import {AssetSearchResult, Investment, InvestmentsResponse, TradeActionPayload, UpsertPositionPayload} from '../../../models/investment.model';
+import { buildInvestmentsCsv } from '../wallets-csv';
 
 @Component({
   selector: 'app-investments',
   standalone: true,
-  imports: [ReactiveFormsModule, MatTableModule, MatSortModule, MatPaginatorModule],
+  imports: [ReactiveFormsModule, MatTableModule, MatSortModule, MatPaginatorModule, RouterLink],
   templateUrl: './investments.component.html',
-  styleUrl: './investments.component.css'
+  styleUrl: './investments.component.css',
 })
-export class InvestmentsComponent implements OnInit {
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  private fb = inject(FormBuilder);
-  private investmentService = inject(InvestmentService);
-  private destroyRef = inject(DestroyRef);
-  private prefs = inject(PreferencesService);
 
+export class InvestmentsComponent implements OnInit {
+  // Servicios e inyecciones
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly investmentService = inject(InvestmentService);
+  private readonly preferencesService = inject(PreferencesService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  // Navegación
   portfolioId = signal<number | null>(null);
   returnUrl = '/app/wallets';
-  cargando = signal(true);
-  nombreCartera = signal('Cargando...');
-  valorTotal = signal(0);
-  ganancias = signal(0);
-  porcentajeGanancias = signal(0);
-  totalPosiciones = signal(0);
-  soloLectura = signal(false);
+
+  // Estado general de la vista
+  isLoading = signal(true);
+  portfolioName = signal('Cargando...');
+  isReadOnly = signal(false);
   ownerName = signal<string | null>(null);
 
+  // Resumen de la cartera
+  totalValue = signal(0);
+  totalCost = signal(0);
+  totalProfit = signal(0);
+  totalProfitPercentage = signal(0);
+  totalPositions = signal(0);
+
+  // Tabla
   dataSource = new MatTableDataSource<Investment>([]);
   paginator = viewChild(MatPaginator);
   sort = viewChild(MatSort);
+  skeletonItems = Array.from({ length: 5 }, (_, i) => i);
 
-  today: string = new Date().toISOString().split('T')[0];
-  
-
-  columnasDef = [
+  columns = [
     { def: 'symbol', title: 'Activo', align: 'left' },
     { def: 'weight', title: 'Peso', align: 'left' },
     { def: 'return_7d', title: 'Rendimiento', align: 'left' },
     { def: 'value', title: 'Valor', align: 'left' },
-    { def: 'quantity', title: 'Acciones', align: 'left' }
+    { def: 'quantity', title: 'Acciones', align: 'left' },
   ];
 
-  columnasVisibles = computed(() => {
-    const base = this.columnasDef.map((c) => c.def);
-    return this.soloLectura() ? base : [...base, 'opciones'];
+  visibleColumns = computed(() => {
+    const baseColumns = this.columns.map((column) => column.def);
+    return this.isReadOnly() ? baseColumns : [...baseColumns, 'actions'];
   });
 
-  modalAbierto = signal(false);
-  guardando = signal(false);
-  modalModo = signal<'create' | 'buy' | 'sell'>('create');
-  modalPaso = signal<'search' | 'details'>('search');
+  // Modal
+  isModalOpen = signal(false);
+  isSaving = signal(false);
+  modalMode = signal<'create' | 'buy' | 'sell'>('create');
+  modalStep = signal<'search' | 'details'>('search');
 
-  busqueda = signal('');
-  filtroTipo = signal<'all' | 'crypto' | 'stock'>('all');
-  buscandoActivos = signal(false);
-  resultadosBusquedaOriginales = signal<AssetSearchResult[]>([]);
+  // Buscador de activos
+  searchQuery = signal('');
+  assetTypeFilter = signal<'all' | 'crypto' | 'stock'>('all');
+  isSearchingAssets = signal(false);
+  rawSearchResults = signal<AssetSearchResult[]>([]);
+  private readonly assetSearchSubject = new Subject<string>();
 
-  resultadosFiltrados = computed(() => {
-    if (this.filtroTipo() === 'all') return this.resultadosBusquedaOriginales();
-    return this.resultadosBusquedaOriginales().filter((a) => a.asset_type === this.filtroTipo());
+  filteredSearchResults = computed(() => {
+    if (this.assetTypeFilter() === 'all') {
+      return this.rawSearchResults();
+    }
+
+    return this.rawSearchResults().filter(
+      (asset) => asset.asset_type === this.assetTypeFilter()
+    );
   });
 
-  activoSeleccionado = signal<AssetSearchResult | null>(null);
-  inversionSeleccionada = signal<Investment | null>(null);
-  buscandoPrecio = signal(false);
+  // Activo o inversión seleccionada
+  selectedAsset = signal<AssetSearchResult | null>(null);
+  selectedInvestment = signal<Investment | null>(null);
+  isLoadingHistoricalPrice = signal(false);
 
-  private searchSubject = new Subject<string>();
+  // Formulario
+  today = this.getLocalDateString();
 
-  posicionForm: FormGroup = this.fb.group({
+  positionForm: FormGroup = this.formBuilder.group({
     ticker: ['', [Validators.required, Validators.maxLength(10)]],
     name: [''],
     asset_type: ['crypto', Validators.required],
     image_url: [''],
+    api_id: [''],
     operated_at: ['', Validators.required],
     quantity: [null, [Validators.required, Validators.min(0.00000001)]],
-    price: [null, Validators.required],
-    api_id: ['']
+    price: [null, [Validators.required, Validators.min(0.00000001)]],
   });
 
   constructor() {
+    // Configura el sorting personalizado y enlaza paginator/sort cuando estén disponibles
     effect(() => {
-      const pag = this.paginator();
-      const srt = this.sort();
-      if (pag) this.dataSource.paginator = pag;
-      if (srt) this.dataSource.sort = srt;
+      const paginatorRef = this.paginator();
+      const sortRef = this.sort();
+
+      this.dataSource.sortingDataAccessor = (item: Investment, property: string) => {
+        switch (property) {
+          case 'symbol':
+            return item.symbol ?? '';
+          case 'weight':
+            return Number(item.weight ?? 0);
+          case 'return_7d':
+            return Number(item.pl_percentage ?? 0);
+          case 'value':
+            return Number(item.value ?? 0);
+          case 'quantity':
+            return Number(item.quantity ?? 0);
+          default:
+            return (item as any)[property] ?? '';
+        }
+      };
+
+      if (paginatorRef) {
+        this.dataSource.paginator = paginatorRef;
+      }
+
+      if (sortRef) {
+        this.dataSource.sort = sortRef;
+      }
     });
   }
 
-  ngOnInit() {
-    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
-      const id = params.get('id');
-      if (id) {
-        this.portfolioId.set(Number(id));
-        this.cargarInversiones();
-      }
-    });
+  ngOnInit(): void {
+    // Lee el id de la cartera desde la ruta y carga los datos
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        const id = params.get('id');
 
-    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/app/wallets';
-
-    this.inicializarBuscador();
-    this.posicionForm
-      .get('operated_at')
-      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((fecha) => {
-        const apiId = this.posicionForm.get('api_id')?.value;
-        const assetType = this.posicionForm.get('asset_type')?.value;
-
-        if (fecha && apiId && assetType) {
-          this.buscandoPrecio.set(true);
-          this.investmentService.getHistoricalPrice(apiId, assetType, fecha).subscribe({
-            next: (res: { price?: number }) => {
-              if (res?.price && res.price > 0) {
-                this.posicionForm.patchValue({ price: res.price }, { emitEvent: false });
-              } else {
-                this.posicionForm.patchValue({ price: null }, { emitEvent: false });
-              }
-              this.buscandoPrecio.set(false);
-            },
-            error: () => {
-              this.posicionForm.patchValue({ price: null }, { emitEvent: false });
-              this.buscandoPrecio.set(false);
-            }
-          });
+        if (!id) {
+          return;
         }
+
+        this.portfolioId.set(Number(id));
+        this.loadInvestments();
+      });
+
+    // Guarda la ruta de vuelta para poder regresar correctamente
+    this.returnUrl =
+      this.route.snapshot.queryParamMap.get('returnUrl') ?? '/app/wallets';
+
+    // Inicializa listeners auxiliares
+    this.initializeAssetSearch();
+    this.initializeOperationDateChanges();
+  }
+
+  // Carga las inversiones de la cartera actual
+  loadInvestments(): void {
+    const portfolioId = this.portfolioId();
+
+    if (!portfolioId) {
+      return;
+    }
+
+    this.isLoading.set(true);
+
+    this.investmentService
+      .getInvestments(portfolioId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response: InvestmentsResponse) => {
+          this.isReadOnly.set(Boolean(response.read_only));
+          this.ownerName.set(response.owner_name ?? null);
+          this.portfolioName.set(response.portfolio_name);
+
+          const activeInvestments = response.investments.filter(
+            (investment) => Number(investment.quantity) > 0
+          );
+
+          this.dataSource.data = activeInvestments;
+          this.updateSummary(response.total_value, activeInvestments);
+          this.isLoading.set(false);
+        },
+        error: (error) => {
+          console.error('Error loading investments:', error);
+          this.isReadOnly.set(false);
+          this.ownerName.set(null);
+          this.dataSource.data = [];
+          this.updateSummary(0, []);
+          this.isLoading.set(false);
+        },
       });
   }
 
-  validarCantidadMaxima() {
-    if (this.modalModo() === 'sell' && this.inversionSeleccionada()) {
-      const maxQ = this.inversionSeleccionada()!.quantity;
-      const currentQ = this.posicionForm.get('quantity')?.value;
-      if (currentQ > maxQ) {
-        this.posicionForm.patchValue({ quantity: maxQ });
-      }
+  // Exporta la cartera actual a CSV
+  exportCsv(): void {
+    const portfolioId = this.portfolioId();
+
+    if (!portfolioId || this.isReadOnly()) {
+      return;
     }
-  }
 
-  cargarInversiones() {
-    const id = this.portfolioId();
-    if (!id) return;
-
-    this.cargando.set(true);
-    this.investmentService.getInvestments(id).subscribe({
-      next: (response) => {
-        this.soloLectura.set(Boolean(response.read_only));
-        this.ownerName.set(response.owner_name ?? null);
-        this.nombreCartera.set(response.portfolio_name);
-        this.valorTotal.set(response.total_value);
-
-        const inversionesActivas = response.investments.filter((inv) => inv.quantity > 0);
-        this.totalPosiciones.set(inversionesActivas.length);
-        this.ganancias.set(0);
-        this.porcentajeGanancias.set(0);
-        this.dataSource.data = inversionesActivas;
-        this.cargando.set(false);
-      },
-      error: (err) => {
-        console.error('Error cargando inversiones:', err);
-        this.soloLectura.set(false);
-        this.ownerName.set(null);
-        this.cargando.set(false);
-      }
-    });
-  }
-
-  exportarCsv() {
-    const id = this.portfolioId();
-    if (!id || this.soloLectura()) return;
-
-    const name = this.nombreCartera();
-    const csv = buildInvestmentsCsv(name, this.dataSource.data);
+    const portfolioName = this.portfolioName();
+    const csv = buildInvestmentsCsv(portfolioName, this.dataSource.data);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const safe = name.replace(/[^\w\-]+/g, '_').slice(0, 48) || 'cartera';
-    a.href = url;
-    a.download = `${safe}_${id}.csv`;
-    a.click();
+
+    const link = document.createElement('a');
+    const safeName =
+      portfolioName.replace(/[^\w\-]+/g, '_').slice(0, 48) || 'portfolio';
+
+    link.href = url;
+    link.download = `${safeName}_${portfolioId}.csv`;
+    link.click();
+
     URL.revokeObjectURL(url);
   }
 
-  guardarPosicion() {
-    if (this.posicionForm.invalid || !this.portfolioId()) return;
+  // Guarda una nueva posición o procesa una compra/venta
+  savePosition(): void {
+    const portfolioId = this.portfolioId();
 
-    const formValues = this.posicionForm.value;
-    this.guardando.set(true);
-
-    if (this.modalModo() === 'create') {
-      const payload = {
-        symbol: String(formValues.ticker).toUpperCase(),
-        name: formValues.name,
-        image_url: formValues.image_url,
-        asset_type: formValues.asset_type,
-        quantity: Number(formValues.quantity),
-        avg_buy_price: Number(formValues.price),
-        operated_at: formValues.operated_at
-      };
-
-      this.investmentService.addInvestment(this.portfolioId()!, payload).subscribe({
-        next: () => {
-          this.guardando.set(false);
-          this.cerrarModal();
-          this.cargarInversiones();
-        },
-        error: (err) => {
-          console.error('Error guardando posición:', err);
-          this.guardando.set(false);
-        }
-      });
+    if (!portfolioId || this.positionForm.invalid) {
       return;
     }
 
-    const inversion = this.inversionSeleccionada();
-    if (!inversion) {
-      this.guardando.set(false);
+    const formValue = this.positionForm.value;
+    this.isSaving.set(true);
+
+    if (this.modalMode() === 'create') {
+      this.createPosition(portfolioId, formValue);
       return;
     }
 
-    const tradePayload = {
-      quantity: Number(formValues.quantity),
-      price_per_unit: Number(formValues.price),
-      operated_at: formValues.operated_at
-    };
-
-    const request$ =
-      this.modalModo() === 'buy'
-        ? this.investmentService.buyInvestment(this.portfolioId()!, inversion.id, tradePayload)
-        : this.investmentService.sellInvestment(this.portfolioId()!, inversion.id, tradePayload);
-
-    request$.subscribe({
-      next: () => {
-        this.guardando.set(false);
-        this.cerrarModal();
-        this.cargarInversiones();
-      },
-      error: (err) => {
-        console.error('Error procesando operación:', err);
-        this.guardando.set(false);
-      }
-    });
+    this.executeTrade(portfolioId, formValue);
   }
 
-  abrirModalNuevaPosicion() {
-    if (this.soloLectura()) return;
-    this.prepararModal('create');
-  }
-
-  comprarActivo(activo: Investment) {
-    if (this.soloLectura()) return;
-    this.prepararModal('buy', activo);
-  }
-
-  venderActivo(activo: Investment) {
-    if (this.soloLectura()) return;
-    this.prepararModal('sell', activo);
-  }
-
-  cerrarModal() {
-    this.modalAbierto.set(false);
-    this.guardando.set(false);
-    this.buscandoActivos.set(false);
-  }
-
-  volverABusqueda() {
-    if (this.modalModo() !== 'create') return;
-    this.modalPaso.set('search');
-  }
-
-  onSearchInput(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    this.busqueda.set(value);
-    this.buscandoActivos.set(true);
-    this.searchSubject.next(value);
-  }
-
-  setFiltro(tipo: 'all' | 'crypto' | 'stock') {
-    this.filtroTipo.set(tipo);
-  }
-
-  seleccionarActivo(activo: AssetSearchResult) {
-    this.activoSeleccionado.set(activo);
-    this.modalPaso.set('details');
-
-    this.posicionForm.patchValue({
-      ticker: activo.symbol,
-      name: activo.name,
-      asset_type: activo.asset_type,
-      image_url: activo.image_url ?? '',
-      api_id: activo.symbol
-    });
-
-    const currentFecha = this.posicionForm.get('operated_at')?.value;
-    if (currentFecha) {
-      this.posicionForm.get('operated_at')?.setValue(currentFecha, { emitEvent: true });
-    }
-  }
-
-  volver() {
+  // Vuelve a la pantalla anterior
+  goBack(): void {
     this.router.navigateByUrl(this.returnUrl);
   }
 
-  verHistorialTrades(): void {
-    const currentId = this.portfolioId();
+  // Abre el historial de trades de la cartera
+  viewTradeHistory(): void {
+    const currentPortfolioId = this.portfolioId();
 
-    if (currentId !== null) {
-      this.router.navigate(
-        ['/app/wallets', currentId, 'trades'],
-        {
-          queryParams: {
-            returnUrl: this.router.url
-          }
-        }
-      );
+    if (currentPortfolioId === null) {
+      return;
+    }
+
+    this.router.navigate(['/app/wallets', currentPortfolioId, 'trades'], {
+      queryParams: {
+        returnUrl: this.router.url,
+      },
+    });
+  }
+
+  // Abre el modal para crear una posición nueva
+  openNewPositionModal(): void {
+    if (this.isReadOnly()) {
+      return;
+    }
+
+    this.prepareModal('create');
+  }
+
+  // Abre el modal en modo compra
+  buyAsset(investment: Investment): void {
+    if (this.isReadOnly()) {
+      return;
+    }
+
+    this.prepareModal('buy', investment);
+  }
+
+  // Abre el modal en modo venta
+  sellAsset(investment: Investment): void {
+    if (this.isReadOnly()) {
+      return;
+    }
+
+    this.prepareModal('sell', investment);
+  }
+
+  // Cierra el modal y limpia estados temporales
+  closeModal(): void {
+    this.isModalOpen.set(false);
+    this.isSaving.set(false);
+    this.isSearchingAssets.set(false);
+  }
+
+  // Vuelve al paso de búsqueda dentro del modal
+  goBackToSearch(): void {
+    if (this.modalMode() !== 'create') {
+      return;
+    }
+
+    this.modalStep.set('search');
+  }
+
+  // Actualiza el texto del buscador y lanza la búsqueda si procede
+  onAssetSearchInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.searchQuery.set(value);
+
+    if (value.trim().length < 2) {
+      this.isSearchingAssets.set(false);
+      this.rawSearchResults.set([]);
+      return;
+    }
+
+    this.isSearchingAssets.set(true);
+    this.assetSearchSubject.next(value);
+  }
+
+  // Cambia el filtro de tipo de activo
+  setAssetTypeFilter(type: 'all' | 'crypto' | 'stock'): void {
+    this.assetTypeFilter.set(type);
+  }
+
+  // Guarda el activo seleccionado y rellena el formulario
+  selectAsset(asset: AssetSearchResult): void {
+    this.selectedAsset.set(asset);
+    this.modalStep.set('details');
+
+    this.positionForm.patchValue({
+      ticker: asset.symbol,
+      name: asset.name,
+      asset_type: asset.asset_type,
+      image_url: asset.image_url ?? '',
+      api_id: asset.symbol ?? '',
+    });
+
+    this.loadHistoricalPrice();
+  }
+
+  // Evita vender más cantidad de la disponible
+  validateMaxSellQuantity(): void {
+    const selectedInvestment = this.selectedInvestment();
+
+    if (this.modalMode() !== 'sell' || !selectedInvestment) {
+      return;
+    }
+
+    const maxQuantity = Number(selectedInvestment.quantity ?? 0);
+    const currentQuantity = Number(this.positionForm.get('quantity')?.value ?? 0);
+
+    if (currentQuantity > maxQuantity) {
+      this.positionForm.patchValue({ quantity: maxQuantity });
     }
   }
 
+  // Devuelve la inicial del activo si no hay imagen
   getInitial(value: string | null | undefined): string {
     return value ? value.charAt(0).toUpperCase() : '';
   }
 
-  formatNumber(value: number | null | undefined, digits: number = 2): string {
+  // Formatea números con decimales fijos
+  formatNumber(value: number | string | null | undefined, digits = 2): string {
     return Number(value ?? 0).toFixed(digits);
   }
 
+  // Formatea un importe usando las preferencias del usuario
+  formatCurrency(value: number): string {
+    return this.preferencesService.formatCurrency(value);
+  }
+
+  // Convierte el valor a número y lo formatea como moneda
+  formatValue(value: number | string | null | undefined): string {
+    return this.preferencesService.formatCurrency(Number(value ?? 0));
+  }
+
+  // Devuelve la clase de alineación para la tabla
   getTextAlignClass(align: string): string {
     return align === 'right' ? '!text-right' : '!text-left';
   }
 
-  getCellClass(colDef: string, value: number | string | null | undefined): string {
-    if (colDef === 'return_7d') {
-      return Number(value ?? 0) >= 0 ? '!text-green-500 font-ibm' : '!text-red-500 font-ibm';
-    }
-    if (colDef === 'weight' || colDef === 'value') {
-      return '!text-neutral-100 font-medium font-ibm';
-    }
-    if (colDef === 'symbol' || colDef === 'quantity') {
-      return '!text-white font-ibm';
-    }
-    return '';
+  // Añade clase extra a ciertas columnas de la tabla
+  getCellClass(columnDef: string): string {
+    const styledColumns = ['weight', 'value', 'quantity', 'symbol', 'return_7d'];
+    return styledColumns.includes(columnDef) ? 'font-ibm' : '';
   }
 
+  // Devuelve el título del modal según el modo actual
   getModalTitle(): string {
-    if (this.modalModo() === 'create') return 'Nueva Posición';
-    if (this.modalModo() === 'buy') return 'Comprar Activo';
+    if (this.modalMode() === 'create') return 'Nueva Posición';
+    if (this.modalMode() === 'buy') return 'Comprar Activo';
     return 'Vender Activo';
   }
 
+  // Devuelve el texto del botón principal del modal
   getModalActionText(): string {
-    if (this.guardando()) return 'Guardando...';
-    if (this.modalModo() === 'create') return 'Añadir';
-    if (this.modalModo() === 'buy') return 'Comprar';
+    if (this.isSaving()) return 'Guardando...';
+    if (this.modalMode() === 'create') return 'Añadir';
+    if (this.modalMode() === 'buy') return 'Comprar';
     return 'Vender';
   }
 
-  private inicializarBuscador() {
-    this.searchSubject
+  // Recalcula el resumen de la cartera
+  private updateSummary(totalValue: number, investments: Investment[]): void {
+    let totalCost = 0;
+    let totalProfit = 0;
+
+    for (const investment of investments) {
+      const quantity = Number(investment.quantity ?? 0);
+      const averageBuyPrice = Number(investment.avg_buy_price ?? 0);
+      const profitLoss = Number(investment.pl ?? 0);
+
+      totalCost += quantity * averageBuyPrice;
+      totalProfit += profitLoss;
+    }
+
+    this.totalValue.set(Number(totalValue ?? 0));
+    this.totalCost.set(totalCost);
+    this.totalProfit.set(totalProfit);
+    this.totalPositions.set(investments.length);
+    this.totalProfitPercentage.set(
+      totalCost > 0 ? (totalProfit / totalCost) * 100 : 0
+    );
+  }
+
+  // Crea una posición nueva en la cartera
+  private createPosition(portfolioId: number, formValue: any): void {
+    const payload: UpsertPositionPayload = {
+      symbol: String(formValue.ticker).toUpperCase(),
+      name: formValue.name,
+      image_url: formValue.image_url,
+      asset_type: formValue.asset_type,
+      quantity: Number(formValue.quantity),
+      avg_buy_price: Number(formValue.price),
+      operated_at: formValue.operated_at,
+      api_id: formValue.api_id,
+    };
+
+    this.investmentService
+      .addInvestment(portfolioId, payload)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.closeModal();
+          this.loadInvestments();
+        },
+        error: (error) => {
+          console.error('Error saving position:', error);
+          this.isSaving.set(false);
+        },
+      });
+  }
+
+  // Procesa una compra o una venta sobre una inversión existente
+  private executeTrade(portfolioId: number, formValue: any): void {
+    const selectedInvestment = this.selectedInvestment();
+
+    if (!selectedInvestment) {
+      this.isSaving.set(false);
+      return;
+    }
+
+    const tradePayload: TradeActionPayload = {
+      quantity: Number(formValue.quantity),
+      price_per_unit: Number(formValue.price),
+      operated_at: formValue.operated_at,
+    };
+
+    const request$ =
+      this.modalMode() === 'buy'
+        ? this.investmentService.buyInvestment(
+            portfolioId,
+            selectedInvestment.id,
+            tradePayload
+          )
+        : this.investmentService.sellInvestment(
+            portfolioId,
+            selectedInvestment.id,
+            tradePayload
+          );
+
+    request$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.closeModal();
+          this.loadInvestments();
+        },
+        error: (error) => {
+          console.error('Error processing trade:', error);
+          this.isSaving.set(false);
+        },
+      });
+  }
+
+  // Inicializa el flujo reactivo del buscador de activos
+  private initializeAssetSearch(): void {
+    this.assetSearchSubject
       .pipe(
         debounceTime(250),
         distinctUntilChanged(),
-        filter((query) => {
-          if (query.trim().length < 2) {
-            this.resultadosBusquedaOriginales.set([]);
-            this.buscandoActivos.set(false);
-            return false;
-          }
-          return true;
-        }),
-        switchMap((query) => {
-          this.buscandoActivos.set(true);
-          return this.investmentService.searchAssets(query);
-        }),
+        filter((query) => query.trim().length >= 2),
+        switchMap((query) => this.investmentService.searchAssets(query)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
         next: (results) => {
-          this.resultadosBusquedaOriginales.set(results);
-          this.buscandoActivos.set(false);
+          this.rawSearchResults.set(results);
+          this.isSearchingAssets.set(false);
         },
-        error: (err) => {
-          console.error('Error buscando activos:', err);
-          this.resultadosBusquedaOriginales.set([]);
-          this.buscandoActivos.set(false);
+        error: (error) => {
+          console.error('Error searching assets:', error);
+          this.rawSearchResults.set([]);
+          this.isSearchingAssets.set(false);
+        },
+      });
+  }
+
+  // Escucha cambios en la fecha para recargar el precio histórico
+  private initializeOperationDateChanges(): void {
+    this.positionForm
+      .get('operated_at')
+      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        if (this.isModalOpen()) {
+          this.loadHistoricalPrice();
         }
       });
   }
 
-  private prepararModal(modo: 'create' | 'buy' | 'sell', activo?: Investment) {
-    this.modalModo.set(modo);
-    this.modalPaso.set(modo === 'create' ? 'search' : 'details');
+  // Carga el precio histórico según activo, tipo y fecha
+  private loadHistoricalPrice(): void {
+    const apiId = this.positionForm.get('api_id')?.value;
+    const assetType = this.positionForm.get('asset_type')?.value;
+    const operatedAt = this.positionForm.get('operated_at')?.value;
 
-    if (modo === 'create') {
-      this.busqueda.set('');
-      this.resultadosBusquedaOriginales.set([]);
-      this.activoSeleccionado.set(null);
-      this.inversionSeleccionada.set(null);
-      this.filtroTipo.set('all');
-    } else if (activo) {
-      this.inversionSeleccionada.set(activo);
-      this.activoSeleccionado.set({
-        symbol: activo.symbol,
-        name: activo.name ?? activo.symbol,
-        image_url: activo.image_url ?? null,
-        asset_type: (activo.asset_type ?? 'crypto') as 'stock' | 'crypto',
-        api_id: activo.symbol
+    if (!apiId || !assetType || !operatedAt) {
+      return;
+    }
+
+    this.isLoadingHistoricalPrice.set(true);
+
+    this.investmentService
+      .getHistoricalPrice(apiId, assetType, operatedAt)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.positionForm.patchValue(
+            { price: Number(response.price ?? 0) || null },
+            { emitEvent: false }
+          );
+          this.isLoadingHistoricalPrice.set(false);
+        },
+        error: (error) => {
+          console.error('Error loading historical price:', error);
+          this.positionForm.patchValue({ price: null }, { emitEvent: false });
+          this.isLoadingHistoricalPrice.set(false);
+        },
+      });
+  }
+
+  // Prepara el modal según la acción que se vaya a realizar
+  private prepareModal(
+    mode: 'create' | 'buy' | 'sell',
+    investment?: Investment
+  ): void {
+    this.modalMode.set(mode);
+    this.modalStep.set(mode === 'create' ? 'search' : 'details');
+
+    if (mode === 'create') {
+      this.searchQuery.set('');
+      this.assetTypeFilter.set('all');
+      this.rawSearchResults.set([]);
+      this.selectedAsset.set(null);
+      this.selectedInvestment.set(null);
+    } else if (investment) {
+      this.selectedInvestment.set(investment);
+      this.selectedAsset.set({
+        symbol: investment.symbol,
+        name: investment.name ?? investment.symbol,
+        image_url: investment.image_url ?? null,
+        asset_type: investment.asset_type,
+        api_id: investment.symbol,
       });
     }
 
-    const today = new Date().toISOString().split('T')[0];
-    this.posicionForm.reset(
+    this.positionForm.reset(
       {
-        ticker: activo?.symbol ?? '',
-        name: activo?.name ?? (activo?.symbol ?? ''),
-        asset_type: activo?.asset_type ?? 'crypto',
-        image_url: activo?.image_url ?? '',
-        api_id: activo?.symbol ?? '',
-        operated_at: today,
+        ticker: investment?.symbol ?? '',
+        name: investment?.name ?? investment?.symbol ?? '',
+        asset_type: investment?.asset_type ?? 'crypto',
+        image_url: investment?.image_url ?? '',
+        api_id: investment?.symbol ?? '',
+        operated_at: this.today,
         quantity: null,
-        price: null
+        price: null,
       },
       { emitEvent: false }
     );
 
-    queueMicrotask(() => {
-      const apiId = this.posicionForm.get('api_id')?.value;
-      const assetType = this.posicionForm.get('asset_type')?.value;
-      const fecha = this.posicionForm.get('operated_at')?.value;
+    this.isModalOpen.set(true);
 
-      if (apiId && assetType && fecha) {
-        this.buscandoPrecio.set(true)
-        this.investmentService.getHistoricalPrice(apiId, assetType, fecha).subscribe({
-          next: (res: { price?: number }) => {
-            if (res?.price && res.price > 0) {
-              this.posicionForm.patchValue({ price: res.price }, { emitEvent: false });
-            } else {
-              this.posicionForm.patchValue({ price: null }, { emitEvent: false });
-            }
-            this.buscandoPrecio.set(false);
-          },
-          error: () => {
-            this.posicionForm.patchValue({ price: null }, { emitEvent: false });
-            this.buscandoPrecio.set(false);
-          }
-        });
-      }
-    });
-
-    this.modalAbierto.set(true);
+    if (mode !== 'create') {
+      this.loadHistoricalPrice();
+    }
   }
-  
-  format(value: number) {
-    return this.prefs.formatCurrency(value);
+
+  // Devuelve la fecha local en formato YYYY-MM-DD
+  private getLocalDateString(): string {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    return new Date(now.getTime() - offset).toISOString().split('T')[0];
   }
 }

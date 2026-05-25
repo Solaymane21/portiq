@@ -310,7 +310,7 @@ export class DashboardComponent implements OnInit {
                     const item = alloc.find(i => i.label === seriesName);
                     if (!item) return seriesName;
                     const amount = total * item.percent / 100;
-                    return amount.toLocaleString('es-ES') + '€';
+                    return this.format(amount);
                   }
                 },
                 value: {

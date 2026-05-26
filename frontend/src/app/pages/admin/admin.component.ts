@@ -21,7 +21,7 @@ import { AuthService } from '../../services/auth.service';
 })
 export class AdminComponent implements AfterViewInit, OnInit {
 
-  //Tabla admin
+  // Columnas que se muestran en la tabla de usuarios
   displayedColumns = ['usuario', 'email', 'suscripcion', 'estado_suscripcion', 'ultimo_acceso', 'fecha_alta', 'acciones'];
 
   dataSource = new MatTableDataSource<User>([]);
@@ -32,19 +32,23 @@ export class AdminComponent implements AfterViewInit, OnInit {
   adminService = inject(AdminService)
   notificationService = inject(NotificationsService)
 
+  // Estados de los modales
   showDeleteModal = signal<boolean>(false)
   showCancelSubscriptionModal = signal<boolean>(false)
   showResumeSubscriptionModal = signal<boolean>(false)
-  userSelected = signal<User['id']>(0)
+  userSelected = signal<User['id']>(0)  // ID del usuario seleccionado
+
+  // Estadísticas
   totalUsers = signal<number>(0);
   loggedToday = signal<number>(0);
   premiumUsers = signal<number>(0);
   totalPortfolios = signal<number>(0);
 
   ngOnInit(): void {
-    this.loadUsers()
+    this.loadUsers()  // Carga la lista de usuarios al iniciar
   }
 
+  // Filtra la tabla por texto (nombre o email)
   applyFilter(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.dataSource.filter = value.trim().toLowerCase();
@@ -55,7 +59,7 @@ export class AdminComponent implements AfterViewInit, OnInit {
   }
 
   ngAfterViewInit(): void {
-
+    // Configura ordenación y paginación después de que la vista está lista
     if (this.sort) {
       this.dataSource.sort = this.sort;
     }
@@ -63,6 +67,7 @@ export class AdminComponent implements AfterViewInit, OnInit {
       this.dataSource.paginator = this.paginator;
     }
 
+    // Define cómo ordenar cada columna
     this.dataSource.sortingDataAccessor = (item: User, sortHeaderId: string) => {
       switch (sortHeaderId) {
         case 'suscripcion':
@@ -84,6 +89,7 @@ export class AdminComponent implements AfterViewInit, OnInit {
       };
   }
 
+  // Carga los usuarios desde el backend
   loadUsers(): void{
     this.adminService.getUsers().subscribe({
       next: (res: any)=> {
@@ -100,6 +106,7 @@ export class AdminComponent implements AfterViewInit, OnInit {
     });
   }
 
+  // Elimina un usuario
   deleteUser() {
     this.adminService.isLoading.set(true)
 
@@ -108,7 +115,7 @@ export class AdminComponent implements AfterViewInit, OnInit {
         this.adminService.isLoading.set(false)
         this.showDeleteModal.set(false)
         this.notificationService.info(`Usuario eliminado correctamente`);
-        this.loadUsers();
+        this.loadUsers();  // Recarga la lista
       },
       error: (err) => {
         this.adminService.isLoading.set(false)
@@ -117,16 +124,19 @@ export class AdminComponent implements AfterViewInit, OnInit {
     });
   }
 
+  // Abre el modal de confirmación para eliminar
   onDelete(id: User['id']) {
     this.showDeleteModal.set(true)
     this.userSelected.set(id)
   }
 
+  // Abre el modal para cancelar suscripción
   onCancelSubscription(id: User['id']) {
     this.showCancelSubscriptionModal.set(true)
     this.userSelected.set(id)
   }
 
+  // Cancela la suscripción de un usuario premium
   cancelSubscription() {
     this.adminService.isLoading.set(true)
 
@@ -135,7 +145,7 @@ export class AdminComponent implements AfterViewInit, OnInit {
         this.adminService.isLoading.set(false)
         this.showCancelSubscriptionModal.set(false)
         this.notificationService.info(res.message)
-        this.loadUsers();
+        this.loadUsers();  // Recarga la lista
       },
       error: (err) => {
         this.adminService.isLoading.set(false)
@@ -144,11 +154,13 @@ export class AdminComponent implements AfterViewInit, OnInit {
     });
   }
 
+  // Abre el modal para reanudar suscripción
   onResumeSubscription(id: User['id']) {
     this.showResumeSubscriptionModal.set(true);
     this.userSelected.set(id);
   }
 
+  // Reanuda la suscripción de un usuario premium
   resumeSubscription() {
     this.adminService.isLoading.set(true);
 
@@ -157,7 +169,7 @@ export class AdminComponent implements AfterViewInit, OnInit {
         this.adminService.isLoading.set(false);
         this.showResumeSubscriptionModal.set(false);
         this.notificationService.success(res.message)
-        this.loadUsers();
+        this.loadUsers();  // Recarga la lista
       },
       error: (err) => {
         this.adminService.isLoading.set(false);

@@ -8,13 +8,13 @@ import { Router } from '@angular/router';
 import { PreferencesService } from '../../services/preferences.service';
 
 interface SymbolInfo {
-  symbol: string;
-  name: string;
-  price: number;
-  currency: string;
-  type: string;
-  sector: string;
-  logo: string;
+  symbol: string;   
+  name: string;      
+  price: number;     
+  currency: string;    
+  type: string;        
+  sector: string;    
+  logo: string;     
 }
 
 @Component({
@@ -31,31 +31,35 @@ export class SymbolDetailComponent implements OnInit {
   private route    = inject(ActivatedRoute);
   private market   = inject(MarketService);
 
-  symbol         = signal('');
-  info           = signal<SymbolInfo | null>(null);
-  loadingInfo    = signal(true);
-  loadingChart   = signal(true);
-  selectedPeriod = signal('1D');
+  // Estados del componente
+  symbol         = signal('');              // Símbolo actual
+  info           = signal<SymbolInfo | null>(null);  // Información del símbolo
+  loadingInfo    = signal(true);            // Cargando información
+  loadingChart   = signal(true);            // Cargando gráfica
+  selectedPeriod = signal('1D');            // Período seleccionado
 
-  readonly periods = ['1D', '1W', '1M', '1Y'];
+  readonly periods = ['1D', '1W', '1M', '1Y'];  // Opciones de la gráfica
 
-  chartOptions: any = {};
-  changeData = { value: 0, percent: 0, positive: true };
+  chartOptions: any = {};                   // Opciones de la gráfica
+  changeData = { value: 0, percent: 0, positive: true };  // Cambio de precio
 
   isLoading = signal(false)
 
   ngOnInit(): void {
+    // Escucha cambios en la URL (cuando cambia el símbolo)
     this.route.params.subscribe(params => {
       const sym = (this.route.snapshot.paramMap.get('symbol') ?? '').toUpperCase();
       this.symbol.set(sym);
-      this.loadInfo(sym);
-      this.loadChart(sym, this.selectedPeriod());
+      this.loadInfo(sym);        // Carga información del símbolo
+      this.loadChart(sym, this.selectedPeriod());  // Carga la gráfica
     });
   }
 
+  // Carga la información del símbolo (precio, nombre, logo, etc.)
   loadInfo(symbol: string): void {
     this.loadingInfo.set(true);
 
+    // Si es criptomoneda, usa CoinGecko
     if (this.market.isCrypto(symbol)) {
       const coinId = this.market.coinGeckoId(
         symbol.replace(/-USD$/i, '').toLowerCase()
@@ -77,6 +81,7 @@ export class SymbolDetailComponent implements OnInit {
         error: () => this.loadingInfo.set(false),
       });
 
+    // Si es acción, usa la API propia
     } else {
       this.market.getPrices(symbol, 'stock').subscribe({
         next: (res) => {
@@ -92,6 +97,7 @@ export class SymbolDetailComponent implements OnInit {
     }
   }
 
+  // Carga la gráfica del símbolo
   loadChart(symbol: string, period: string): void {
     this.loadingChart.set(true);
 
@@ -102,14 +108,15 @@ export class SymbolDetailComponent implements OnInit {
       next: (res) => {
         const values = res?.values ?? res?.data ?? [];
         const prices = values.map((v: any) => +(v.y ?? 0));
-        const first  = prices[0] ?? 0;
-        const last   = prices[prices.length - 1] ?? 0;
-        const color = this.preferencesService.colorHex();
+        const first  = prices[0] ?? 0;           // Primer precio del período
+        const last   = prices[prices.length - 1] ?? 0;  // Último precio
 
+        // Calcula cambio de precio (absoluto y porcentual)
         const val = +(last - first).toFixed(2);
         const pct = first !== 0 ? +((last - first) / first * 100).toFixed(2) : 0;
         this.changeData = { value: val, percent: pct, positive: val >= 0 };
 
+        // Formatea las fechas según el período
         const xFormatter = (value: string, timestamp?: number) => {
           if (!timestamp) return '';
           const d = new Date(timestamp);
@@ -117,21 +124,18 @@ export class SymbolDetailComponent implements OnInit {
           switch (period) {
             case '1D':
               return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-
             case '1W':
               return d.toLocaleDateString('es-ES', { weekday: 'short' });
-
             case '1M':
               return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-
             case '1Y':
               return d.toLocaleDateString('es-ES', { month: 'short' });
-
             default:
               return d.toLocaleDateString('es-ES', { month: 'short', day: '2-digit' });
           }
         };
 
+        // Configuración de la gráfica
         this.chartOptions = {
           chart: {
             type: 'area',
@@ -140,7 +144,7 @@ export class SymbolDetailComponent implements OnInit {
             background: 'transparent',
             animations: { enabled: true, speed: 400 }
           },
-          colors: [color],
+          colors: [this.preferencesService.colorHex()],  // Color del tema
           series: [{
             name: symbol,
             data: values.map((v: any) => ({ x: v.x, y: +(v.y ?? 0) }))
@@ -151,9 +155,7 @@ export class SymbolDetailComponent implements OnInit {
             labels: {
               show: true,
               formatter: (_value: string, timestamp?: number) => xFormatter(_value, timestamp),
-              style: {
-                colors: '#6b7280'
-              }
+              style: { colors: '#6b7280' }
             },
             axisBorder: { show: false },
             axisTicks: { show: false }
@@ -164,20 +166,13 @@ export class SymbolDetailComponent implements OnInit {
               formatter: (v: number) => v.toFixed(2)
             }
           },
-          stroke: {
-            curve: 'smooth',
-            width: 2,
-            colors: [color]
-          },
+          stroke: { curve: 'smooth', width: 2 },
           fill: {
             type: 'gradient',
-            colors: [color],
             gradient: {
               shade: 'dark',
               type: 'vertical',
               shadeIntensity: 0.35,
-              gradientToColors: [color],
-              inverseColors: false,
               opacityFrom: 0.25,
               opacityTo: 0
             }
@@ -197,21 +192,25 @@ export class SymbolDetailComponent implements OnInit {
     });
   }
 
+  // Cambia el período de la gráfica
   selectPeriod(period: string): void {
     this.selectedPeriod.set(period);
     this.loadChart(this.symbol(), period);
   }
 
+  // Vuelve a la página anterior
   goBack(): void {
     this.isLoading.set(true)
     window.history.back()
   }
 
+  // Obtiene la URL del logo (para acciones)
   getLogoUrl(symbol: string): string {
     const clean = symbol.replace(/-USD$/i, '');
     return `https://financialmodelingprep.com/image-stock/${clean}.png`;
   }
 
+  // Si la imagen falla, la oculta
   onImgError(event: Event): void {
     const img = event.target as HTMLImageElement;
     img.style.display = 'none';

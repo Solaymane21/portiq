@@ -1,6 +1,7 @@
 import { Injectable, computed, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../environments/environment'; 
+import { environment } from '../../environments/environment';
+import { SubscriptionService } from './subscription.service';
 
 export interface QuestionOption {
   label: string;
@@ -32,6 +33,7 @@ export type ViewState = 'questionnaire' | 'loading' | 'result' | 'error';
 export class InvestorProfileService {
 
   private http = inject(HttpClient);
+  private subscriptionService = inject(SubscriptionService)
 
   currentQuestion = signal<number>(0);
   lastQuestion    = computed(() => this.questions.length - 1);
@@ -49,19 +51,21 @@ export class InvestorProfileService {
   loadExistingProfile(): void {
     this.viewState.set('loading');
 
-    this.http.get<ProfileResult>(`${environment.apiUrl}/investor-profile`).subscribe({
-      next: (result) => {
-        this.profileResult.set(result);
-        this.viewState.set('result');
-      },
-      error: (err) => {
-        if (err.status === 404) {
-          this.viewState.set('questionnaire');
-        } else {
-          this.viewState.set('questionnaire');
+    if(this.subscriptionService.isPremium()) {
+      this.http.get<ProfileResult>(`${environment.apiUrl}/investor-profile`).subscribe({
+        next: (result) => {
+          this.profileResult.set(result);
+          this.viewState.set('result');
+        },
+        error: (err) => {
+          if (err.status === 404) {
+            this.viewState.set('questionnaire');
+          } else {
+            this.viewState.set('questionnaire');
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   selectAnswer(score: number): void {

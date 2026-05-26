@@ -358,6 +358,7 @@ export class DashboardComponent implements OnInit {
 
   setPeriod(period: string): void {
     this.selectedPeriod = period;
+    this.areaOptions = null;
     this.loadChart(period);
   }
 
@@ -403,8 +404,9 @@ export class DashboardComponent implements OnInit {
         
         results.forEach(assetData => {
           assetData.forEach((point: { x: number; y: number }) => {
+            const roundedX = Math.round(point.x / 60000) * 60000;
             const current = dataMap.get(point.x) || 0;
-            dataMap.set(point.x, current + point.y);
+            dataMap.set(roundedX, current + point.y);
           });
         });
         

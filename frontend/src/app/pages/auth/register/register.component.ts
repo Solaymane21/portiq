@@ -17,6 +17,7 @@ export class RegisterComponent implements OnInit {
   progressPercent = computed(() => (this.authService.currentStep() / 4) * 100);
 
   ngOnInit(): void {
-      this.authService.msgError.set('')
+    this.authService.msgError.set('')
+    this.authService.currentStep.set(1)
   }
 }

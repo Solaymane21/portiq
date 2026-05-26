@@ -29,6 +29,19 @@
                   <p class="text-orange-500">{{ this.authService.msgError() }}</p>
                 }
             </div>
+            <div class="flex flex-col gap-1 mt-2">
+                <label class="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="checkbox" formControlName="termsAccepted" class="w-4 h-4 accent-orange-500 cursor-pointer">
+                    <span class="text-gray-700">
+                        He leído y acepto la
+                        <a routerLink="/public/privacy" target="_blank" class="text-orange-500 hover:underline">Política de Privacidad</a> y los
+                        <a routerLink="/public/terms" target="_blank" class="text-orange-500 hover:underline">Términos y Condiciones</a>.
+                    </span>
+                </label>
+                @if (registerForm.get('termsAccepted')?.invalid && (submitted() || registerForm.get('termsAccepted')?.touched)) {
+                    <p class="text-orange-500 text-sm">Debes aceptar los términos y la política para continuar.</p>
+                }
+            </div>
             <button (click)="next()" [disabled]="this.authService.isLoading()" type="submit" class="bg-orange-500 hover:bg-orange-500/80 flex justify-center rounded-md py-2 text-white disabled:bg-orange-500/80 disabled:cursor-not-allowed">
               @if (authService.isLoading()) {
                 <mat-spinner diameter="20"></mat-spinner>
@@ -38,7 +51,7 @@
             </button>
             <div class="border-t border-black w-full"></div>
             <div class="flex flex-col">
-                <button (click)="this.authService.onLoginWithGoogle()" type="button" class="w-full flex items-center justify-center gap-2 py-2 border border-black bg-white hover:bg-neutral-200/80 rounded-md">
+                <button (click)="continueWithGoogle()" type="button" class="w-full flex items-center justify-center gap-2 py-2 border border-black bg-white hover:bg-neutral-200/80 rounded-md">
                   <svg class="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24">
                       <path
                       fill="#4285F4"
@@ -60,6 +73,9 @@
                   Continuar con Google
                 </button>
             </div>
+            @if (registerForm.get('termsAccepted')?.invalid && (submitted() || registerForm.get('termsAccepted')?.touched)) {
+                <p class="text-orange-500 text-sm">Debes aceptar los términos y la política para continuar con Google.</p>
+            }
             <div class="text-center">
                 <p>¿Ya tienes cuenta? <span> <a routerLink="/auth/login" class="text-orange-500 hover:underline">Iniciar sesión</a></span></p>
             </div>

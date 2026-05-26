@@ -18,13 +18,17 @@ export class AppComponent {
   private title = inject(Title);
 
   ngOnInit(): void {
-    this.authService.refreshUser().subscribe({
-      next: (user) => {
-        if (user && !this.initialDataService.ready()) {
-          this.initialDataService.run().subscribe();
+    const token = localStorage.getItem('token')
+
+    if(token) {
+      this.authService.refreshUser().subscribe({
+        next: (user) => {
+          if (user && !this.initialDataService.ready()) {
+            this.initialDataService.run().subscribe();
+          }
         }
-      }
-    });
+      });
+    }
 
     this.router.events
       .pipe(

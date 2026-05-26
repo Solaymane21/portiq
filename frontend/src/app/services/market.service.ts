@@ -79,15 +79,17 @@ export class MarketService {
     purchasePrices: number[], 
     fromDate: string
   ) {
-    return this.http.post<{ data: { x: number; y: number }[] }>(
+    return this.http.get<{ data: { x: number; y: number }[] }>(
       `${this.apiUrl}/portfolio-history`,
       {
-        symbols: symbols,
-        quantities: quantities,
-        asset_types: assetTypes,
-        purchase_dates: purchaseDates,
-        purchase_prices: purchasePrices,
+        params:{
+        symbols: symbols.join(','),
+        quantities: quantities.join(','),
+        asset_types: assetTypes.join(','),
+        purchase_dates: purchaseDates.join(','),
+        purchase_prices: purchasePrices.join(','),
         from_date: fromDate
+        }
       }
     );
   }

@@ -10,14 +10,19 @@ class TradeController extends Controller
 {
     public function index(Request $request, $portfolioId)
     {
+        // Sacamos la cartera o devolvemos 404 si no existe
         $portfolio = Portfolio::where('id', $portfolioId)->firstOrFail();
 
+        // Solo puede entrar el dueño o si la cartera es publica
         $user = $request->user();
         if ((int) $portfolio->user_id !== (int) $user->id && ! $portfolio->is_public) {
             abort(403, 'No autorizado');
         }
 
-        $trades = Trade::whereHas('investment', fn ($q) => $q->where('portfolio_id', $portfolioId))
+        // Traemos las operaciones de esa cartera con su simbolo
+        $trades = Trade::whereHas('investment', function ($query) use ($portfolioId) {
+                $query->where('portfolio_id', $portfolioId);
+            })
             ->with('investment.symbol')
             ->orderBy('operated_at', 'desc')
             ->orderBy('id', 'desc')
@@ -30,6 +35,7 @@ class TradeController extends Controller
             $symbol = $trade->investment->symbol ?? null;
             $totalValue = (float) ($trade->quantity * $trade->price_per_unit);
 
+            // Sumamos segun si entra dinero o sale
             if ($trade->type === 'venta') {
                 $totalOut += $totalValue;
             } else {

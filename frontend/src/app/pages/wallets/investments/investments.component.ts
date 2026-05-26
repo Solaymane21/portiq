@@ -1,7 +1,7 @@
 import { Component, DestroyRef, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, switchMap } from 'rxjs/operators';
 
@@ -9,13 +9,12 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 
-import { PreferencesService } from '../../../services/preferences.service';
-import { InvestmentService } from '../../../services/investment.service';
 import { AssetSearchResult, Investment, InvestmentsResponse, TradeActionPayload, UpsertPositionPayload } from '../../../models/investment.model';
-import { buildInvestmentsCsv } from '../wallets-csv';
-
+import { InvestmentService } from '../../../services/investment.service';
 import { NotificationsService } from '../../../services/notifications.service';
+import { PreferencesService } from '../../../services/preferences.service';
 import { SubscriptionService } from '../../../services/subscription.service';
+import { buildInvestmentsCsv } from '../wallets-csv';
 
 @Component({
   selector: 'app-investments',
@@ -25,32 +24,36 @@ import { SubscriptionService } from '../../../services/subscription.service';
   styleUrls: ['./investments.component.css'],
 })
 export class InvestmentsComponent implements OnInit {
-  // Servicios e inyecciones
+  // Servicios
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private formBuilder = inject(FormBuilder);
   private investmentService = inject(InvestmentService);
   private destroyRef = inject(DestroyRef);
   private preferencesService = inject(PreferencesService);
-  subscriptionService = inject(SubscriptionService);
   private notifications = inject(NotificationsService);
 
+  subscriptionService = inject(SubscriptionService);
+
   isAtAssetLimit = computed(() => {
-    if (this.subscriptionService.isPremium()) return false;
+    if (this.subscriptionService.isPremium()) {
+      return false;
+    }
+
     return this.totalPositions() >= 10;
   });
 
-  // Navegación
+  // Navegacion
   portfolioId = signal<number | null>(null);
   returnUrl = '/app/wallets';
 
-  // Estado general de la vista
+  // Estado general
   isLoading = signal(true);
   portfolioName = signal('Cargando...');
   isReadOnly = signal(false);
   ownerName = signal<string | null>(null);
 
-  // Resumen de la cartera
+  // Resumen
   totalValue = signal(0);
   totalCost = signal(0);
   totalProfit = signal(0);
@@ -82,7 +85,7 @@ export class InvestmentsComponent implements OnInit {
   modalMode = signal<'create' | 'buy' | 'sell'>('create');
   modalStep = signal<'search' | 'details'>('search');
 
-  // Buscador de activos
+  // Buscador
   searchQuery = signal('');
   assetTypeFilter = signal<'all' | 'crypto' | 'stock'>('all');
   isSearchingAssets = signal(false);
@@ -94,10 +97,12 @@ export class InvestmentsComponent implements OnInit {
       return this.rawSearchResults();
     }
 
-    return this.rawSearchResults().filter((asset) => asset.asset_type === this.assetTypeFilter());
+    return this.rawSearchResults().filter(
+      (asset) => asset.asset_type === this.assetTypeFilter()
+    );
   });
 
-  // Activo o inversión seleccionada
+  // Seleccion
   selectedAsset = signal<AssetSearchResult | null>(null);
   selectedInvestment = signal<Investment | null>(null);
   isLoadingHistoricalPrice = signal(false);
@@ -117,7 +122,7 @@ export class InvestmentsComponent implements OnInit {
   });
 
   constructor() {
-    // Configura el sorting personalizado y enlaza paginator/sort cuando estén disponibles
+    // Configura sort y paginator cuando existen en la vista
     effect(() => {
       const paginatorRef = this.paginator();
       const sortRef = this.sort();
@@ -150,7 +155,6 @@ export class InvestmentsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Lee el id de la cartera desde la ruta y carga los datos
     this.route.paramMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((params) => {
@@ -164,15 +168,12 @@ export class InvestmentsComponent implements OnInit {
         this.loadInvestments();
       });
 
-    // Guarda la ruta de vuelta para poder regresar correctamente
     this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/app/wallets';
 
-    // Inicializa listeners auxiliares
     this.initializeAssetSearch();
     this.initializeOperationDateChanges();
   }
 
-  // Carga las inversiones de la cartera actual
   loadInvestments(): void {
     const portfolioId = this.portfolioId();
 
@@ -206,13 +207,12 @@ export class InvestmentsComponent implements OnInit {
           this.dataSource.data = [];
           this.updateSummary(0, []);
           this.isLoading.set(false);
-        }
+        },
       });
   }
 
-  // Exporta la cartera actual a CSV
   exportCsv(): void {
-    // solo premium
+    // Solo premium
     if (!this.subscriptionService.canUseFeature('export')) {
       this.notifications.warning('La exportación CSV requiere el Plan Premium');
       return;
@@ -230,8 +230,7 @@ export class InvestmentsComponent implements OnInit {
     const url = URL.createObjectURL(blob);
 
     const link = document.createElement('a');
-    const safeName =
-      portfolioName.replace(/[^\w\-]+/g, '_').slice(0, 48) || 'portfolio';
+    const safeName = portfolioName.replace(/[^\w\-]+/g, '_').slice(0, 48) || 'portfolio';
 
     link.href = url;
     link.download = `${safeName}_${portfolioId}.csv`;
@@ -240,7 +239,6 @@ export class InvestmentsComponent implements OnInit {
     URL.revokeObjectURL(url);
   }
 
-  // Guarda una nueva posición o procesa una compra/venta
   savePosition(): void {
     const portfolioId = this.portfolioId();
 
@@ -265,12 +263,10 @@ export class InvestmentsComponent implements OnInit {
     this.executeTrade(portfolioId, formValue);
   }
 
-  // Vuelve a la pantalla anterior
   goBack(): void {
     this.router.navigateByUrl(this.returnUrl);
   }
 
-  // Abre el historial de trades de la cartera
   viewTradeHistory(): void {
     const currentPortfolioId = this.portfolioId();
 
@@ -285,7 +281,6 @@ export class InvestmentsComponent implements OnInit {
     });
   }
 
-  // Abre el modal para crear una posición nueva
   openNewPositionModal(): void {
     if (this.isReadOnly()) {
       return;
@@ -299,7 +294,6 @@ export class InvestmentsComponent implements OnInit {
     this.prepareModal('create');
   }
 
-  // Abre el modal en modo compra
   buyAsset(investment: Investment): void {
     if (this.isReadOnly()) {
       return;
@@ -308,7 +302,6 @@ export class InvestmentsComponent implements OnInit {
     this.prepareModal('buy', investment);
   }
 
-  // Abre el modal en modo venta
   sellAsset(investment: Investment): void {
     if (this.isReadOnly()) {
       return;
@@ -317,14 +310,12 @@ export class InvestmentsComponent implements OnInit {
     this.prepareModal('sell', investment);
   }
 
-  // Cierra el modal y limpia estados temporales
   closeModal(): void {
     this.isModalOpen.set(false);
     this.isSaving.set(false);
     this.isSearchingAssets.set(false);
   }
 
-  // Vuelve al paso de búsqueda dentro del modal
   goBackToSearch(): void {
     if (this.modalMode() !== 'create') {
       return;
@@ -333,7 +324,6 @@ export class InvestmentsComponent implements OnInit {
     this.modalStep.set('search');
   }
 
-  // Actualiza el texto del buscador y lanza la búsqueda si procede
   onAssetSearchInput(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     this.searchQuery.set(value);
@@ -348,12 +338,10 @@ export class InvestmentsComponent implements OnInit {
     this.assetSearchSubject.next(value);
   }
 
-  // Cambia el filtro de tipo de activo
   setAssetTypeFilter(type: 'all' | 'crypto' | 'stock'): void {
     this.assetTypeFilter.set(type);
   }
 
-  // Guarda el activo seleccionado y rellena el formulario
   selectAsset(asset: AssetSearchResult): void {
     this.selectedAsset.set(asset);
     this.modalStep.set('details');
@@ -369,7 +357,6 @@ export class InvestmentsComponent implements OnInit {
     this.loadHistoricalPrice();
   }
 
-  // Evita vender más cantidad de la disponible
   validateMaxSellQuantity(): void {
     const selectedInvestment = this.selectedInvestment();
 
@@ -385,58 +372,63 @@ export class InvestmentsComponent implements OnInit {
     }
   }
 
-  // Devuelve la inicial del activo si no hay imagen
   getInitial(value: string | null | undefined): string {
     return value ? value.charAt(0).toUpperCase() : '';
   }
 
-  // Formatea números con decimales fijos
   formatNumber(value: number | string | null | undefined, digits = 2): string {
     return Number(value ?? 0).toFixed(digits);
   }
 
   getAvailableQuantity(): number {
-    const investment = this.selectedInvestment();
-    return Number(investment?.quantity ?? 0);
+    return Number(this.selectedInvestment()?.quantity ?? 0);
   }
 
-  // Formatea un importe usando las preferencias del usuario
   formatCurrency(value: number): string {
     return this.preferencesService.formatCurrency(value);
   }
 
-  // Convierte el valor a número y lo formatea como moneda
   formatValue(value: number | string | null | undefined): string {
     return this.preferencesService.formatCurrency(Number(value ?? 0));
   }
 
-  // Devuelve la clase de alineación para la tabla
   getTextAlignClass(align: string): string {
     return align === 'right' ? '!text-right' : '!text-left';
   }
 
-  // Añade clase extra a ciertas columnas de la tabla
   getCellClass(columnDef: string): string {
     const styledColumns = ['weight', 'value', 'quantity', 'symbol', 'return_7d'];
     return styledColumns.includes(columnDef) ? 'font-ibm' : '';
   }
 
-  // Devuelve el título del modal según el modo actual
   getModalTitle(): string {
-    if (this.modalMode() === 'create') return 'Nueva Posición';
-    if (this.modalMode() === 'buy') return 'Comprar Activo';
+    if (this.modalMode() === 'create') {
+      return 'Nueva Posición';
+    }
+
+    if (this.modalMode() === 'buy') {
+      return 'Comprar Activo';
+    }
+
     return 'Vender Activo';
   }
 
-  // Devuelve el texto del botón principal del modal
   getModalActionText(): string {
-    if (this.isSaving()) return 'Guardando...';
-    if (this.modalMode() === 'create') return 'Añadir';
-    if (this.modalMode() === 'buy') return 'Comprar';
+    if (this.isSaving()) {
+      return 'Guardando...';
+    }
+
+    if (this.modalMode() === 'create') {
+      return 'Añadir';
+    }
+
+    if (this.modalMode() === 'buy') {
+      return 'Comprar';
+    }
+
     return 'Vender';
   }
 
-  // Recalcula el resumen de la cartera
   private updateSummary(totalValue: number, investments: Investment[]): void {
     let totalCost = 0;
     let totalProfit = 0;
@@ -457,7 +449,6 @@ export class InvestmentsComponent implements OnInit {
     this.totalProfitPercentage.set(totalCost > 0 ? (totalProfit / totalCost) * 100 : 0);
   }
 
-  // Crea una posición nueva en la cartera
   private createPosition(portfolioId: number, formValue: any): void {
     const payload: UpsertPositionPayload = {
       symbol: String(formValue.ticker).toUpperCase(),
@@ -487,7 +478,6 @@ export class InvestmentsComponent implements OnInit {
       });
   }
 
-  // Procesa una compra o una venta sobre una inversión existente
   private executeTrade(portfolioId: number, formValue: any): void {
     const selectedInvestment = this.selectedInvestment();
 
@@ -505,16 +495,8 @@ export class InvestmentsComponent implements OnInit {
     const isBuy = this.modalMode() === 'buy';
 
     const request$ = isBuy
-      ? this.investmentService.buyInvestment(
-          portfolioId,
-          selectedInvestment.id,
-          tradePayload
-        )
-      : this.investmentService.sellInvestment(
-          portfolioId,
-          selectedInvestment.id,
-          tradePayload
-        );
+      ? this.investmentService.buyInvestment(portfolioId, selectedInvestment.id, tradePayload)
+      : this.investmentService.sellInvestment(portfolioId, selectedInvestment.id, tradePayload);
 
     request$
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -534,7 +516,6 @@ export class InvestmentsComponent implements OnInit {
       });
   }
 
-  // Inicializa el flujo reactivo del buscador de activos
   private initializeAssetSearch(): void {
     this.assetSearchSubject
       .pipe(
@@ -557,7 +538,6 @@ export class InvestmentsComponent implements OnInit {
       });
   }
 
-  // Escucha cambios en la fecha para recargar el precio histórico
   private initializeOperationDateChanges(): void {
     this.positionForm
       .get('operated_at')
@@ -569,7 +549,6 @@ export class InvestmentsComponent implements OnInit {
       });
   }
 
-  // Carga el precio histórico según activo, tipo y fecha
   private loadHistoricalPrice(): void {
     const apiId = this.positionForm.get('api_id')?.value;
     const assetType = this.positionForm.get('asset_type')?.value;
@@ -600,7 +579,6 @@ export class InvestmentsComponent implements OnInit {
       });
   }
 
-  // Prepara el modal según la acción que se vaya a realizar
   private prepareModal(mode: 'create' | 'buy' | 'sell', investment?: Investment): void {
     this.modalMode.set(mode);
     this.modalStep.set(mode === 'create' ? 'search' : 'details');
@@ -643,7 +621,6 @@ export class InvestmentsComponent implements OnInit {
     }
   }
 
-  // Devuelve la fecha local en formato YYYY-MM-DD
   private getLocalDateString(): string {
     const now = new Date();
     const offset = now.getTimezoneOffset() * 60000;

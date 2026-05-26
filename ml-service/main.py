@@ -373,37 +373,27 @@ def get_historical_price(
     import re
     from datetime import datetime, timedelta
 
-    # Comprobar que el simbolo tenga un formato valido
+    # Valida el formato basico del simbolo
     if not re.match(r"^[A-Za-z0-9.\-]{1,20}$", symbol):
         raise HTTPException(status_code=422, detail="Simbolo invalido")
 
-    # Comprobar que la fecha tenga buen formato
+    # Intenta convertir la fecha al formato esperado
     try:
         target_date = datetime.strptime(date, "%Y-%m-%d")
     except ValueError:
         raise HTTPException(status_code=422, detail="Formato de fecha invalido. Usa YYYY-MM-DD")
 
-    # Pasar el simbolo a mayusculas
+    # Normaliza el simbolo a mayusculas
     clean_symbol = symbol.upper()
 
-    # Preparar las fechas para buscar el historico
-    # Se buscan algunos dias antes por si ese dia no hubo mercado
-    start_date = target_date - timedelta(days=7)
-    end_date = target_date + timedelta(days=1)
+    # Busca unos dias antes por si no hubo mercado ese dia
+    start_date = (target_date - timedelta(days=7)).strftime("%Y-%m-%d")
 
-    def clean_dataframe(df):
-        # A veces yfinance devuelve columnas dobles
-        # Esto las deja normales
-        if df.empty:
-            return df
+    # Suma un dia para incluir bien el rango final
+    end_date = (target_date + timedelta(days=1)).strftime("%Y-%m-%d")
 
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
-
-        return df
-
+    # Descarga datos de Yahoo Finance
     def download_data(ticker, start=None, end=None, period=None):
-        # Descargar datos desde Yahoo
         df = yf.download(
             ticker,
             start=start,
@@ -412,109 +402,117 @@ def get_historical_price(
             progress=False,
             auto_adjust=False
         )
-        return clean_dataframe(df)
 
-    def has_price_data(ticker):
-        # Comprobar si ese ticker devuelve precios de verdad
-        try:
-            df = download_data(ticker, period="7d")
+        # Corrige columnas multiples que a veces devuelve yfinance
+        if not df.empty and isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
 
-            if df.empty:
-                return False
+        # Devuelve el dataframe ya limpio
+        return df
 
-            if "Close" not in df.columns:
-                return False
-
-            return not df["Close"].dropna().empty
-
-        except Exception:
-            return False
-
+    # Saca el ultimo precio de cierre disponible hasta una fecha limite
     def get_close_price(df, limit_date):
-        # Coger el ultimo precio disponible en esa fecha o antes
-        if df.empty:
-            return None
-
-        df = df[df.index.strftime("%Y-%m-%d") <= limit_date.strftime("%Y-%m-%d")]
-
+        # Si no hay datos o no existe Close no seguimos
         if df.empty or "Close" not in df.columns:
             return None
 
+        # Filtra solo fechas iguales o anteriores a la pedida
+        df = df[df.index.strftime("%Y-%m-%d") <= limit_date.strftime("%Y-%m-%d")]
+
+        # Si no queda nada despues del filtro no hay precio
+        if df.empty:
+            return None
+
+        # Quita posibles valores nulos en el cierre
         close_values = df["Close"].dropna()
 
+        # Si no hay cierres validos devolvemos None
         if close_values.empty:
             return None
 
+        # Usa el cierre mas cercano hacia atras
         return float(close_values.iloc[-1])
 
-    def get_real_crypto_symbol(user_symbol):
-        # Primero probar el formato normal
+    # Comprueba rapido si un ticker devuelve precios utiles
+    def has_price_data(ticker):
+        try:
+            df = download_data(ticker, period="7d")
+
+            # Solo vale si encontramos un cierre usable
+            return get_close_price(df, target_date) is not None
+        except Exception:
+            # Si falla la descarga tratamos el ticker como invalido
+            return False
+
+    # Intenta encontrar el simbolo correcto de crypto en Yahoo
+    def get_crypto_symbol(user_symbol):
+        # Primero prueba el formato mas comun
         normal_symbol = f"{user_symbol}-USD"
+
+        # Si existe y tiene datos lo usamos
         if has_price_data(normal_symbol):
             return normal_symbol
 
-        # Si falla, buscar el ticker real en Yahoo
         try:
+            # Busca resultados relacionados en Yahoo
             search = yf.Search(user_symbol, max_results=10)
-            quotes = search.quotes
 
-            for item in quotes:
+            # Recorre los resultados encontrados
+            for item in search.quotes:
                 quote_symbol = item.get("symbol", "")
                 quote_type = item.get("quoteType", "")
 
-                # Nos quedamos con criptos en USD
+                # Solo nos interesan cryptos terminadas en USD
                 if quote_type == "CRYPTOCURRENCY" and quote_symbol.endswith("-USD"):
+                    # Confirma que el ticker encontrado tiene precio real
                     if has_price_data(quote_symbol):
                         return quote_symbol
         except Exception:
+            # Si la busqueda falla seguimos con None
             pass
 
+        # Si no se encontro nada devolvemos None
         return None
 
     try:
-        # Si es crypto, buscar primero el ticker real
-        if asset_type == "crypto":
-            yahoo_symbol = get_real_crypto_symbol(clean_symbol)
-        else:
-            yahoo_symbol = clean_symbol
+        # Para crypto resolvemos el ticker real de Yahoo
+        yahoo_symbol = get_crypto_symbol(clean_symbol) if asset_type == "crypto" else clean_symbol
 
-        # Si no se encuentra, devolver error
+        # Si no hay ticker valido devolvemos 404
         if not yahoo_symbol:
             raise HTTPException(status_code=404, detail="No se encontro un ticker valido")
 
-        # Descargar el historico del ticker correcto
-        asset_data = download_data(
-            yahoo_symbol,
-            start=start_date.strftime("%Y-%m-%d"),
-            end=end_date.strftime("%Y-%m-%d")
-        )
+        # Descarga datos del activo en torno a la fecha pedida
+        asset_data = download_data(yahoo_symbol, start=start_date, end=end_date)
 
+        # Busca el cierre mas cercano hacia atras
+        price = get_close_price(asset_data, target_date)
+
+        # Si no vino nada de Yahoo devolvemos error
         if asset_data.empty:
             raise HTTPException(status_code=404, detail="Sin datos para esa fecha")
 
-        # Sacar el ultimo precio valido
-        price = get_close_price(asset_data, target_date)
-
+        # Si no encontramos cierre util devolvemos error
         if price is None:
             raise HTTPException(status_code=404, detail="Sin datos cercanos a esa fecha")
 
+        # Por defecto Yahoo devuelve este precio en USD
         currency = "USD"
 
-        # Convertir a EUR si hace falta
+        # Convierte a EUR si el cliente lo pide
         if convert_to_eur:
-            fx_data = download_data(
-                "EURUSD=X",
-                start=start_date.strftime("%Y-%m-%d"),
-                end=end_date.strftime("%Y-%m-%d")
-            )
+            # Descarga el tipo de cambio EURUSD
+            fx_data = download_data("EURUSD=X", start=start_date, end=end_date)
 
+            # Busca el cambio mas cercano hacia atras
             exchange_rate = get_close_price(fx_data, target_date)
 
-            if exchange_rate is not None and exchange_rate > 0:
+            # Solo convierte si el cambio existe y es valido
+            if exchange_rate and exchange_rate > 0:
                 price = price / exchange_rate
                 currency = "EUR"
 
-        # Devolver el resultado final
+        # Devuelve la respuesta final ya redondeada
         return {
             "symbol": clean_symbol,
             "yahoo_symbol": yahoo_symbol,
@@ -523,7 +521,10 @@ def get_historical_price(
             "currency": currency
         }
 
+    # Reenvia errores HTTP controlados tal cual
     except HTTPException:
         raise
+
+    # Convierte cualquier otro error en 500
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

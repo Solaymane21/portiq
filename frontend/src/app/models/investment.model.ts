@@ -51,4 +51,5 @@ export interface TradeActionPayload {
   operated_at?: string | null;
 }
 
+// Para importar usamos lo mismo que para crear una posicion
 export type ImportPositionPayload = UpsertPositionPayload;

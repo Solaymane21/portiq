@@ -1,38 +1,37 @@
-import { Component, signal, OnInit, inject, viewChild, ElementRef, computed } from '@angular/core';
 import { NgClass } from '@angular/common';
-import { Router } from '@angular/router';
-import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
+import { Component, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { switchMap, finalize } from 'rxjs/operators';
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { finalize, switchMap } from 'rxjs/operators';
 
-import { PortfolioService } from '../../../services/portfolio.service';
-import { InvestmentService } from '../../../services/investment.service';
-import { PreferencesService } from '../../../services/preferences.service';
-import { Portfolio } from '../../../models/portfolio.model';
-import { ImportPositionRow, parsePositionsCsv, downloadImportTemplate } from '../wallets-csv';
-import { SubscriptionService } from '../../../services/subscription.service';
-import { NotificationsService } from '../../../services/notifications.service';
 import { PlanLimitBannerComponent } from '../../../components/plan-limit-banner/plan-limit-banner.component';
+import { Portfolio } from '../../../models/portfolio.model';
+import { InvestmentService } from '../../../services/investment.service';
+import { NotificationsService } from '../../../services/notifications.service';
+import { PortfolioService } from '../../../services/portfolio.service';
+import { PreferencesService } from '../../../services/preferences.service';
+import { SubscriptionService } from '../../../services/subscription.service';
+import { ImportPositionRow, downloadImportTemplate, parsePositionsCsv } from '../wallets-csv';
 
 @Component({
   selector: 'app-portfolios',
   standalone: true,
   imports: [ReactiveFormsModule, NgClass, CdkMenuTrigger, CdkMenu, CdkMenuItem, PlanLimitBannerComponent],
   templateUrl: './portfolios.component.html',
-  styleUrl: './portfolios.component.css'
+  styleUrl: './portfolios.component.css',
 })
 export class PortfoliosComponent implements OnInit {
-
-  // Servicios
   private router = inject(Router);
   private portfolioService = inject(PortfolioService);
   private investmentService = inject(InvestmentService);
   private prefs = inject(PreferencesService);
-  subscriptionService = inject(SubscriptionService);
-  notifications = inject(NotificationsService)
 
-  // Referencias del HTML
+  subscriptionService = inject(SubscriptionService);
+  notifications = inject(NotificationsService);
+
+  // Referencia al input oculto de csv
   csvFileInput = viewChild<ElementRef<HTMLInputElement>>('csvFileInput');
 
   // Estado general
@@ -46,8 +45,14 @@ export class PortfoliosComponent implements OnInit {
 
   sortedPortfolios = computed(() => {
     return [...this.myPortfolios()].sort((a, b) => {
-      if (a.is_default && !b.is_default) return -1;
-      if (!a.is_default && b.is_default) return 1;
+      if (a.is_default && !b.is_default) {
+        return -1;
+      }
+
+      if (!a.is_default && b.is_default) {
+        return 1;
+      }
+
       return a.id - b.id;
     });
   });
@@ -59,18 +64,16 @@ export class PortfoliosComponent implements OnInit {
   portfolioForm = new FormGroup({
     name: new FormControl('', [Validators.required, Validators.maxLength(15)]),
     is_default: new FormControl(false),
-    is_public: new FormControl(false)
+    is_public: new FormControl(false),
   });
 
-  portfolioIsPublic = toSignal(
-    this.portfolioForm.get('is_public')!.valueChanges,
-    { initialValue: false }
-  );
+  portfolioIsPublic = toSignal(this.portfolioForm.get('is_public')!.valueChanges, {
+    initialValue: false,
+  });
 
-  portfolioIsDefault = toSignal(
-    this.portfolioForm.get('is_default')!.valueChanges,
-    { initialValue: false }
-  );
+  portfolioIsDefault = toSignal(this.portfolioForm.get('is_default')!.valueChanges, {
+    initialValue: false,
+  });
 
   // Modal eliminar
   isDeleteModalOpen = signal(false);
@@ -86,22 +89,20 @@ export class PortfoliosComponent implements OnInit {
   importNewPortfolio = new FormGroup({
     name: new FormControl('', [Validators.required, Validators.maxLength(15)]),
     is_default: new FormControl(false),
-    is_public: new FormControl(false)
+    is_public: new FormControl(false),
   });
 
   importPortfolioId = new FormControl<number | null>(null, [Validators.required]);
 
-  // Lifecycle
-  ngOnInit() {
+  ngOnInit(): void {
     this.loadPortfolios();
   }
 
-  // CARTERAS
-
-  loadPortfolios() {
+  loadPortfolios(): void {
     this.isLoading.set(true);
 
-    this.portfolioService.getPortfolios()
+    this.portfolioService
+      .getPortfolios()
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (data) => {
@@ -109,25 +110,29 @@ export class PortfoliosComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error loading portfolios', err);
-        }
+        },
       });
   }
 
-  savePortfolio() {
-    if (this.portfolioForm.invalid) return;
+  savePortfolio(): void {
+    if (this.portfolioForm.invalid) {
+      return;
+    }
 
     const selected = this.selectedPortfolio();
+    const values = this.portfolioForm.getRawValue();
 
     const data = {
-      name: this.portfolioForm.value.name ?? '',
-      is_default: !!this.portfolioForm.value.is_default,
-      is_public: !!this.portfolioForm.value.is_public
+      name: values.name ?? '',
+      is_default: !!values.is_default,
+      is_public: !!values.is_public,
     };
 
     this.isSubmitting.set(true);
 
     if (this.formMode() === 'create') {
-      this.portfolioService.createPortfolio(data)
+      this.portfolioService
+        .createPortfolio(data)
         .pipe(finalize(() => this.isSubmitting.set(false)))
         .subscribe({
           next: () => {
@@ -138,7 +143,7 @@ export class PortfoliosComponent implements OnInit {
           },
           error: (err) => {
             console.error('Error saving portfolio:', err);
-          }
+          },
         });
 
       return;
@@ -149,7 +154,8 @@ export class PortfoliosComponent implements OnInit {
       return;
     }
 
-    this.portfolioService.updatePortfolio(selected.id, data)
+    this.portfolioService
+      .updatePortfolio(selected.id, data)
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: () => {
@@ -158,17 +164,21 @@ export class PortfoliosComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error saving portfolio:', err);
-        }
+        },
       });
   }
 
-  deletePortfolio() {
+  deletePortfolio(): void {
     const selected = this.selectedPortfolio();
-    if (!selected) return;
+
+    if (!selected) {
+      return;
+    }
 
     this.isSubmitting.set(true);
 
-    this.portfolioService.deletePortfolio(selected.id)
+    this.portfolioService
+      .deletePortfolio(selected.id)
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: () => {
@@ -179,13 +189,13 @@ export class PortfoliosComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error deleting portfolio:', err);
-        }
+        },
       });
   }
 
-  goToPortfolio(portfolioId: number) {
+  goToPortfolio(portfolioId: number): void {
     this.router.navigate(['/app/wallets', portfolioId], {
-      state: { returnUrl: this.router.url }
+      state: { returnUrl: this.router.url },
     });
   }
 
@@ -203,18 +213,15 @@ export class PortfoliosComponent implements OnInit {
     return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
   }
 
-  format(value: number) {
+  format(value: number): string {
     return this.prefs.formatCurrency(value);
   }
 
-  // MODAL CREAR / EDITAR
-
-  openCreateModal() {
-    // verificar límite antes de abrir el modal
+  // Modal crear / editar
+  openCreateModal(): void {
+    // Validamos el limite antes de abrir el modal
     if (!this.subscriptionService.canCreate('portfolios')) {
-      this.notifications.warning(
-        'Has alcanzado el límite de carteras. Mejora al Plan Premium.'
-      );
+      this.notifications.warning('Has alcanzado el límite de carteras. Mejora al Plan Premium.');
       return;
     }
 
@@ -224,46 +231,44 @@ export class PortfoliosComponent implements OnInit {
     this.portfolioForm.patchValue({
       name: '',
       is_default: false,
-      is_public: false
+      is_public: false,
     });
 
     this.isModalOpen.set(true);
   }
 
-  openEditModal(portfolio: Portfolio) {
+  openEditModal(portfolio: Portfolio): void {
     this.formMode.set('edit');
     this.selectedPortfolio.set(portfolio);
 
     this.portfolioForm.patchValue({
       name: portfolio.name,
       is_default: portfolio.is_default,
-      is_public: portfolio.is_public
+      is_public: portfolio.is_public,
     });
 
     this.isModalOpen.set(true);
   }
 
-  closeModal() {
+  closeModal(): void {
     this.isModalOpen.set(false);
     this.selectedPortfolio.set(null);
   }
 
-  // MODAL ELIMINAR
-
-  openDeleteModal(portfolio: Portfolio) {
+  // Modal eliminar
+  openDeleteModal(portfolio: Portfolio): void {
     this.selectedPortfolio.set(portfolio);
     this.isDeleteModalOpen.set(true);
   }
 
-  closeDeleteModal() {
+  closeDeleteModal(): void {
     this.isDeleteModalOpen.set(false);
     this.selectedPortfolio.set(null);
   }
 
-  // IMPORTAR CSV
-
-  openImportModal() {
-    // solo premium
+  // Importar CSV
+  openImportModal(): void {
+    // Solo premium
     if (!this.subscriptionService.canUseFeature('import')) {
       this.notifications.warning('La importación CSV requiere el Plan Premium');
       return;
@@ -286,32 +291,36 @@ export class PortfoliosComponent implements OnInit {
     this.importNewPortfolio.reset({
       name: '',
       is_default: false,
-      is_public: false
+      is_public: false,
     });
   }
 
-  closeImportModal() {
+  closeImportModal(): void {
     this.importModalOpen.set(false);
     this.importSubmitting.set(false);
 
     const input = this.csvFileInput()?.nativeElement;
+
     if (input) {
       input.value = '';
     }
   }
 
-  triggerCsvSelection() {
+  triggerCsvSelection(): void {
     const input = this.csvFileInput()?.nativeElement;
+
     if (input) {
       input.click();
     }
   }
 
-  onCsvSelected(event: Event) {
+  onCsvSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     this.importFileName.set(file.name);
 
@@ -334,24 +343,23 @@ export class PortfoliosComponent implements OnInit {
     reader.readAsText(file, 'UTF-8');
   }
 
-  downloadTemplate() {
+  downloadTemplate(): void {
     downloadImportTemplate();
   }
 
-  executeImport() {
+  executeImport(): void {
     const rows = this.importRows();
 
-    if (rows.length === 0) return;
-    if (this.importParseError()) return;
+    if (rows.length === 0 || this.importParseError()) {
+      return;
+    }
 
-    const positions = rows.map((row) => {
-      return {
-        symbol: row.symbol,
-        asset_type: row.asset_type,
-        quantity: row.quantity,
-        avg_buy_price: row.avg_buy_price
-      };
-    });
+    const positions = rows.map((row) => ({
+      symbol: row.symbol,
+      asset_type: row.asset_type,
+      quantity: row.quantity,
+      avg_buy_price: row.avg_buy_price,
+    }));
 
     this.importSubmitting.set(true);
 
@@ -363,26 +371,27 @@ export class PortfoliosComponent implements OnInit {
 
       const values = this.importNewPortfolio.getRawValue();
 
-      this.portfolioService.createPortfolio({
-        name: values.name ?? '',
-        is_default: !!values.is_default,
-        is_public: !!values.is_public
-      })
-      .pipe(
-        switchMap((response: any) => {
-          return this.investmentService.importPositions(response.portfolio.id, positions);
-        }),
-        finalize(() => this.importSubmitting.set(false))
-      )
-      .subscribe({
-        next: () => {
-          this.closeImportModal();
-          this.loadPortfolios();
-        },
-        error: (err) => {
-          console.error('Import error:', err);
-        }
-      });
+      this.portfolioService
+        .createPortfolio({
+          name: values.name ?? '',
+          is_default: !!values.is_default,
+          is_public: !!values.is_public,
+        })
+        .pipe(
+          switchMap((response: any) => {
+            return this.investmentService.importPositions(response.portfolio.id, positions);
+          }),
+          finalize(() => this.importSubmitting.set(false))
+        )
+        .subscribe({
+          next: () => {
+            this.closeImportModal();
+            this.loadPortfolios();
+          },
+          error: (err) => {
+            console.error('Import error:', err);
+          },
+        });
 
       return;
     }
@@ -394,7 +403,8 @@ export class PortfoliosComponent implements OnInit {
       return;
     }
 
-    this.investmentService.importPositions(portfolioId, positions)
+    this.investmentService
+      .importPositions(portfolioId, positions)
       .pipe(finalize(() => this.importSubmitting.set(false)))
       .subscribe({
         next: () => {
@@ -403,8 +413,7 @@ export class PortfoliosComponent implements OnInit {
         },
         error: (err) => {
           console.error('Import error:', err);
-        }
+        },
       });
   }
-
 }

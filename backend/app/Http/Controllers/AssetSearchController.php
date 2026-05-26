@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Symbol;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 class AssetSearchController extends Controller
 {
@@ -17,66 +17,80 @@ class AssetSearchController extends Controller
 
     public function search(Request $request)
     {
+        // Validamos la busqueda
         $request->validate([
             'q' => 'required|string|min:2|max:50',
         ]);
-        
+
+        // Dejamos el texto limpio antes de buscar
+        $query = strtoupper(trim($request->q));
         $cacheKey = 'asset_search_' . md5($request->q);
-        if ($cached = Cache::get($cacheKey)) {
-            return response()->json($cached);
+
+        // Si ya esta en cache, devolvemos eso
+        $cachedResults = Cache::get($cacheKey);
+        if ($cachedResults) {
+            return response()->json($cachedResults);
         }
 
-        $query = strtoupper(trim($request->q));
+        // Si no, hacemos la busqueda normal
         $results = $this->performSearch($query);
 
+        // Guardamos el resultado un rato para no repetir llamadas
         Cache::put($cacheKey, $results, self::CACHE_TTL);
-        
+
         return response()->json($results);
     }
 
     private function performSearch(string $query): array
     {
+        // Primero miramos si existe exacto en local
         $exactMatch = Symbol::where('symbol', $query)->get();
         if ($exactMatch->isNotEmpty()) {
             return $this->convertToArray($exactMatch);
         }
 
-        $partialLocal = $this->searchPartialInDatabase($query);
-        if (count($partialLocal) >= self::MIN_LOCAL_TO_RETURN) {
-            return $partialLocal;
+        // Si no, buscamos coincidencias parciales
+        $localResults = $this->searchPartialInDatabase($query);
+
+        // Si con local ya tenemos bastante, no hace falta salir fuera
+        if (count($localResults) >= self::MIN_LOCAL_TO_RETURN) {
+            return $localResults;
         }
 
-        $localSymbols = array_column($partialLocal, 'symbol');
+        // Guardamos los simbolos locales para no repetirlos
+        $localSymbols = array_column($localResults, 'symbol');
         $externalResults = [];
-        
+
+        // Completamos con APIs externas
         $this->searchInCoinGecko($query, $localSymbols, $externalResults);
         $this->searchInTwelveData($query, $localSymbols, $externalResults);
 
-        return array_merge($partialLocal, array_slice($externalResults, 0, self::MAX_EXTERNAL_RESULTS));
+        return array_merge(
+            $localResults,
+            array_slice($externalResults, 0, self::MAX_EXTERNAL_RESULTS)
+        );
     }
 
-    /**
-     * Convierte modelos de DB a array JSON
-     */
+    // Pasamos los modelos al formato que devuelve la API
     private function convertToArray($symbols): array
     {
         $results = [];
+
         foreach ($symbols as $symbol) {
             $results[] = [
-                'symbol'     => $symbol->symbol,
-                'name'       => $symbol->name,
-                'api_id'     => $symbol->api_id,
-                'image_url'  => $symbol->image_url,
+                'symbol' => $symbol->symbol,
+                'name' => $symbol->name,
+                'api_id' => $symbol->api_id,
+                'image_url' => $symbol->image_url,
                 'asset_type' => $symbol->asset_type,
-                'source'     => 'local',
+                'source' => 'local',
             ];
         }
+
         return $results;
     }
 
-    /**
-     * Busqueda parcial en nuestra base de datos
-     */
+    // Busqueda parcial en nuestra base de datos
     private function searchPartialInDatabase(string $query): array
     {
         $symbols = Symbol::where('symbol', 'ilike', "%{$query}%")
@@ -87,85 +101,93 @@ class AssetSearchController extends Controller
         return $this->convertToArray($symbols);
     }
 
-    /**
-     * Busca CRYPTO en CoinGecko API
-     */
+    // Buscamos cryptos en CoinGecko
     private function searchInCoinGecko(string $query, array $localSymbols, array &$externalResults): void
     {
         try {
             $response = Http::timeout(5)->get('https://api.coingecko.com/api/v3/search', [
-                'query' => $query
+                'query' => $query,
             ]);
 
-            if ($response->successful()) {
-                $coins = $response->json('coins', []);
-                $coins = array_slice($coins, 0, self::MAX_EXTERNAL_RESULTS);
+            // Si falla, salimos y ya esta
+            if (!$response->successful()) {
+                return;
+            }
 
-                foreach ($coins as $coin) {
-                    $symbol = strtoupper($coin['symbol']);
-                    
-                    if (!in_array($symbol, $localSymbols) && 
-                        count($externalResults) < self::MAX_EXTERNAL_RESULTS) {
-                        
-                        $externalResults[] = [
-                            'symbol'     => $symbol,
-                            'name'       => $coin['name'],
-                            'api_id'     => $coin['api_symbol'],
-                            'image_url'  => $coin['large'] ?? $coin['thumb'] ?? null,
-                            'asset_type' => 'crypto',
-                            'source'     => 'api'
-                        ];
-                    }
+            $coins = array_slice($response->json('coins', []), 0, self::MAX_EXTERNAL_RESULTS);
+
+            foreach ($coins as $coin) {
+                $symbol = strtoupper($coin['symbol']);
+
+                // Saltamos si ya existe o si ya hemos llegado al limite
+                if (in_array($symbol, $localSymbols) || count($externalResults) >= self::MAX_EXTERNAL_RESULTS) {
+                    continue;
                 }
+
+                $externalResults[] = [
+                    'symbol' => $symbol,
+                    'name' => $coin['name'],
+                    'api_id' => $coin['api_symbol'],
+                    'image_url' => $coin['large'] ?? $coin['thumb'] ?? null,
+                    'asset_type' => 'crypto',
+                    'source' => 'api',
+                ];
             }
         } catch (\Exception $e) {
             Log::error('Error CoinGecko search [' . $query . ']: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Busca ACCIONES en TwelveData API
-     */
+    // Buscamos acciones en TwelveData
     private function searchInTwelveData(string $query, array $localSymbols, array &$externalResults): void
     {
         try {
             $response = Http::timeout(5)->get('https://api.twelvedata.com/symbol_search', [
-                'symbol'     => $query,
+                'symbol' => $query,
                 'outputsize' => 10,
             ]);
 
-            if ($response->successful() && isset($response->json()['data'])) {
-                $addedSymbols = [];
+            $data = $response->json('data');
 
-                foreach ($response->json()['data'] as $stock) {
-                    $symbol = strtoupper($stock['symbol']);
-                    
-                    if (!in_array($symbol, $localSymbols) &&
-                        !in_array($symbol, $addedSymbols) &&
-                        count($externalResults) < self::MAX_EXTERNAL_RESULTS) {
-                        
-                        $externalResults[] = [
-                            'symbol'     => $symbol,
-                            'name'       => $stock['instrument_name'],
-                            'api_id'     => $stock['symbol'],
-                            'image_url'  => null,
-                            'asset_type' => 'stock',
-                            'source'     => 'api',
-                        ];
-                        $addedSymbols[] = $symbol;
-                    }
+            // Si no viene nada util, no seguimos
+            if (!$response->successful() || !is_array($data)) {
+                return;
+            }
+
+            $addedSymbols = [];
+
+            foreach ($data as $stock) {
+                $symbol = strtoupper($stock['symbol']);
+
+                // Evitamos repetir simbolos
+                if (
+                    in_array($symbol, $localSymbols) ||
+                    in_array($symbol, $addedSymbols) ||
+                    count($externalResults) >= self::MAX_EXTERNAL_RESULTS
+                ) {
+                    continue;
                 }
+
+                $externalResults[] = [
+                    'symbol' => $symbol,
+                    'name' => $stock['instrument_name'],
+                    'api_id' => $stock['symbol'],
+                    'image_url' => null,
+                    'asset_type' => 'stock',
+                    'source' => 'api',
+                ];
+
+                $addedSymbols[] = $symbol;
             }
         } catch (\Exception $e) {
             Log::error('Error TwelveData search [' . $query . ']: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Obtiene precio historico
-     */
+    // Pedimos el precio historico a la API de Python
     public function history(Request $request)
     {
+        // Validamos lo minimo antes de llamar fuera
         $request->validate([
             'api_id' => 'required|string',
             'asset_type' => 'required|in:crypto,stock',
@@ -183,15 +205,21 @@ class AssetSearchController extends Controller
                 'convert_to_eur' => $convertToEur ? 'true' : 'false',
             ]);
 
-            if ($response->successful() && isset($response->json()['price'])) {
+            $price = $response->json('price');
+
+            // Si viene bien, devolvemos el precio
+            if ($response->successful() && $price !== null) {
                 return response()->json([
-                    'price' => (float) $response->json()['price']
+                    'price' => (float) $price,
                 ]);
             }
 
+            // Si no hay precio, mantenemos la misma respuesta
             return response()->json(['price' => null]);
         } catch (\Exception $e) {
             Log::error('Error FastAPI [' . $request->api_id . ']: ' . $e->getMessage());
+
+            // Si algo falla, devolvemos null igual
             return response()->json(['price' => null]);
         }
     }

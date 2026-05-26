@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 
 class PortfolioController extends Controller
 {
-
     private PlanLimitService $planLimit;
 
     public function __construct(PlanLimitService $planLimit)
@@ -22,41 +21,50 @@ class PortfolioController extends Controller
     {
         $sort = (string) $request->query('sort', 'total_value');
         $order = strtolower((string) $request->query('order', 'desc')) === 'asc' ? 'asc' : 'desc';
-        $search = $request->query('q');
+        $search = (string) $request->query('q', '');
 
         $allowedSorts = ['total_value', 'asset_count', 'name', 'owner_name', 'created_at', 'updated_at'];
-        if (! in_array($sort, $allowedSorts, true)) {
+        if (!in_array($sort, $allowedSorts, true)) {
             $sort = 'total_value';
         }
 
+        // Sacamos solo las carteras publicas
         $portfolios = Portfolio::query()
             ->where('is_public', true)
             ->with(['user:id,name,avatar', 'investments'])
             ->get();
 
-        $rows = $portfolios->map(fn (Portfolio $p) => $this->publicRankingRow($p));
+        // Montamos las filas que usara el ranking
+        $rows = $portfolios->map(function (Portfolio $portfolio) {
+            return $this->publicRankingRow($portfolio);
+        });
 
-        if ($search !== null && $search !== '') {
-            $needle = mb_strtolower((string) $search);
+        // Si viene texto, filtramos por nombre de cartera o dueño
+        if ($search !== '') {
+            $needle = mb_strtolower($search);
+
             $rows = $rows->filter(function (array $row) use ($needle) {
                 return str_contains(mb_strtolower($row['name']), $needle)
                     || str_contains(mb_strtolower($row['owner_name']), $needle);
             });
         }
 
-        $sorted = $order === 'desc'
+        // Ordenamos segun lo que llegue en la query
+        $rows = $order === 'desc'
             ? $rows->sortByDesc($sort)
             : $rows->sortBy($sort);
 
-        return response()->json($sorted->values());
+        return response()->json($rows->values());
     }
 
     public function follow(Request $request, $portfolioId)
     {
+        // Solo se puede seguir una cartera publica que exista
         $portfolio = Portfolio::where('id', $portfolioId)
             ->where('is_public', true)
             ->firstOrFail();
 
+        // No dejamos seguir tu propia cartera
         if ((int) $portfolio->user_id === (int) $request->user()->id) {
             return response()->json([
                 'message' => 'No puedes seguir tu propia cartera.'
@@ -82,7 +90,9 @@ class PortfolioController extends Controller
             ->where('portfolio_id', $portfolioId)
             ->delete();
 
-        return response()->json(['message' => 'Has dejado de seguir la cartera.']);
+        return response()->json([
+            'message' => 'Has dejado de seguir la cartera.',
+        ]);
     }
 
     public function index(Request $request)
@@ -93,28 +103,31 @@ class PortfolioController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        $data = $portfolios->map(fn (Portfolio $p) => $this->portfolioSummary($p, true));
+        $data = $portfolios->map(function (Portfolio $portfolio) {
+            return $this->portfolioSummary($portfolio, true);
+        });
 
         return response()->json($data);
     }
 
     public function store(Request $request)
     {
-        // comprobar limites de suscripcion
+        // Miramos si el plan deja crear otra cartera
         $count = $request->user()->portfolios()->count();
         $check = $this->planLimit->check($request->user(), 'portfolios', $count);
 
         if (!$check['allowed']) {
             return response()->json([
-                'message'  => $check['message'],
-                'code'     => 'PLAN_LIMIT_EXCEEDED',
+                'message' => $check['message'],
+                'code' => 'PLAN_LIMIT_EXCEEDED',
                 'resource' => 'portfolios',
-                'limit'    => $check['limit'],
+                'limit' => $check['limit'],
             ], 403);
         }
 
         $isDefault = $request->is_default ?? false;
 
+        // Si esta sera la principal, quitamos esa marca al resto
         if ($isDefault) {
             $request->user()->portfolios()->update(['is_default' => false]);
         }
@@ -134,10 +147,10 @@ class PortfolioController extends Controller
     public function update(Request $request, $id)
     {
         $portfolio = $request->user()->portfolios()->with('investments')->findOrFail($id);
-
         $isDefault = $request->is_default ?? false;
 
-        if ($isDefault && ! $portfolio->is_default) {
+        // Si ahora pasa a ser principal, quitamos la principal anterior
+        if ($isDefault && !$portfolio->is_default) {
             $request->user()->portfolios()
                 ->where('id', '!=', $portfolio->id)
                 ->update(['is_default' => false]);
@@ -161,6 +174,7 @@ class PortfolioController extends Controller
     {
         $portfolio = $request->user()->portfolios()->findOrFail($id);
 
+        // Borramos primero lo relacionado y luego la cartera
         $portfolio->investments()->delete();
         $portfolio->delete();
 
@@ -171,18 +185,22 @@ class PortfolioController extends Controller
 
     private function activeInvestments(Collection $investments): Collection
     {
-        return $investments->filter(fn ($inv) => (float) $inv->quantity > 0);
+        return $investments->filter(function ($investment) {
+            return (float) $investment->quantity > 0;
+        });
     }
 
     private function portfolioValue(Collection $investments): float
     {
-        return (float) $investments->sum(fn ($inv) => (float) $inv->quantity * (float) $inv->avg_buy_price);
+        return (float) $investments->sum(function ($investment) {
+            return (float) $investment->quantity * (float) $investment->avg_buy_price;
+        });
     }
 
     private function portfolioSummary(Portfolio $portfolio, bool $includeMetrics): array
     {
         $investments = $portfolio->investments ?? collect();
-        $active = $this->activeInvestments($investments);
+        $activeInvestments = $this->activeInvestments($investments);
 
         $row = [
             'id' => $portfolio->id,
@@ -194,12 +212,14 @@ class PortfolioController extends Controller
         ];
 
         if ($includeMetrics) {
-            $row['asset_count'] = $active->count();
+            $row['asset_count'] = $activeInvestments->count();
             $row['total_value'] = round($this->portfolioValue($investments), 2);
-        } else {
-            $row['asset_count'] = 0;
-            $row['total_value'] = 0;
+
+            return $row;
         }
+
+        $row['asset_count'] = 0;
+        $row['total_value'] = 0;
 
         return $row;
     }
@@ -208,7 +228,7 @@ class PortfolioController extends Controller
     {
         $user = $portfolio->user;
         $investments = $portfolio->investments ?? collect();
-        $active = $this->activeInvestments($investments);
+        $activeInvestments = $this->activeInvestments($investments);
 
         return [
             'id' => $portfolio->id,
@@ -219,7 +239,7 @@ class PortfolioController extends Controller
                 'name' => $user->name,
                 'avatar' => $user->avatar,
             ],
-            'asset_count' => $active->count(),
+            'asset_count' => $activeInvestments->count(),
             'total_value' => round($this->portfolioValue($investments), 2),
             'created_at' => $portfolio->created_at,
             'updated_at' => $portfolio->updated_at,

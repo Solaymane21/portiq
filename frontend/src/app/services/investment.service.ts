@@ -1,13 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import {
-  AssetSearchResult,
-  InvestmentsResponse,
-  UpsertPositionPayload,
-  TradeActionPayload,
-  ImportPositionPayload,
-} from '../models/investment.model';
+
+import { AssetSearchResult, ImportPositionPayload, InvestmentsResponse, TradeActionPayload, UpsertPositionPayload } from '../models/investment.model';
+
 import { environment } from '../../environments/environment';
 import { PreferencesService } from './preferences.service';
 
@@ -17,80 +13,52 @@ import { PreferencesService } from './preferences.service';
 export class InvestmentService {
   private readonly http = inject(HttpClient);
   private readonly preferencesService = inject(PreferencesService);
-  private readonly apiBase = environment.apiUrl;
+  private readonly apiUrl = environment.apiUrl;
 
+  // Sacamos una cartera con sus inversiones
   getInvestments(portfolioId: number): Observable<InvestmentsResponse> {
-    return this.http.get<InvestmentsResponse>(
-      `${this.apiBase}/portfolios/${portfolioId}/investments`
-    );
+    return this.http.get<InvestmentsResponse>(`${this.apiUrl}/portfolios/${portfolioId}/investments`);
   }
 
-  addInvestment(
-    portfolioId: number,
-    payload: UpsertPositionPayload
-  ): Observable<unknown> {
-    return this.http.post(
-      `${this.apiBase}/portfolios/${portfolioId}/investments`,
-      payload
-    );
+  // Creamos una posicion nueva
+  addInvestment(portfolioId: number, payload: UpsertPositionPayload): Observable<unknown> {
+    return this.http.post(`${this.apiUrl}/portfolios/${portfolioId}/investments`, payload);
   }
 
-  importPositions(
-    portfolioId: number,
-    positions: ImportPositionPayload[]
-  ): Observable<{ message: string; count: number }> {
+  // Importamos varias posiciones de golpe
+  importPositions(portfolioId: number, positions: ImportPositionPayload[]): Observable<{ message: string; count: number }> {
     return this.http.post<{ message: string; count: number }>(
-      `${this.apiBase}/portfolios/${portfolioId}/investments/import`,
+      `${this.apiUrl}/portfolios/${portfolioId}/investments/import`,
       { positions }
     );
   }
 
-  buyInvestment(
-    portfolioId: number,
-    investmentId: number,
-    payload: TradeActionPayload
-  ): Observable<unknown> {
-    return this.http.post(
-      `${this.apiBase}/portfolios/${portfolioId}/investments/${investmentId}/buy`,
-      payload
-    );
+  // Registramos una compra
+  buyInvestment(portfolioId: number, investmentId: number, payload: TradeActionPayload): Observable<unknown> {
+    return this.http.post(`${this.apiUrl}/portfolios/${portfolioId}/investments/${investmentId}/buy`, payload);
   }
 
-  sellInvestment(
-    portfolioId: number,
-    investmentId: number,
-    payload: TradeActionPayload
-  ): Observable<unknown> {
-    return this.http.post(
-      `${this.apiBase}/portfolios/${portfolioId}/investments/${investmentId}/sell`,
-      payload
-    );
+  // Registramos una venta
+  sellInvestment(portfolioId: number, investmentId: number, payload: TradeActionPayload): Observable<unknown> {
+    return this.http.post(`${this.apiUrl}/portfolios/${portfolioId}/investments/${investmentId}/sell`, payload);
   }
 
+  // Buscamos activos por texto
   searchAssets(query: string): Observable<AssetSearchResult[]> {
-    return this.http.get<AssetSearchResult[]>(`${this.apiBase}/assets/search`, {
-      params: { q: query },
-    });
+    return this.http.get<AssetSearchResult[]>(`${this.apiUrl}/assets/search`, { params: { q: query } });
   }
 
-  getHistoricalPrice(
-    apiId: string,
-    assetType: string,
-    date: string
-  ): Observable<{ price: number }> {
+  // Pedimos el precio historico con la moneda elegida
+  getHistoricalPrice(apiId: string, assetType: string, date: string): Observable<{ price: number }> {
     const convertToEur = this.preferencesService.currency() === 'EUR' ? '1' : '0';
 
-    return this.http.get<{ price: number }>(`${this.apiBase}/assets/history`, {
-      params: {
-        api_id: apiId,
-        asset_type: assetType,
-        date,
-        convert_to_eur: convertToEur,
-      },
+    return this.http.get<{ price: number }>(`${this.apiUrl}/assets/history`, {
+      params: { api_id: apiId, asset_type: assetType, date, convert_to_eur: convertToEur },
     });
   }
 
+  // Sacamos el historial de operaciones
   getTrades(portfolioId: number): Observable<unknown> {
-    return this.http.get(`${this.apiBase}/portfolios/${portfolioId}/trades`);
+    return this.http.get(`${this.apiUrl}/portfolios/${portfolioId}/trades`);
   }
 }

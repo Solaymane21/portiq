@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Favorite;
+use App\Models\FavoritePortfolio;
 use Illuminate\Http\Request;
 
 class InitialDataController extends Controller
@@ -26,6 +27,8 @@ class InitialDataController extends Controller
             ->values()
             ->toArray();
 
+        $portfolios = FavoritePortfolio::where('user_id', $user->id)->all();
+
         $preferences = $user->preferences
             ? [
                 'currency'    => $user->preferences->currency,
@@ -43,7 +46,7 @@ class InitialDataController extends Controller
         return response()->json([
             'favorites' => [
                 'assets' => $assets,
-                'portfolios' => [],
+                'portfolios' => $portfolios,
             ],
             'preferences' => $preferences,
         ]);

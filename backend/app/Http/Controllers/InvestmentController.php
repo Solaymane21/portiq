@@ -164,7 +164,7 @@ class InvestmentController extends Controller
     {
         $validated = $request->validate([
             'quantity' => 'required|numeric|min:0.00000001',
-            'price_per_unit' => 'required|numeric|min:0.01',
+            'price_per_unit' => 'required|numeric|min:0.00000001',
             'operated_at' => 'nullable|date',
         ]);
 
@@ -199,7 +199,7 @@ class InvestmentController extends Controller
     {
         $validated = $request->validate([
             'quantity' => 'required|numeric|min:0.00000001',
-            'price_per_unit' => 'required|numeric|min:0.01',
+            'price_per_unit' => 'required|numeric|min:0.00000001',
             'operated_at' => 'nullable|date',
         ]);
 

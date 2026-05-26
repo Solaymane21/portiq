@@ -29,7 +29,8 @@ export class RegisterDataComponent {
         Validators.required,
         Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
       ]
-    )
+    ),
+    termsAccepted: new FormControl(false, [Validators.requiredTrue])
   })
 
   next() {
@@ -41,6 +42,17 @@ export class RegisterDataComponent {
     this.authService.email.set(this.registerForm.value.email!.toLowerCase())
 
     this.authService.onStep1()
+  }
+
+  continueWithGoogle() {
+    const termsControl = this.registerForm.get('termsAccepted');
+
+    if (termsControl?.invalid) {
+      termsControl.markAsTouched();
+      return;
+    }
+
+    this.authService.onLoginWithGoogle();
   }
 
 }

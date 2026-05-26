@@ -148,7 +148,7 @@
                     }
                   </p>
 
-                  <p class="text-lg font-medium font-ibm text-zinc-900 dark:text-white">{{ row.total_value | number: '1.2-2' }}€</p>
+                  <p class="text-lg font-medium font-ibm text-zinc-900 dark:text-white">{{ format(row.total_value)}}</p>
                 </div>
 
                 <div class="flex flex-wrap gap-2 lg:ml-auto lg:justify-end">
@@ -196,7 +196,7 @@
                     </p>
 
                     <div class="text-right">
-                      <p class="text-lg font-medium font-ibm text-zinc-900 dark:text-white">{{ format(row.total_value) }}€</p>
+                      <p class="text-lg font-medium font-ibm text-zinc-900 dark:text-white">{{ format(row.total_value) }}</p>
                       <p class="mt-0.5 hidden text-xs text-neutral-500 sm:block">Actualizado {{ row.updated_at | date: 'short' }}</p>
                     </div>
                   </div>

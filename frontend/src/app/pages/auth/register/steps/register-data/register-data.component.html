@@ -73,7 +73,7 @@
                   Continuar con Google
                 </button>
             </div>
-            @if (registerForm.get('termsAccepted')?.invalid && (submitted() || registerForm.get('termsAccepted')?.touched)) {
+            @if (registerForm.get('termsAccepted')?.invalid && (submitted() || registerForm.get('termsAccepted')?.touched) && submittedwhitGoogle()) {
                 <p class="text-orange-500 text-sm">Debes aceptar los términos y la política para continuar con Google.</p>
             }
             <div class="text-center">

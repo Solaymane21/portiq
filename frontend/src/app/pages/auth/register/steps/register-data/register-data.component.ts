@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 export class RegisterDataComponent {
   authService = inject(AuthService)
   submitted = signal<boolean>(false)
+  submittedwhitGoogle = signal<boolean>(false)
 
   registerForm = new FormGroup({
     username: new FormControl(
@@ -45,6 +46,8 @@ export class RegisterDataComponent {
   }
 
   continueWithGoogle() {
+    this.submittedwhitGoogle.set(true)
+
     const termsControl = this.registerForm.get('termsAccepted');
 
     if (termsControl?.invalid) {

@@ -542,7 +542,16 @@ export class InvestmentsComponent implements OnInit {
     this.positionForm
       .get('operated_at')
       ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
+      .subscribe((value) => {
+        if (!value) {
+          return;
+        }
+
+        if (value > this.today) {
+          this.positionForm.get('operated_at')?.setValue(this.today, { emitEvent: false });
+          return;
+        }
+
         if (this.isModalOpen()) {
           this.loadHistoricalPrice();
         }

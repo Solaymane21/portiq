@@ -16,11 +16,13 @@ use Illuminate\Support\Facades\Log;
 
 class InvestmentController extends Controller
 {
+    // Tiempo de cache en segundos
     private const CACHE_TTL = 60;
 
-    // Portfolio completo con precios reales desde la API de Python
+    // Devuelve el portfolio completo con precios actualizados
     public function index(Request $request, $portfolioId): \Illuminate\Http\JsonResponse
     {
+        // Cargamos portfolio, usuario, simbolos y compras iniciales
         $portfolio = Portfolio::with([
                 'investments.symbol',
                 'investments.trades' => function ($query) {
@@ -33,27 +35,37 @@ class InvestmentController extends Controller
             ->where('id', $portfolioId)
             ->firstOrFail();
 
+        // Comprobamos si el usuario puede ver este portfolio
         $this->authorizePortfolioAccess($portfolio, $request->user());
 
+        // Marcamos si el portfolio se esta viendo en modo solo lectura
         $readOnly = $portfolio->user_id !== $request->user()->id;
+
+        // Generamos la clave de cache para este portfolio
         $cacheKey = $this->getPortfolioCacheKey($portfolioId);
 
-        // Si es solo lectura, intentamos tirar de cache
+        // Si es solo lectura intentamos responder desde cache
         if ($readOnly) {
             $cached = Cache::get($cacheKey);
 
+            // Si ya estaba en cache devolvemos la respuesta al momento
             if ($cached) {
                 return response()->json($cached);
             }
         }
 
+        // Montamos las inversiones con precio actual
         $investmentsData = $this->buildInvestmentsWithRealPrices($portfolio);
+
+        // Sumamos el valor total del portfolio
         $totalValue = $this->calculateTotalValue($investmentsData);
 
+        // Calculamos el peso de cada activo si el total es valido
         if ($totalValue > 0) {
             $this->calculateWeights($investmentsData, $totalValue);
         }
 
+        // Preparamos la respuesta final
         $response = [
             'portfolio_name' => $portfolio->name,
             'total_value' => round($totalValue, 2),
@@ -62,14 +74,16 @@ class InvestmentController extends Controller
             'owner_name' => $readOnly ? $portfolio->user?->name : null,
         ];
 
+        // Guardamos la respuesta en cache
         Cache::put($cacheKey, $response, self::CACHE_TTL);
 
         return response()->json($response);
     }
 
-    // Nueva posicion
+    // Crea una nueva posicion o suma a una existente
     public function store(Request $request, $portfolioId): \Illuminate\Http\JsonResponse
     {
+        // Validamos los datos de entrada
         $validated = $request->validate([
             'symbol' => 'required|string|max:20',
             'name' => 'nullable|string|max:255',
@@ -81,12 +95,16 @@ class InvestmentController extends Controller
             'operated_at' => 'nullable|date',
         ]);
 
+        // Solo el dueño puede crear posiciones en su portfolio
         $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
 
-        // Miramos si el plan deja meter otro activo
+        // Contamos cuantos activos siguen abiertos en este portfolio
         $activeCount = $portfolio->investments()->where('quantity', '>', 0)->count();
+
+        // Comprobamos si el plan permite meter otro activo
         $check = app(PlanLimitService::class)->check($request->user(), 'assets_per_portfolio', $activeCount);
 
+        // Si el plan no lo permite devolvemos error claro
         if (!$check['allowed']) {
             return response()->json([
                 'message' => $check['message'],
@@ -96,19 +114,22 @@ class InvestmentController extends Controller
             ], 403);
         }
 
+        // Aplicamos la compra como nuevo lote
         $investment = $this->applyBuyLot($portfolio, strtoupper($validated['symbol']), $validated);
 
+        // Limpiamos cache para que el portfolio se recalcule
         Cache::forget($this->getPortfolioCacheKey($portfolioId));
 
         return response()->json([
-            'message' => 'Posición guardada con éxito',
+            'message' => 'Posicion guardada con exito',
             'investment' => $investment->load('symbol'),
         ], 201);
     }
 
-    // Importacion masiva
+    // Importa varias posiciones de golpe
     public function importPositions(Request $request, $portfolioId): \Illuminate\Http\JsonResponse
     {
+        // Validamos el array de posiciones
         $validated = $request->validate([
             'positions' => 'required|array|min:1|max:500',
             'positions.*.symbol' => 'required|string|max:20',
@@ -121,63 +142,80 @@ class InvestmentController extends Controller
             'positions.*.operated_at' => 'nullable|date',
         ]);
 
+        // Buscamos el portfolio del usuario actual
         $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
 
+        // Metemos todo en transaccion para que falle todo o nada
         DB::transaction(function () use ($portfolio, $validated) {
             $this->bulkApplyBuyLots($portfolio, $validated['positions']);
         });
 
+        // Limpiamos cache para forzar recarga
         Cache::forget($this->getPortfolioCacheKey($portfolioId));
 
         return response()->json([
-            'message' => 'Importación completada.',
+            'message' => 'Importacion completada.',
             'count' => count($validated['positions']),
         ]);
     }
 
+    // Este endpoint no se usa porque hay buy y sell
     public function update(Request $request, $portfolioId, $investmentId): \Illuminate\Http\JsonResponse
     {
         return response()->json(['message' => 'Usa buy() o sell()'], 501);
     }
 
-    // Eliminar posicion
+    // Elimina una posicion si no tiene trades
     public function destroy(Request $request, $portfolioId, $investmentId): \Illuminate\Http\JsonResponse
     {
+        // Buscamos el portfolio del usuario
         $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
+
+        // Buscamos la inversion dentro de ese portfolio
         $investment = $portfolio->investments()->findOrFail($investmentId);
 
-        // Si tiene movimientos, no dejamos borrarla asi
+        // Si tiene historial no dejamos borrarla asi
         if ($investment->trades()->exists()) {
             return response()->json([
-                'message' => 'No puedes eliminar posición con trades. Usa sell().',
+                'message' => 'No puedes eliminar posicion con trades. Usa sell().',
             ], 422);
         }
 
+        // Si no tiene trades la borramos
         $investment->delete();
+
+        // Limpiamos cache del portfolio
         Cache::forget($this->getPortfolioCacheKey($portfolioId));
 
-        return response()->json(['message' => 'Posición eliminada.']);
+        return response()->json(['message' => 'Posicion eliminada.']);
     }
 
-    // Compra extra sobre una posicion ya existente
+    // Registra una compra extra sobre una posicion existente
     public function buy(Request $request, $portfolioId, $investmentId): \Illuminate\Http\JsonResponse
     {
+        // Validamos los datos de la compra
         $validated = $request->validate([
             'quantity' => 'required|numeric|min:0.00000001',
             'price_per_unit' => 'required|numeric|min:0.00000001',
             'operated_at' => 'nullable|date',
         ]);
 
+        // Buscamos el portfolio del usuario
         $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
+
+        // Buscamos la inversion a modificar
         $investment = $portfolio->investments()->findOrFail($investmentId);
 
+        // Recalculamos cantidad total y precio medio
         $adjustment = $this->calculateBuyAdjustment($investment, $validated);
 
+        // Guardamos los nuevos valores en la inversion
         $investment->update([
             'quantity' => $adjustment['quantity'],
             'avg_buy_price' => $adjustment['avgBuyPrice'],
         ]);
 
+        // Registramos el movimiento en trades
         Trade::create([
             'investment_id' => $investment->id,
             'quantity' => $validated['quantity'],
@@ -186,6 +224,7 @@ class InvestmentController extends Controller
             'operated_at' => $this->parseOperatedAt($validated['operated_at'] ?? null),
         ]);
 
+        // Limpiamos cache para refrescar datos
         Cache::forget($this->getPortfolioCacheKey($portfolioId));
 
         return response()->json([
@@ -194,18 +233,23 @@ class InvestmentController extends Controller
         ]);
     }
 
-    // Venta parcial o total
+    // Registra una venta parcial o total
     public function sell(Request $request, $portfolioId, $investmentId): \Illuminate\Http\JsonResponse
     {
+        // Validamos los datos de la venta
         $validated = $request->validate([
             'quantity' => 'required|numeric|min:0.00000001',
             'price_per_unit' => 'required|numeric|min:0.00000001',
             'operated_at' => 'nullable|date',
         ]);
 
+        // Buscamos el portfolio del usuario
         $portfolio = $request->user()->portfolios()->findOrFail($portfolioId);
+
+        // Buscamos la inversion que se va a vender
         $investment = $portfolio->investments()->findOrFail($investmentId);
 
+        // No dejamos vender mas cantidad de la que existe
         if ($validated['quantity'] > $investment->quantity) {
             return response()->json([
                 'message' => 'Cantidad insuficiente.',
@@ -214,8 +258,10 @@ class InvestmentController extends Controller
             ], 422);
         }
 
+        // Restamos la cantidad vendida
         $newQuantity = $investment->quantity - $validated['quantity'];
 
+        // Guardamos la venta en el historial
         Trade::create([
             'investment_id' => $investment->id,
             'quantity' => $validated['quantity'],
@@ -224,10 +270,12 @@ class InvestmentController extends Controller
             'operated_at' => $this->parseOperatedAt($validated['operated_at'] ?? null),
         ]);
 
+        // Si llega a cero la posicion queda cerrada
         $investment->update([
             'quantity' => $newQuantity <= 0 ? 0 : $newQuantity,
         ]);
 
+        // Limpiamos cache del portfolio
         Cache::forget($this->getPortfolioCacheKey($portfolioId));
 
         return response()->json([
@@ -236,38 +284,48 @@ class InvestmentController extends Controller
         ]);
     }
 
+    // Comprueba si el usuario puede acceder al portfolio
     private function authorizePortfolioAccess(Portfolio $portfolio, $user): void
     {
+        // Si no es suyo y no es publico devolvemos 403
         if ($portfolio->user_id !== $user->id && !$portfolio->is_public) {
             abort(403, 'Sin acceso al portafolio');
         }
     }
 
-    // Monta las inversiones con precio actual
+    // Monta el array final de inversiones con precio real
     private function buildInvestmentsWithRealPrices(Portfolio $portfolio): array
     {
         return $portfolio->investments
             ->map(function ($investment) {
+                // Si falta el simbolo no podemos procesar esta fila
                 if (!$investment->symbol) {
                     return null;
                 }
 
+                // Sacamos datos base del simbolo
                 $symbolData = $investment->symbol;
                 $assetType = $symbolData->asset_type;
                 $apiId = $symbolData->api_id;
                 $symbol = $symbolData->symbol;
 
+                // Intentamos resolver el precio actual
                 $currentPrice = $this->resolveCurrentPrice($investment, $symbol, $apiId, $assetType);
+
+                // Nos aseguramos de no trabajar con cero absoluto
                 $currentPrice = max((float) $currentPrice, 0.00000001);
 
+                // Convertimos a float para operar bien
                 $quantity = (float) $investment->quantity;
                 $avgBuyPrice = (float) $investment->avg_buy_price;
 
+                // Calculamos valor actual, coste, beneficio y porcentaje
                 $currentValue = $quantity * $currentPrice;
                 $buyValue = $quantity * $avgBuyPrice;
                 $pl = $currentValue - $buyValue;
                 $plPct = $buyValue > 0 ? round(($pl / $buyValue) * 100, 2) : 0;
 
+                // Devolvemos la estructura que necesita el frontend
                 return [
                     'id' => $investment->id,
                     'symbol_id' => $investment->symbol_id,
@@ -291,27 +349,33 @@ class InvestmentController extends Controller
             ->toArray();
     }
 
-    // Saca el precio actual y si falla usa el precio medio de compra
+    // Saca el precio actual y si falla usa el precio medio
     private function resolveCurrentPrice(Investment $investment, string $symbol, ?string $apiId, string $assetType): float
     {
+        // Empezamos sin identificador
         $identifier = null;
 
+        // En crypto solemos usar api_id si existe
         if ($assetType === 'crypto' && !empty($apiId)) {
             $identifier = $apiId;
         }
 
+        // En stock usamos api_id si existe y si no el simbolo
         if ($assetType === 'stock') {
             $identifier = !empty($apiId) ? $apiId : $symbol;
         }
 
+        // Intentamos sacar el precio desde la API de Python
         $currentPrice = $identifier
             ? $this->getCurrentPriceFromPythonAPI($identifier, $assetType)
             : null;
 
+        // Si viene precio valido lo devolvemos
         if ($currentPrice !== null) {
             return (float) $currentPrice;
         }
 
+        // Si falla dejamos rastro en logs
         Log::warning('Precio actual no encontrado, usando avg_buy_price', [
             'investment_id' => $investment->id,
             'symbol' => $symbol,
@@ -319,42 +383,54 @@ class InvestmentController extends Controller
             'asset_type' => $assetType,
         ]);
 
+        // Como fallback usamos el precio medio de compra
         return (float) $investment->avg_buy_price;
     }
 
-    // Sacamos la fecha de compra desde el primer trade o desde la creacion
+    // Saca la fecha de compra mas antigua disponible
     private function resolvePurchaseDate(Investment $investment): string
     {
+        // Cogemos el primer trade cargado
         $firstTrade = $investment->trades->first();
 
+        // Si existe fecha operada la devolvemos
         if ($firstTrade && $firstTrade->operated_at) {
             return $firstTrade->operated_at instanceof Carbon
                 ? $firstTrade->operated_at->format('Y-m-d')
                 : date('Y-m-d', strtotime($firstTrade->operated_at));
         }
 
+        // Si no, intentamos usar la fecha de creacion
         if ($investment->created_at instanceof Carbon) {
             return $investment->created_at->format('Y-m-d');
         }
 
+        // Como ultimo recurso devolvemos hoy
         return date('Y-m-d');
     }
 
-    // Pide el precio actual usando la API de Python
+    // Pide el precio actual a la API de Python
     private function getCurrentPriceFromPythonAPI(string $identifier, string $assetType): ?float
     {
+        // Leemos la URL base de la API externa
         $pythonApi = env('PYTHON_API_URL');
+
+        // Usamos la fecha de hoy para pedir el precio actual
         $today = now()->format('Y-m-d');
+
+        // La cache distingue por identificador, tipo y fecha
         $cacheKey = 'current_price_' . md5($identifier . '_' . $assetType . '_' . $today);
 
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($pythonApi, $identifier, $assetType, $today) {
             try {
+                // Llamamos a FastAPI con timeout para no colgar la app
                 $response = Http::timeout(10)->get("{$pythonApi}/historical-price/{$identifier}", [
                     'date' => $today,
                     'asset_type' => $assetType,
                     'convert_to_eur' => 'false',
                 ]);
 
+                // Si FastAPI responde mal lo dejamos en logs
                 if (!$response->successful()) {
                     Log::warning('FastAPI devolvio error HTTP', [
                         'identifier' => $identifier,
@@ -367,12 +443,15 @@ class InvestmentController extends Controller
                     return null;
                 }
 
+                // Sacamos el campo price del json
                 $price = $response->json('price');
 
+                // Si es numerico lo devolvemos como float
                 if (is_numeric($price)) {
                     return (float) $price;
                 }
 
+                // Si no hay un price valido lo registramos
                 Log::warning('FastAPI respondio sin price valido', [
                     'identifier' => $identifier,
                     'asset_type' => $assetType,
@@ -380,6 +459,7 @@ class InvestmentController extends Controller
                     'response' => $response->json(),
                 ]);
             } catch (\Exception $e) {
+                // Si la llamada falla del todo tambien lo registramos
                 Log::error('Error FastAPI precio actual [' . $identifier . ']: ' . $e->getMessage(), [
                     'identifier' => $identifier,
                     'asset_type' => $assetType,
@@ -387,77 +467,44 @@ class InvestmentController extends Controller
                 ]);
             }
 
+            // Si algo fue mal devolvemos null
             return null;
         });
     }
 
-    // Lo dejo por si luego se vuelve a usar
-    private function getPricesFromPythonAPI(array $symbols): array
-    {
-        $tickers = implode(',', array_column($symbols, 'ticker'));
-        $assetTypes = implode(',', array_column($symbols, 'asset_type'));
-        $cacheKey = 'prices_' . md5($tickers . '_' . $assetTypes);
-
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($tickers, $assetTypes) {
-            try {
-                $response = Http::timeout(10)->get(env('PYTHON_API_URL') . '/prices', [
-                    'symbols' => $tickers,
-                    'asset_types' => $assetTypes,
-                ]);
-
-                if (!$response->successful()) {
-                    return [];
-                }
-
-                $prices = [];
-
-                foreach ($response->json('results', []) as $result) {
-                    if (!isset($result['price']) || !is_numeric($result['price'])) {
-                        continue;
-                    }
-
-                    $key = $result['api_id'] ?? $result['symbol'];
-                    $prices[$key] = (float) $result['price'];
-                }
-
-                Log::info('Prices mapeados:', $prices);
-
-                return $prices;
-            } catch (\Exception $e) {
-                Log::error('Error Python API precios: ' . $e->getMessage());
-
-                return [];
-            }
-        });
-    }
-
-    // Importacion masiva de compras
+    // Importa varias compras en una sola pasada
     private function bulkApplyBuyLots(Portfolio $portfolio, array $positions): void
     {
+        // Sacamos todos los tickers en mayusculas
         $tickers = array_map(function ($position) {
             return strtoupper($position['symbol']);
         }, $positions);
 
+        // Traemos de golpe los simbolos ya existentes
         $symbols = Symbol::whereIn('symbol', $tickers)
             ->get()
             ->keyBy('symbol');
 
         foreach ($positions as $position) {
+            // Normalizamos el ticker actual
             $ticker = strtoupper($position['symbol']);
 
+            // Si no existe lo creamos o lo actualizamos
             if (!isset($symbols[$ticker])) {
                 $symbols[$ticker] = $this->createOrUpdateSymbol(null, $ticker, $position);
             } else {
                 $symbols[$ticker] = $this->createOrUpdateSymbol($symbols[$ticker], $ticker, $position);
             }
 
+            // Aplicamos cada compra a su portfolio
             $this->applyBuyLot($portfolio, $ticker, $position);
         }
     }
 
-    // Crea el simbolo si no existe y actualiza datos si hace falta
+    // Crea el simbolo o actualiza sus datos si cambian
     private function createOrUpdateSymbol(?Symbol $symbol, string $ticker, array $fields): Symbol
     {
+        // Si no existe lo creamos con datos basicos
         if (!$symbol) {
             $symbol = Symbol::firstOrCreate(
                 ['symbol' => $ticker],
@@ -470,6 +517,7 @@ class InvestmentController extends Controller
             );
         }
 
+        // Si llega un api_id distinto actualizamos el simbolo
         if (!empty($fields['api_id']) && $symbol->api_id !== $fields['api_id']) {
             $symbol->update([
                 'api_id' => $fields['api_id'],
@@ -478,46 +526,56 @@ class InvestmentController extends Controller
                 'asset_type' => $fields['asset_type'] ?? $symbol->asset_type,
             ]);
 
+            // Devolvemos el modelo refrescado
             return $symbol->fresh();
         }
 
         return $symbol;
     }
 
-    // Logica comun para una compra nueva
+    // Aplica una compra nueva o suma a una posicion existente
     private function applyBuyLot(Portfolio $portfolio, string $symbolTicker, array $fields): Investment
     {
+        // Nos aseguramos de que el simbolo exista
         $symbol = $this->createOrUpdateSymbol(null, $symbolTicker, $fields);
 
+        // Buscamos si ya habia una inversion de ese simbolo en el portfolio
         $investment = Investment::where('portfolio_id', $portfolio->id)
             ->where('symbol_id', $symbol->id)
             ->first();
 
+        // Normalizamos cantidad y precio
         $quantity = (float) $fields['quantity'];
         $price = (float) $fields['avg_buy_price'];
 
         if ($investment) {
+            // Si ya existia recalculamos media y cantidad
             $adjustment = $this->calculateBuyAdjustment($investment, [
                 'quantity' => $quantity,
                 'price_per_unit' => $price,
             ]);
 
+            // Guardamos los nuevos datos acumulados
             $investment->update([
                 'quantity' => $adjustment['quantity'],
                 'avg_buy_price' => $adjustment['avgBuyPrice'],
             ]);
 
+            // Marcamos el trade como compra normal
             $tradeType = 'compra';
         } else {
+            // Si no existia creamos una nueva posicion
             $investment = $portfolio->investments()->create([
                 'symbol_id' => $symbol->id,
                 'quantity' => $quantity,
                 'avg_buy_price' => $price,
             ]);
 
+            // El primer trade se marca distinto
             $tradeType = 'nuevaPosicion';
         }
 
+        // Guardamos el movimiento en la tabla de trades
         Trade::create([
             'investment_id' => $investment->id,
             'quantity' => $quantity,
@@ -529,11 +587,19 @@ class InvestmentController extends Controller
         return $investment;
     }
 
+    // Recalcula cantidad total y precio medio tras una compra
     private function calculateBuyAdjustment(Investment $investment, array $operation): array
     {
+        // Coste acumulado antes de comprar mas
         $totalCostBefore = $investment->quantity * $investment->avg_buy_price;
+
+        // Coste del nuevo lote
         $newCost = $operation['quantity'] * $operation['price_per_unit'];
+
+        // Nueva cantidad total
         $newQuantity = $investment->quantity + $operation['quantity'];
+
+        // Nuevo precio medio ponderado
         $newAvgPrice = ($totalCostBefore + $newCost) / $newQuantity;
 
         return [
@@ -542,11 +608,13 @@ class InvestmentController extends Controller
         ];
     }
 
+    // Suma el valor total de todas las inversiones
     private function calculateTotalValue(array $investmentsData): float
     {
         return array_sum(array_column($investmentsData, 'value'));
     }
 
+    // Calcula el peso porcentual de cada inversion
     private function calculateWeights(array &$investmentsData, float $totalValue): void
     {
         foreach ($investmentsData as &$investment) {
@@ -554,11 +622,13 @@ class InvestmentController extends Controller
         }
     }
 
+    // Convierte la fecha recibida o usa ahora por defecto
     private function parseOperatedAt(?string $date): Carbon
     {
         return $date ? Carbon::parse($date) : now();
     }
 
+    // Genera la clave de cache del portfolio
     private function getPortfolioCacheKey($portfolioId): string
     {
         return "portfolio_{$portfolioId}_investments";

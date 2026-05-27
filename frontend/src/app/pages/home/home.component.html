@@ -204,7 +204,7 @@
           Todo lo que necesitas
         </p>
         <h2 class="text-4xl md:text-5xl font-ibm font-black text-zEinc-900 dark:text-white leading-tight">
-          Explora lasfuncionalidades
+          Explora las funcionalidades
         </h2>
       </div>
 
@@ -230,7 +230,7 @@
         </aside>
 
         <!-- MENÚ MOBILE HORIZONTAL -->
-        <div class="lg:hidden w-full mb-2 flex justify-center overflow-x-auto pb-2 scrollbar-hide">
+        <div class="lg:hidden w-full mb-2 flex justify-start overflow-x-auto pb-2 scrollbar-hide">
           <div class="flex justify-center items-center flex-nowrap gap-3 w-max">
             @for (feature of features; track feature.id) {
               <button (click)="activeFeature.set(feature.id)"

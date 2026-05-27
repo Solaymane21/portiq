@@ -1,151 +1,243 @@
 <div class="space-y-6">
-  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-    <div class="flex items-center gap-4">
+  <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+    <div class="flex min-w-0 items-start gap-4">
       <button
+        type="button"
         (click)="volver()"
-        class="inline-flex items-center justify-center p-2 rounded-md bg-zinc-50 dark:bg-neutral-950 text-zinc-500 dark:text-neutral-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer shrink-0 transition-colors">
+        class="inline-flex shrink-0 items-center justify-center rounded-md bg-zinc-50 p-2 text-zinc-500 transition-colors hover:text-zinc-900 dark:bg-neutral-950 dark:text-neutral-500 dark:hover:text-white"
+      >
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
         </svg>
       </button>
 
-      <div class="min-w-0">
-        <h1 class="text-3xl font-ibm text-zinc-900 dark:text-white truncate">Historial de Operaciones</h1>
-        <p class="text-neutral-500 text-sm mt-1">
-          Cartera: <span class="text-orange-500 mt-1">{{ nombreCartera() }}</span>
+      <div class="min-w-0 flex-1">
+        <h1 class="min-w-0 break-words text-[clamp(1.25rem,2.6vw,1.875rem)] font-ibm text-zinc-900 text-wrap dark:text-white">
+          Historial de Operaciones
+        </h1>
+        <p class="mt-1 text-sm text-neutral-500">
+          Cartera: <span class="text-orange-500">{{ nombreCartera() }}</span>
         </p>
       </div>
     </div>
   </div>
 
-
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5 mb-5 text-zinc-800 dark:text-neutral-300">
-    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 shadow-sm dark:shadow-none">
-      <p class="mb-3">Capital Depositado</p>
-      <p class="text-2xl md:text-3xl font-ibm font-bold text-zinc-900 dark:text-neutral-100 text-center">
+  <!-- Resumen rapido -->
+  <div class="mt-5 mb-5 grid grid-cols-1 gap-4 text-zinc-800 dark:text-neutral-300 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="min-w-0 w-full rounded-2xl border border-zinc-400 bg-zinc-50 p-5 shadow-sm dark:border-neutral-600 dark:bg-neutral-950 dark:shadow-none">
+      <p class="mb-3 min-w-0 break-words text-[clamp(0.875rem,1.4vw,1rem)] text-zinc-700 text-wrap dark:text-neutral-300">
+        Capital Depositado
+      </p>
+      <p class="min-w-0 break-words text-center text-[clamp(1rem,2vw,1.875rem)] font-ibm font-bold tabular-nums text-zinc-900 dark:text-neutral-100">
         {{ format(totalDepositado()) }}
       </p>
     </div>
 
-    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 shadow-sm dark:shadow-none">
-      <p class="mb-3">Capital Retirado</p>
-      <p class="text-2xl md:text-3xl font-ibm font-bold text-center tabular-nums">
+    <div class="min-w-0 w-full rounded-2xl border border-zinc-400 bg-zinc-50 p-5 shadow-sm dark:border-neutral-600 dark:bg-neutral-950 dark:shadow-none">
+      <p class="mb-3 min-w-0 break-words text-[clamp(0.875rem,1.4vw,1rem)] text-zinc-700 text-wrap dark:text-neutral-300">
+        Capital Retirado
+      </p>
+      <p class="min-w-0 break-words text-center text-[clamp(1rem,2vw,1.875rem)] font-ibm font-bold tabular-nums text-zinc-900 dark:text-neutral-100">
         {{ format(totalRetirado()) }}
       </p>
     </div>
 
-    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 shadow-sm dark:shadow-none">
-      <p class="mb-3">Exposición Neta</p>
-      <p class="text-2xl md:text-3xl font-ibm font-bold text-zinc-900 dark:text-neutral-100 text-center">
-        {{ exposicionNeta() < 0 ? '+' : '' }}{{ format(exposicionNeta()) }}
+    <div class="min-w-0 w-full rounded-2xl border border-zinc-400 bg-zinc-50 p-5 shadow-sm dark:border-neutral-600 dark:bg-neutral-950 dark:shadow-none">
+      <p class="mb-3 min-w-0 break-words text-[clamp(0.875rem,1.4vw,1rem)] text-zinc-700 text-wrap dark:text-neutral-300">
+        Exposición Neta
+      </p>
+      <p class="min-w-0 break-words text-center text-[clamp(1rem,2vw,1.875rem)] font-ibm font-bold tabular-nums text-zinc-900 dark:text-neutral-100">
+        {{ getExposicionNetaDisplay() }}
       </p>
     </div>
-    <div class="bg-zinc-50 dark:bg-neutral-950 border w-full border-zinc-400 dark:border-neutral-600 rounded-2xl p-5 shadow-sm dark:shadow-none">
-      <p class="mb-3">Operaciones Totales</p>
-      <p class="text-2xl md:text-3xl font-ibm font-bold text-zinc-900 dark:text-neutral-100 text-center">
+
+    <div class="min-w-0 w-full rounded-2xl border border-zinc-400 bg-zinc-50 p-5 shadow-sm dark:border-neutral-600 dark:bg-neutral-950 dark:shadow-none">
+      <p class="mb-3 min-w-0 break-words text-[clamp(0.875rem,1.4vw,1rem)] text-zinc-700 text-wrap dark:text-neutral-300">
+        Operaciones Totales
+      </p>
+      <p class="min-w-0 break-words text-center text-[clamp(1rem,2vw,1.875rem)] font-ibm font-bold tabular-nums text-zinc-900 dark:text-neutral-100">
         {{ totalOperaciones() }}
       </p>
     </div>
   </div>
 
-  <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-xl overflow-hidden shadow-sm dark:shadow-none">
+  <div class="overflow-hidden rounded-xl border border-zinc-400 bg-zinc-50 dark:border-neutral-600 dark:bg-neutral-950">
     <div class="w-full overflow-x-auto">
-      <table mat-table [dataSource]="dataSource" matSort class="w-full min-w-[760px] !bg-transparent text-zinc-900 dark:text-white">
-        <ng-container matColumnDef="operated_at">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-400 text-sm font-medium align-middle hover:!text-zinc-900 dark:hover:!text-white transition-colors">
-            Fecha
-          </th>
-          <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 text-right align-middle">
-            {{ element.operated_at | date:'dd-MM-yyyy' }}
-          </td>
-        </ng-container>
+      @if (cargando()) {
+        <div class="min-w-[760px]">
+          <div class="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_140px] px-4 md:px-6 py-4 border-b !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 gap-4">
+            <div class="h-4 w-20 rounded bg-zinc-200 dark:bg-neutral-800 animate-pulse"></div>
+            <div class="h-4 w-16 rounded bg-zinc-200 dark:bg-neutral-800 animate-pulse"></div>
+            <div class="h-4 w-24 rounded bg-zinc-200 dark:bg-neutral-800 animate-pulse"></div>
+            <div class="h-4 w-16 rounded bg-zinc-200 dark:bg-neutral-800 animate-pulse"></div>
+            <div class="h-4 w-20 rounded bg-zinc-200 dark:bg-neutral-800 animate-pulse"></div>
+            <div class="ml-auto h-4 w-12 rounded bg-zinc-200 dark:bg-neutral-800 animate-pulse"></div>
+          </div>
 
-        <ng-container matColumnDef="symbol">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-400 text-sm font-medium align-middle hover:!text-zinc-900 dark:hover:!text-white transition-colors">
-            Activo
-          </th>
-          <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !text-zinc-500 dark:!text-neutral-400 text-right align-middle">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="w-8 h-8 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center border border-neutral-600">
-                @if (element.image_url) {
-                  <img [src]="element.image_url" [alt]="element.symbol" class="w-full h-full object-cover" />
-                } @else {
-                  <span class="text-xs !text-zinc-000 dark:!text-neutral-400">{{ getInitial(element.symbol) }}</span>
-                }
+          @for (n of skeletonItems; track n) {
+            <div class="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_140px] items-center px-4 md:px-6 py-4 border-b !border-zinc-300 dark:!border-neutral-800 gap-4 bg-zinc-50 dark:bg-neutral-950">
+              <div class="flex min-w-0 items-center gap-3">
+                <div class="w-8 h-8 shrink-0 rounded-full bg-zinc-200 dark:bg-neutral-800 animate-pulse"></div>
+                <div class="h-5 w-24 rounded bg-zinc-200 dark:bg-neutral-800 animate-pulse"></div>
               </div>
-              <div class="min-w-0">
-                <p class="!text-zinc-900 dark:!text-neutral-400 truncate">{{ element.symbol }}</p>
+
+              <div class="h-5 w-14 rounded bg-zinc-200 dark:bg-neutral-800 animate-pulse"></div>
+              <div class="h-5 w-20 rounded bg-zinc-200 dark:bg-neutral-800 animate-pulse"></div>
+              <div class="h-5 w-24 rounded bg-zinc-200 dark:bg-neutral-800 animate-pulse"></div>
+              <div class="h-5 w-20 rounded bg-zinc-200 dark:bg-neutral-800 animate-pulse"></div>
+
+              <div class="flex justify-end gap-2">
+                <div class="h-8 w-16 rounded-md bg-zinc-200 dark:bg-neutral-800 animate-pulse"></div>
+                <div class="h-8 w-16 rounded-md bg-zinc-200 dark:bg-neutral-800 animate-pulse"></div>
               </div>
             </div>
-          </td>
-        </ng-container>
+          }
+        </div>
+      } @else {
+        <table mat-table [dataSource]="dataSource" matSort class="w-full min-w-[760px] !bg-transparent text-zinc-900 dark:text-white">
+          <ng-container matColumnDef="operated_at">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              mat-sort-header
+              class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-400 text-sm font-medium align-middle hover:!text-zinc-900 dark:hover:!text-white transition-colors"
+            >
+              Fecha
+            </th>
+            <td
+              mat-cell
+              *matCellDef="let element"
+              class="px-4 md:px-6 py-4 border-b uppercase whitespace-nowrap !border-zinc-300 dark:!border-neutral-800 text-zinc-700 dark:!text-neutral-400 text-right align-middle"
+            >
+              {{ element.operated_at | date:'dd-MM-yyyy' }}
+            </td>
+          </ng-container>
 
-        <ng-container matColumnDef="type">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-400 text-sm font-medium align-middle hover:!text-zinc-900 dark:hover:!text-white transition-colors">
-            Operación
-          </th>
-          <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 text-right align-middle">
-            <span [class]="getTypeBadgeClass(element.type)" class="px-2.5 py-1 text-xs font-medium rounded-full inline-block">
-              {{ getTypeLabel(element.type) }}
-            </span>
-          </td>
-        </ng-container>
+          <ng-container matColumnDef="symbol">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              mat-sort-header
+              class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-400 text-sm font-medium align-middle hover:!text-zinc-900 dark:hover:!text-white transition-colors"
+            >
+              Activo
+            </th>
+            <td
+              mat-cell
+              *matCellDef="let element"
+              class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !text-zinc-500 dark:!text-neutral-400 text-right align-middle"
+            >
+              <div class="flex min-w-0 items-center gap-3">
+                <div class="flex w-8 h-8 items-center justify-center overflow-hidden rounded-full bg-neutral-800 border border-neutral-600">
+                  @if (element.image_url) {
+                    <img [src]="element.image_url" [alt]="element.symbol" class="w-full h-full object-cover" />
+                  } @else {
+                    <span class="text-xs text-zinc-100 dark:!text-neutral-400">{{ getInitial(element.symbol) }}</span>
+                  }
+                </div>
 
-        <ng-container matColumnDef="price_per_unit">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-400 text-sm font-medium align-middle hover:!text-zinc-900 dark:hover:!text-white transition-colors">
-            Precio Ud.
-          </th>
-          <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 text-right align-middle">
-            {{ format(element.price_per_unit) }}
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="quantity">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-400 text-sm font-medium align-middle hover:!text-zinc-900 dark:hover:!text-white transition-colors">
-            Cantidad
-          </th>
-          <td mat-cell *matCellDef="let element" class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 text-right align-middle">
-            {{ formatNumber(element.quantity, 6) }}
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="total_value">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-400 text-sm font-medium align-middle hover:!text-zinc-900 dark:hover:!text-white transition-colors">
-            Total
-          </th>
-          <td
-            mat-cell
-            *matCellDef="let element"
-            class="px-4 md:px-6 py-4 border-b !border-zinc-300 dark:!border-neutral-800 text-right font-medium font-ibm"
-            [class]="element.type === 'venta' ? 'text-green-500' : 'text-red-500'">
-            {{ element.type === 'venta' ? '+' : '-' }}{{ format(element.total_value) }}
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:!bg-zinc-100 dark:hover:!bg-neutral-900/80 transition-colors group"></tr>
-
-        <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell text-center py-12 !text-neutral-500 border-none" colspan="6">
-            @if (cargando()) {
-              <div class="flex flex-col items-center justify-center">
-                <svg class="animate-spin h-6 w-6 text-orange-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                <span>Cargando historial...</span>
+                <div class="min-w-0">
+                  <p class="truncate !text-zinc-900 dark:!text-neutral-400">{{ element.symbol }}</p>
+                </div>
               </div>
-            } @else {
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="type">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              mat-sort-header
+              class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-400 text-sm font-medium align-middle hover:!text-zinc-900 dark:hover:!text-white transition-colors"
+            >
+              Operación
+            </th>
+            <td
+              mat-cell
+              *matCellDef="let element"
+              class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 text-right align-middle"
+            >
+              <span [class]="getTypeBadgeClass(element.type)" class="inline-block rounded-full px-2.5 py-1 text-xs font-medium">
+                {{ getTypeLabel(element.type) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="price_per_unit">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              mat-sort-header
+              class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-400 text-sm font-medium align-middle hover:!text-zinc-900 dark:hover:!text-white transition-colors"
+            >
+              Precio Ud.
+            </th>
+            <td
+              mat-cell
+              *matCellDef="let element"
+              class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 text-zinc-700 dark:!text-neutral-400 text-right align-middle"
+            >
+              {{ format(element.price_per_unit) }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="quantity">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              mat-sort-header
+              class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-400 text-sm font-medium align-middle hover:!text-zinc-900 dark:hover:!text-white transition-colors"
+            >
+              Cantidad
+            </th>
+            <td
+              mat-cell
+              *matCellDef="let element"
+              class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 text-zinc-700 dark:!text-neutral-400 text-right align-middle"
+            >
+              {{ formatNumber(element.quantity, 6) }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="total_value">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              mat-sort-header
+              class="px-4 md:px-6 py-4 border-b uppercase !border-zinc-300 dark:!border-neutral-800 !bg-zinc-100 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-400 text-sm font-medium align-middle hover:!text-zinc-900 dark:hover:!text-white transition-colors"
+            >
+              Total
+            </th>
+            <td
+              mat-cell
+              *matCellDef="let element"
+              class="px-4 md:px-6 py-4 border-b !border-zinc-300 dark:!border-neutral-800 text-right font-medium font-ibm"
+              [class]="element.type === 'venta' ? 'text-green-500' : 'text-red-500'"
+            >
+              {{ element.type === 'venta' ? '+' : '-' }}{{ format(element.total_value) }}
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: displayedColumns;"
+            class="group hover:!bg-zinc-100 dark:hover:!bg-neutral-900/80 transition-colors"
+          ></tr>
+
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell py-12 text-center !text-neutral-500 border-none" colspan="6">
               No hay operaciones registradas en esta cartera
-            }
-          </td>
-        </tr>
-      </table>
+            </td>
+          </tr>
+        </table>
+      }
     </div>
 
     <mat-paginator
       [pageSize]="10"
-      class="border-t !border-zinc-300 dark:!border-neutral-600 !bg-zinc-50 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-500">
+      class="border-t !border-zinc-300 dark:!border-neutral-600 !bg-zinc-50 dark:!bg-neutral-950 !text-zinc-500 dark:!text-neutral-500"
+    >
     </mat-paginator>
   </div>
 </div>

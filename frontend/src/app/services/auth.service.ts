@@ -7,7 +7,6 @@ import { catchError, map, of, tap } from 'rxjs';
 import { InitialDataService } from './initial-data.service';
 import { FavoritesService } from './favorites.service';
 import { environment } from '../../environments/environment';
-import { PreferencesService } from './preferences.service';
 import { CookiesService } from './cookies.service';
 import { NotificationsService } from './notifications.service';
 
@@ -30,7 +29,6 @@ export class AuthService {
   private router = inject(Router);
   private initialDataService = inject(InitialDataService)
   private favoritesService = inject(FavoritesService)
-  private preferencesService = inject(PreferencesService);
   private cookiesService = inject(CookiesService)
   private notificationsService = inject(NotificationsService)
 

@@ -188,80 +188,6 @@ def portfolio_value(positions: str):
     }
 
 """
-Precio histórico para una fecha exacta
-"""
-@app.get("/historical-price/{symbol}")
-def get_historical_price(symbol: str, date: str, asset_type: str = "stock", convert_to_eur: bool = True):
-    if not re.match(r'^[A-Za-z0-9.\-]{1,10}$', symbol):
-        raise HTTPException(status_code=422, detail="Símbolo inválido")
-
-    yf_symbol = f"{symbol.upper()}-USD" if asset_type == "crypto" else symbol.upper()
-
-    try:
-        target_date = datetime.strptime(date, "%Y-%m-%d")
-        start_date = target_date - timedelta(days=5)
-        end_date = target_date + timedelta(days=1)
-
-        # 1. Obtenemos el precio del activo
-        df = yf.download(
-            yf_symbol,
-            start=start_date.strftime("%Y-%m-%d"),
-            end=end_date.strftime("%Y-%m-%d"),
-            progress=False
-        )
-
-        if df.empty:
-            raise HTTPException(status_code=404, detail="Sin datos para esta fecha")
-
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
-
-        df_filtered = df[df.index.strftime('%Y-%m-%d') <= target_date.strftime('%Y-%m-%d')]
-        
-        if df_filtered.empty:
-            raise HTTPException(status_code=404, detail="Sin datos cercanos a esa fecha")
-
-        price = float(df_filtered['Close'].iloc[-1])
-        currency = "USD"
-
-        # 2. Conversión a EUR (reemplaza a TwelveData)
-        if convert_to_eur:
-            # Descargamos el histórico del par Euro/Dólar
-            fx_df = yf.download(
-                "EURUSD=X",
-                start=start_date.strftime("%Y-%m-%d"),
-                end=end_date.strftime("%Y-%m-%d"),
-                progress=False
-            )
-            
-            if not fx_df.empty:
-                if isinstance(fx_df.columns, pd.MultiIndex):
-                    fx_df.columns = fx_df.columns.get_level_values(0)
-                
-                fx_filtered = fx_df[fx_df.index.strftime('%Y-%m-%d') <= target_date.strftime('%Y-%m-%d')]
-                
-                if not fx_filtered.empty:
-                    exchange_rate = float(fx_filtered['Close'].iloc[-1])
-                    # Fórmula: Precio (USD) / Tasa de cambio (EUR/USD) = Precio (EUR)
-                    price = price / exchange_rate
-                    currency = "EUR"
-
-        return {
-            "symbol": symbol.upper(),
-            "requested_date": date,
-            "price": round(price, 4),
-            "currency": currency
-        }
-
-    except ValueError:
-        raise HTTPException(status_code=422, detail="Formato de fecha inválido. Usa YYYY-MM-DD")
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-"""
 Historial de precios para gráfica
 """
 @app.get("/history/{symbol}")
@@ -433,3 +359,200 @@ def portfolio_history(
         import traceback
         traceback.print_exc()
         return {"data": []}
+
+"""
+Precio historico para una fecha exacta
+"""
+@app.get("/historical-price/{symbol}")
+def get_historical_price(
+    symbol: str,
+    date: str,
+    asset_type: str = "stock",
+    convert_to_eur: bool = True
+):
+    import re
+    from datetime import datetime, timedelta
+
+    # Validamos el simbolo para evitar entradas raras
+    if not re.match(r"^[A-Za-z0-9.\-]{1,20}$", symbol):
+        raise HTTPException(status_code=422, detail="Simbolo invalido")
+
+    # Intentamos convertir la fecha al formato esperado
+    try:
+        target_date = datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Formato de fecha invalido. Usa YYYY-MM-DD")
+
+    # Solo permitimos stock o crypto
+    asset_type = asset_type.lower().strip()
+    if asset_type not in ("stock", "crypto"):
+        raise HTTPException(status_code=422, detail="asset_type debe ser 'stock' o 'crypto'")
+
+    # Normalizamos el simbolo a mayusculas
+    clean_symbol = symbol.upper()
+
+    # Buscamos algunos dias antes por si no hubo mercado ese dia
+    start_date = (target_date - timedelta(days=7)).strftime("%Y-%m-%d")
+
+    # Sumamos un dia porque yfinance usa end exclusivo
+    end_date = (target_date + timedelta(days=1)).strftime("%Y-%m-%d")
+
+    def download_data(ticker, start=None, end=None, period=None):
+        # Descargamos datos diarios desde Yahoo
+        df = yf.download(
+            ticker,
+            start=start,
+            end=end,
+            period=period,
+            interval="1d",
+            progress=False,
+            auto_adjust=False,
+            threads=False
+        )
+
+        # Si no llega nada devolvemos un dataframe vacio
+        if df is None or df.empty:
+            return pd.DataFrame()
+
+        # Si vienen columnas dobles nos quedamos con la primera capa
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+
+        # Convertimos el indice a fechas de pandas
+        df.index = pd.to_datetime(df.index)
+
+        # Quitamos timezone si existe para comparar mejor las fechas
+        try:
+            if getattr(df.index, "tz", None) is not None:
+                df.index = df.index.tz_localize(None)
+        except Exception:
+            pass
+
+        # Ordenamos por si acaso
+        return df.sort_index()
+
+    def get_close_price(df, limit_date):
+        # Si no hay datos o no hay columna Close no seguimos
+        if df.empty or "Close" not in df.columns:
+            return None
+
+        # Filtramos hasta la fecha pedida incluida
+        df = df[df.index <= pd.Timestamp(limit_date)]
+
+        # Si no queda nada no hay precio util
+        if df.empty:
+            return None
+
+        # Quitamos cierres vacios
+        close_values = df["Close"].dropna()
+
+        # Si sigue vacio devolvemos None
+        if close_values.empty:
+            return None
+
+        # Cogemos el cierre mas cercano hacia atras
+        return float(close_values.iloc[-1])
+
+    def ticker_has_data(ticker):
+        # Aqui solo comprobamos si el ticker existe y devuelve precios
+        try:
+            df = download_data(ticker, period="1mo")
+
+            # Si esta vacio no sirve
+            if df.empty:
+                return False
+
+            # Si no tiene Close no sirve
+            if "Close" not in df.columns:
+                return False
+
+            # Si no hay cierres reales no sirve
+            if df["Close"].dropna().empty:
+                return False
+
+            return True
+        except Exception:
+            return False
+
+    def resolve_crypto_symbol(user_symbol):
+        # Probamos primero el formato normal de Yahoo
+        normal_symbol = f"{user_symbol}-USD"
+
+        # Si existe lo devolvemos directamente
+        if ticker_has_data(normal_symbol):
+            return normal_symbol
+
+        # Si no, intentamos encontrarlo con el buscador
+        try:
+            search = yf.Search(user_symbol, max_results=10)
+
+            # Recorremos los resultados devueltos por Yahoo
+            for item in search.quotes:
+                quote_symbol = (item.get("symbol") or "").upper()
+                quote_type = (item.get("quoteType") or "").upper()
+
+                # Nos quedamos solo con cryptos en USD
+                if quote_type == "CRYPTOCURRENCY" and quote_symbol.endswith("-USD"):
+                    # Confirmamos que ese ticker si devuelve precios
+                    if ticker_has_data(quote_symbol):
+                        return quote_symbol
+        except Exception:
+            pass
+
+        # Si no encontramos nada devolvemos None
+        return None
+
+    try:
+        # Para crypto resolvemos el ticker real de Yahoo
+        yahoo_symbol = resolve_crypto_symbol(clean_symbol) if asset_type == "crypto" else clean_symbol
+
+        # Si no existe un ticker valido devolvemos 404
+        if not yahoo_symbol:
+            raise HTTPException(status_code=404, detail="No se encontro un ticker valido")
+
+        # Descargamos los datos alrededor de la fecha pedida
+        data = download_data(yahoo_symbol, start=start_date, end=end_date)
+
+        # Si Yahoo no devuelve nada no hay datos para ese rango
+        if data.empty:
+            raise HTTPException(status_code=404, detail="Sin datos para esa fecha")
+
+        # Buscamos el ultimo cierre disponible hasta la fecha objetivo
+        price = get_close_price(data, target_date)
+
+        # Si no encontramos cierre util devolvemos error
+        if price is None:
+            raise HTTPException(status_code=404, detail="Sin cierre disponible cerca de esa fecha")
+
+        # El precio base lo tratamos como USD
+        currency = "USD"
+
+        # Si nos piden EUR intentamos convertir el precio
+        if convert_to_eur:
+            # Descargamos el cambio EURUSD del mismo rango
+            fx_data = download_data("EURUSD=X", start=start_date, end=end_date)
+
+            # Buscamos el cambio mas cercano hacia atras
+            fx_rate = get_close_price(fx_data, target_date)
+
+            # Solo convertimos si el cambio existe y es valido
+            if fx_rate and fx_rate > 0:
+                price = price / fx_rate
+                currency = "EUR"
+
+        # Devolvemos la respuesta final ya redondeada
+        return {
+            "symbol": clean_symbol,
+            "yahoo_symbol": yahoo_symbol,
+            "requested_date": date,
+            "price": round(price, 8) if asset_type == "crypto" else round(price, 4),
+            "currency": currency
+        }
+
+    # Reenviamos tal cual los errores HTTP controlados
+    except HTTPException:
+        raise
+
+    # Cualquier otro fallo lo convertimos en error 500
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")

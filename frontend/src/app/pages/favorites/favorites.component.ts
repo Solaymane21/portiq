@@ -32,22 +32,26 @@ export class FavoritesComponent implements OnInit {
   notificationService = inject(NotificationsService)
   subscriptionService = inject(SubscriptionService);
 
+  // Datos de favoritos
   favorites = this.favoritesService.favorites;
   favoritePortfolios = this.favoritesService.favoritePortfolios;
-  deletingPortfolioIds = signal<Set<number>>(new Set());
+  deletingPortfolioIds = signal<Set<number>>(new Set()); 
 
-  sparklines = new Map<number, any>();
-  prices = signal<Record<string, number>>({});
-  loadingPrices = signal<boolean>(false);
+  // Gráficas y precios
+  sparklines = new Map<number, any>();        // Mini gráficas para cada favorito
+  prices = signal<Record<string, number>>({}); // Precios actuales
+  loadingPrices = signal<boolean>(false);      // Cargando precios
 
+  // Búsqueda para añadir favoritos
   searchQuery = '';
   searchResults = signal<SearchResult[]>([]);
   isSearching = signal<boolean>(false);
   isFetching = this.favoritesService.fetching;
   showDropdown = signal<boolean>(false);
-  changes = signal<Record<string, number>>({});
-  deletingIds = signal<Set<number>>(new Set());
+  changes = signal<Record<string, number>>({});  // Cambio porcentual de cada símbolo
+  deletingIds = signal<Set<number>>(new Set());  // Activos en proceso de borrado
 
+  // Filtro por tipo de activo
   filter = signal<'all' | 'stock' | 'crypto' | 'etf'>('all')
   assetLabels: Record<string, string> = {
     all: 'Todos',
@@ -56,13 +60,13 @@ export class FavoritesComponent implements OnInit {
     etf: 'ETF'
   };
 
-  // color activo del tema
+  // Color del tema
   private get primaryColor(): string {
     return this.preferencesService.colorHex();
   }
 
   constructor() {
-    // cuando cambia el color, reconstruye todas las sparklines
+    // Cuando cambia el color del tema, reconstruye todas las sparklines
     effect(() => {
       this.preferencesService.colorTheme();
       this.rebuildAllSparklines();
@@ -70,11 +74,13 @@ export class FavoritesComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Carga favoritos al iniciar
     this.favoritesService.load().subscribe(favs => {
       this.loadPrices(favs.assets);
       this.loadSparklines(favs.assets);
     });
 
+    // Actualiza precios cada 30 segundos
     interval(30000).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
@@ -84,12 +90,14 @@ export class FavoritesComponent implements OnInit {
       }
     });
 
+    // Búsqueda con debounce (espera 250ms después de cada tecla)
     this.searchSubject.pipe(
       debounceTime(250),
       distinctUntilChanged()
     ).subscribe(query => this.fetchResults(query));
   }
 
+  // Filtra los favoritos según el tipo seleccionado
   filteredFavorites = computed(() => {
     const f = this.filter();
     const favs = this.favorites();
@@ -97,6 +105,7 @@ export class FavoritesComponent implements OnInit {
     return favs.filter(fav => fav.asset_type === f);
   });
 
+  // Carga las sparklines (mini gráficas) de los favoritos
   loadSparklines(favs: Favorite[]): void {
     const missing = favs.filter(f => !this.sparklines.has(f.symbol_id));
     if (missing.length === 0) return;
@@ -116,6 +125,7 @@ export class FavoritesComponent implements OnInit {
     });
   }
 
+  // Carga los precios actuales de los favoritos
   loadPrices(favs: Favorite[], silent = false): void {
     if (!silent) this.loadingPrices.set(true);
 
@@ -142,18 +152,22 @@ export class FavoritesComponent implements OnInit {
     });
   }
 
+  // Devuelve el precio de un símbolo
   getPrice(symbol: string): number {
     return this.prices()[symbol] ?? 0;
   }
 
+  // Devuelve el cambio porcentual de un símbolo
   getChange(symbol: string): number {
     return this.changes()[symbol] ?? 0;
   }
 
+  // Devuelve la sparkline de un símbolo
   getSparkline(symbolId: number) {
     return this.sparklines.get(symbolId);
   }
 
+  // Construye una sparkline (mini gráfica de 60px de alto)
   buildSparkline(fav: Favorite, history: any) {
     const data = history?.data ?? [];
 
@@ -162,7 +176,7 @@ export class FavoritesComponent implements OnInit {
       chart: {
         type: 'area' as const,
         height: 60,
-        sparkline: { enabled: true },
+        sparkline: { enabled: true },  // Modo sparkline: sin ejes ni grid
         toolbar: { show: false },
         background: 'transparent'
       },
@@ -190,6 +204,7 @@ export class FavoritesComponent implements OnInit {
     };
   }
 
+  // Cuando cambia el color del tema, actualiza todas las sparklines
   private rebuildAllSparklines(): void {
     this.sparklines.forEach((sparkline, symbolId) => {
       this.sparklines.set(symbolId, {
@@ -199,6 +214,7 @@ export class FavoritesComponent implements OnInit {
     });
   }
 
+  // Busca activos para añadir a favoritos
   onSearch(query: string): void {
     if (query.length < 2) {
       this.searchResults.set([]);
@@ -209,6 +225,7 @@ export class FavoritesComponent implements OnInit {
     this.searchSubject.next(query);
   }
 
+  // Ejecuta la búsqueda en el backend
   fetchResults(query: string): void {
     this.marketService.search(query).subscribe({
       next: (results) => {
@@ -224,18 +241,15 @@ export class FavoritesComponent implements OnInit {
     });
   }
 
+  // Añade un activo a favoritos
   addToFavorites(result: SearchResult): void {
-    // verificar límite antes de abrir el modal
     if (!this.subscriptionService.canCreate('favorites')) {
-      this.notificationService.warning(
-        'Has alcanzado el límite de favoritos. Mejora al Plan Premium.'
-      );
+      this.notificationService.warning('Has alcanzado el límite de favoritos. Mejora al Plan Premium.');
       return;
     }
 
     this.favoritesService.add(result).subscribe({
       next: (newFav) => {
-        // Solo carga precio y sparkline del nuevo
         this.loadPrices([newFav], false);
         this.loadSparklines([newFav]);
         this.subscriptionService.loadPlanLimits();
@@ -247,10 +261,12 @@ export class FavoritesComponent implements OnInit {
     this.showDropdown.set(false);
   }
 
+  // Indica si un activo está siendo eliminado
   isDeleting(symbolId: number): boolean {
     return this.deletingIds().has(symbolId);
   }
 
+  // Elimina un activo de favoritos
   removeFromFavorites(symbolId: number): void {
     const fav = this.favorites().find(f => f.symbol_id === symbolId);
 
@@ -276,12 +292,14 @@ export class FavoritesComponent implements OnInit {
     });
   }
 
+  // Si hace clic fuera del buscador, cierra el dropdown
   @HostListener('document:click', ['$event'])
   onClickOutside(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.relative')) this.showDropdown.set(false);
   }
 
+  // Limpia la búsqueda
   clearSearch(): void {
     this.searchQuery = '';
     this.searchResults.set([]);
@@ -289,14 +307,17 @@ export class FavoritesComponent implements OnInit {
     this.isSearching.set(false);
   }
 
+  // Formatea un número como moneda
   format(value: number) {
     return this.preferencesService.formatCurrency(value);
   }
 
+  // Indica si un portfolio está siendo eliminado
   isDeletingPortfolio(portfolioId: number): boolean {
     return this.deletingPortfolioIds().has(portfolioId);
   }
 
+  // Elimina un portfolio de favoritos
   removeFromFavoritePortfolios(portfolioId: number): void {
     const portfolio = this.favoritePortfolios().find(p => p.portfolio_id === portfolioId);
 

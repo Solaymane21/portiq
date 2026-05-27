@@ -2,7 +2,7 @@ export interface Investment {
   id: number;
   portfolio_id: number;
   symbol_id: number;
-  quantity: number;
+  quantity: number | string;
   avg_buy_price: number;
   symbol: string;
   name: string;
@@ -29,7 +29,7 @@ export interface InvestmentsResponse {
 export interface AssetSearchResult {
   symbol: string;
   name: string;
-  api_id?: string; // NUEVO: el id de CoinGecko o TwelveData
+  api_id?: string;
   image_url?: string | null;
   asset_type: 'stock' | 'crypto' | string;
 }
@@ -42,6 +42,7 @@ export interface UpsertPositionPayload {
   quantity: number;
   avg_buy_price: number;
   operated_at?: string | null;
+  api_id?: string | null;
 }
 
 export interface TradeActionPayload {
@@ -50,5 +51,5 @@ export interface TradeActionPayload {
   operated_at?: string | null;
 }
 
-/** Lotes para importación masiva (misma forma que el alta manual). */
+// Para importar usamos lo mismo que para crear una posicion
 export type ImportPositionPayload = UpsertPositionPayload;

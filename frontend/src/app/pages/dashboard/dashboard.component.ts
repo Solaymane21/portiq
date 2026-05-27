@@ -46,14 +46,17 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  // ORDENACIÓN PERSONALIZADA: limpia símbolos como € o % antes de ordenar
   @ViewChild(MatSort) set sort(sort: MatSort) {
     if (sort) {
       this.dataSource.sort = sort;
       this.dataSource.sortingDataAccessor = (item: PortfolioPosition, sortHeaderId: string) => {
         switch (sortHeaderId) {
           case 'price':
+            // Elimina todo lo que no sea número, punto o menos
             return parseFloat(String(item.price).replace(/[^0-9.-]/g, '')) || 0;
           case 'change':
+            // Elimina el signo % y el +/-
             return parseFloat(String(item.change).replace(/[^0-9.-]/g, '')) || 0;
           case 'ticker':
             return item.ticker?.toLowerCase() ?? '';
@@ -72,6 +75,7 @@ export class DashboardComponent implements OnInit {
   selectedPortfolioId: number = 0;
   isLoadingPortfolios = true;
 
+  // Devuelve la cartera seleccionada, o la primera si no hay ninguna seleccionada
   get currentPortfolio(): PortfolioDashboard | undefined {
     return this.portfolios.find(p => p.id === this.selectedPortfolioId) ?? this.portfolios[0];
   }
@@ -94,6 +98,7 @@ export class DashboardComponent implements OnInit {
   }
 
   constructor() {
+    // EFFECT: se ejecuta automáticamente cuando cambia el tema o la cartera
     effect(() => {
       this.preferencesService.colorTheme();
       if (this.currentPortfolio) {
@@ -104,6 +109,7 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // Cambia el color de la gráfica de área al color del tema
   private rebuildAreaColor(): void {
     if (!this.areaOptions) return;
     this.areaOptions = {
@@ -113,6 +119,7 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Si el usuario viene de pagar la suscripción, muestra mensaje de bienvenida
     this.route.queryParams.subscribe(params => {
       if (params['subscribed'] === '1') {
         this.router.navigate([], {
@@ -177,6 +184,7 @@ export class DashboardComponent implements OnInit {
     this.cargarInvestmentsDashboard(this.selectedPortfolioId);
   }
 
+  // CARGA LAS INVERSIONES Y CALCULA LOS TOTALES DE LA CARTERA
   private cargarInvestmentsDashboard(portfolioId: number): void {
     this.isLoading = true;
     this.areaOptions = null;
@@ -184,7 +192,7 @@ export class DashboardComponent implements OnInit {
 
     this.investmentService.getInvestments(portfolioId).subscribe({
       next: (response: any) => {
-
+        // Solo inversiones con cantidad > 0
         const investments = response.investments.filter((inv: any) =>
           parseFloat(inv.quantity || '0') > 0
         );
@@ -199,12 +207,15 @@ export class DashboardComponent implements OnInit {
           const primerActivo = investments[0];
           const symbolParaChart = primerActivo?.symbol ?? 'AAPL';
 
+          // Suma todas las ganancias/pérdidas de cada inversión
           const totalGanancias = investments.reduce((acc: number, inv: any) =>
             acc + (parseFloat(inv.pl) || 0), 0);
 
+          // Calcula cuánto dinero se ha invertido realmente (precio medio * cantidad)
           const totalInvertido = investments.reduce((acc: number, inv: any) =>
             acc + (parseFloat(inv.avg_buy_price) || 0) * (parseFloat(inv.quantity) || 0), 0);
 
+          // Rendimiento porcentual global = (ganancias / invertido) * 100
           const rendimientoGlobal = totalInvertido > 0
             ? (totalGanancias / totalInvertido) * 100
             : 0;
@@ -254,6 +265,7 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // CALCULA LA DISTRIBUCIÓN POR TIPO DE ACTIVO (Acciones, Crypto, ETFs)
   private buildAllocation(investments: any[], totalValue: number): any[] {
     if (!investments.length || !totalValue) return [];
 
@@ -273,6 +285,7 @@ export class DashboardComponent implements OnInit {
     }));
   }
 
+  // CONSTRUYE EL GRÁFICO DONUT (ASIGNACIÓN POR TIPO)
   private buildDonutChart(): void {
     if (!this.currentPortfolio) return;
     this.donutOptions = null;
@@ -310,7 +323,7 @@ export class DashboardComponent implements OnInit {
                     const item = alloc.find(i => i.label === seriesName);
                     if (!item) return seriesName;
                     const amount = total * item.percent / 100;
-                    return amount.toLocaleString('es-ES') + '€';
+                    return this.format(amount);
                   }
                 },
                 value: {
@@ -334,92 +347,91 @@ export class DashboardComponent implements OnInit {
 
   private getAssetColor(tipo: string): string {
     const primary = this.primaryColor;
-
+    // Aplica opacidades diferentes según el tipo de activo
     const colores: Record<string, string> = {
       stock: primary,
       crypto: primary + '99',
       etf: primary + '44'
     };
-
     return colores[tipo] ?? primary;
   }
 
   setPeriod(period: string): void {
     this.selectedPeriod = period;
+    this.areaOptions = null;
     this.loadChart(period);
   }
 
+  // CARGA LA GRÁFICA SEGÚN EL PERÍODO SELECCIONADO
   private loadChart(period: string): void {
-  if (!this.currentPortfolio) return;
-  this.isLoading = true;
+    if (!this.currentPortfolio) return;
+    this.isLoading = true;
 
-  const investments = this.dashboardInvestments;
-  if (!investments.length) { 
-    this.isLoading = false;
-    return; 
-  }
+    const investments = this.dashboardInvestments;
+    if (!investments.length) { 
+      this.isLoading = false;
+      return; 
+    }
 
-  // Para período 1D: usar datos intraday (5m) de /history
-  if (period === '1D') {
-    // Obtener histórico de cada activo
-    const promises = investments.map((inv: any) => {
-      const symbol = inv.symbol;
-      const assetType = inv.asset_type || 'stock';
-      const quantity = parseFloat(inv.quantity);
-      
-      return this.marketService.getHistory(symbol, '1D', assetType).toPromise()
-        .then((response: any) => {
-          if (response?.data && response.data.length > 0) {
-            // Multiplicar cada precio por la cantidad
-            return response.data.map((point: any) => ({
-              x: point.x,
-              y: point.y * quantity
-            }));
-          }
-          return [];
-        })
-        .catch(() => {
-          return [];
-        });
-    });
-
-    // Esperar a que todos los históricos estén listos
-    Promise.all(promises).then((results: any[]) => {
-      // Combinar todos los activos sumando por timestamp
-      const dataMap = new Map<number, number>();
-      
-      results.forEach(assetData => {
-        assetData.forEach((point: { x: number; y: number }) => {
-          const current = dataMap.get(point.x) || 0;
-          dataMap.set(point.x, current + point.y);
-        });
+    // PERÍODO 1D: datos cada 5 minutos desde /history
+    if (period === '1D') {
+      // Para cada activo, pide su histórico intraday
+      const promises = investments.map((inv: any) => {
+        const symbol = inv.symbol;
+        const assetType = inv.asset_type || 'stock';
+        const quantity = parseFloat(inv.quantity);
+        
+        return this.marketService.getHistory(symbol, '1D', assetType).toPromise()
+          .then((response: any) => {
+            if (response?.data && response.data.length > 0) {
+              // Multiplica precio por cantidad para obtener el valor total de esa posición
+              return response.data.map((point: any) => ({
+                x: point.x,
+                y: point.y * quantity
+              }));
+            }
+            return [];
+          })
+          .catch(() => {
+            return [];
+          });
       });
-      
-      // Convertir a array y ordenar por timestamp
-      const combinedData = Array.from(dataMap.entries())
-        .map(([x, y]) => ({ x, y: Number(y.toFixed(2)) }))
-        .sort((a, b) => a.x - b.x);
-      
-      
-      if (combinedData.length > 0) {
-        this.buildAreaChart(combinedData, period);
-      } else {
-        // Fallback: usar datos diarios
+
+      // Espera a que lleguen todos los históricos
+      Promise.all(promises).then((results: any[]) => {
+        // Combina todos los activos sumando valores en el mismo timestamp
+        const dataMap = new Map<number, number>();
+        
+        results.forEach(assetData => {
+          assetData.forEach((point: { x: number; y: number }) => {
+            const roundedX = Math.round(point.x / 60000) * 60000;
+            const current = dataMap.get(point.x) || 0;
+            dataMap.set(roundedX, current + point.y);
+          });
+        });
+        
+        const combinedData = Array.from(dataMap.entries())
+          .map(([x, y]) => ({ x, y: Number(y.toFixed(2)) }))
+          .sort((a, b) => a.x - b.x);
+        
+        if (combinedData.length > 0) {
+          this.buildAreaChart(combinedData, period);
+        } else {
+          this.loadDailyHistory(period);
+        }
+        this.isLoading = false;
+      }).catch((error) => {
+        this.isLoading = false;
         this.loadDailyHistory(period);
-      }
-      this.isLoading = false;
-    }).catch((error) => {
-      this.isLoading = false;
-      // Fallback: usar datos diarios
-      this.loadDailyHistory(period);
-    });
-    return;
+      });
+      return;
+    }
+
+    // PERÍODOS 1M y 1A: datos diarios
+    this.loadDailyHistory(period);
   }
 
-  // Para 1M y 1A: usar portfolio-history (datos diarios)
-  this.loadDailyHistory(period);
-}
-
+  // CARGA HISTÓRICO DIARIO PARA 1M y 1A
   private loadDailyHistory(period: string): void {
     const investments = this.dashboardInvestments;
     if (!investments.length) {
@@ -430,6 +442,7 @@ export class DashboardComponent implements OnInit {
     const now = new Date();
     let fromDate: string;
 
+    // Calcula la fecha de inicio según el período
     if (period === '1M') {
       const d = new Date(now);
       d.setMonth(d.getMonth() - 1);
@@ -439,16 +452,15 @@ export class DashboardComponent implements OnInit {
       d.setFullYear(d.getFullYear() - 1);
       fromDate = d.toISOString().split('T')[0];
     } else {
-      const d = new Date(now);
-      d.setMonth(d.getMonth() - 1);
-      fromDate = d.toISOString().split('T')[0];
+      this.isLoading = false;
+      return;
     }
 
     const symbols = investments.map((inv: any) => inv.symbol);
     const quantities = investments.map((inv: any) => parseFloat(inv.quantity));
     const types = investments.map((inv: any) => inv.asset_type || 'stock');
     
-    // CAMBIAR: usar purchase_date del backend
+    // Fechas de compra de cada inversión (para calcular valor histórico correctamente)
     const purchaseDates = investments.map((inv: any) => {
       if (inv.purchase_date) return inv.purchase_date;
       if (inv.created_at) return inv.created_at.split('T')[0];
@@ -457,6 +469,7 @@ export class DashboardComponent implements OnInit {
       return d.toISOString().split('T')[0];
     });
     
+    // Precios medios de compra de cada inversión
     const purchasePrices = investments.map((inv: any) => inv.avg_buy_price || 0);
 
     this.marketService.getPortfolioHistoryWithDetails(
@@ -466,24 +479,27 @@ export class DashboardComponent implements OnInit {
         if (response?.data && response.data.length > 0) {
           this.buildAreaChart(response.data, period);
         } else {
+          // Si no hay datos históricos, muestra solo el valor actual
           const currentValue = this.currentPortfolio?.totalValue || 0;
           const fallbackData = [{ x: Date.now(), y: currentValue }];
           this.buildAreaChart(fallbackData, period);
         }
         this.isLoading = false;
       },
-      error: () => {
+      error: (error) => {
         this.isLoading = false;
       }
     });
   }
 
+  // CONSTRUYE LA GRÁFICA DE ÁREA (EVOLUCIÓN TEMPORAL)
   private buildAreaChart(data: { x: number; y: number }[], period: string): void {
     
     if (!data || data.length === 0) {
       return;
     }
 
+    // El tooltip muestra hora en 1D, o fecha en 1M/1A
     const tooltipFormat = period === '1D' ? 'HH:mm' : 'dd MMM yyyy';
     
     this.areaOptions = {
@@ -534,6 +550,7 @@ export class DashboardComponent implements OnInit {
     
   }
 
+  // CONSTRUYE EL TREEMAP (DISTRIBUCIÓN POR ACTIVO INDIVIDUAL)
   private buildTreemap(investments: any[], totalValue: number): void {
     if (!investments.length || !totalValue) {
       this.treemapOptions = null;
@@ -542,6 +559,7 @@ export class DashboardComponent implements OnInit {
 
     const baseHex = this.primaryColor;
 
+    // Convierte color hex a rgba para poder aplicar opacidad
     const hexToRgba = (hex: string, alpha: number) => {
       const clean = hex.replace('#', '');
       const r = parseInt(clean.slice(0, 2), 16);
@@ -550,6 +568,7 @@ export class DashboardComponent implements OnInit {
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
 
+    // A mayor peso del activo, menos transparencia (más opaco)
     const getAlphaByWeight = (weight: number) => {
       if (weight <= 5) return 0.35;
       if (weight <= 10) return 0.45;
@@ -585,6 +604,7 @@ export class DashboardComponent implements OnInit {
           dataPointMouseEnter: (event: any) => {
             event.target.style.cursor = 'pointer';
           },
+          // Al hacer clic en un rectángulo, navega al detalle del activo
           dataPointSelection: (_event: any, _chartContext: any, config: any) => {
             const item = treemapData[config.dataPointIndex];
             if (item?.meta) {
@@ -622,6 +642,7 @@ export class DashboardComponent implements OnInit {
           fontWeight: 600,
           colors: ['#ffffff']
         },
+        // Muestra el símbolo y el porcentaje dentro del rectángulo
         formatter: (text: string, opts: any) => {
           const item = opts.w.config.series[opts.seriesIndex].data[opts.dataPointIndex];
           return `${text}\n${Number(item.y).toFixed(1)}%`;

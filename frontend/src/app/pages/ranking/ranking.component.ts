@@ -1,41 +1,46 @@
-import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { PortfolioService } from '../../services/portfolio.service';
-import { FavoritesService } from '../../services/favorites.service';
-import { NotificationsService } from '../../services/notifications.service';
+
 import { PublicPortfolioRanking } from '../../models/publicPortfolioRanking.model';
 import { AuthService } from '../../services/auth.service';
+import { FavoritesService } from '../../services/favorites.service';
+import { NotificationsService } from '../../services/notifications.service';
+import { PortfolioService } from '../../services/portfolio.service';
 import { PreferencesService } from '../../services/preferences.service';
 
 @Component({
   selector: 'app-ranking',
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './ranking.component.html',
-  styleUrl: './ranking.component.css'
+  styleUrl: './ranking.component.css',
 })
 export class RankingComponent implements OnInit {
-  private portfolioService = inject(PortfolioService);
-  private authService = inject(AuthService);
-  private favoritesService = inject(FavoritesService);
-  private notificationsService = inject(NotificationsService);
-  private destroyRef = inject(DestroyRef);
-  private preferencesService = inject(PreferencesService);
+  private readonly portfolioService = inject(PortfolioService);
+  private readonly authService = inject(AuthService);
+  private readonly favoritesService = inject(FavoritesService);
+  private readonly notificationsService = inject(NotificationsService);
+  private readonly preferencesService = inject(PreferencesService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private readonly search$ = new Subject<string>();
 
   rows = signal<PublicPortfolioRanking[]>([]);
   isLoading = signal(true);
   errorMsg = signal<string | null>(null);
-  togglingIds = signal<Set<number>>(new Set()); // IDs en proceso de petición
+
+  // Guardamos los ids que estan cambiando para bloquear el boton
+  togglingIds = signal<Set<number>>(new Set());
 
   sort = signal<string>('total_value');
   order = signal<'asc' | 'desc'>('desc');
   searchInput = '';
 
-  // Usa el signal del servicio — persiste entre navegaciones
+  // Este signal viene del servicio y se mantiene entre vistas
   followingIds = this.favoritesService.followingPortfolioIds;
 
   sortOptions: { value: string; label: string }[] = [
@@ -44,40 +49,43 @@ export class RankingComponent implements OnInit {
     { value: 'name', label: 'Nombre cartera' },
     { value: 'owner_name', label: 'Inversor' },
     { value: 'updated_at', label: 'Última actualización' },
-    { value: 'created_at', label: 'Fecha creación' }
+    { value: 'created_at', label: 'Fecha creación' },
   ];
 
-  private search$ = new Subject<string>();
-
   ngOnInit(): void {
-    // Asegura que followingIds esté poblado
+    // Cargamos favoritos al entrar para saber cuales sigue el usuario
     this.favoritesService.load().subscribe();
 
+    // Esperamos un poco antes de buscar para no disparar peticiones de mas
     this.search$
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe(() => this.load());
 
     this.load();
   }
 
-  onSearchChange(value: string) {
+  onSearchChange(value: string): void {
     this.searchInput = value;
     this.search$.next(value);
   }
 
-  onSortChange(value: string) {
+  onSortChange(value: string): void {
     this.sort.set(value);
     this.load();
   }
 
-  onOrderChange(value: 'asc' | 'desc') {
+  onOrderChange(value: 'asc' | 'desc'): void {
     this.order.set(value);
     this.load();
   }
 
   isOwnPortfolio(row: PublicPortfolioRanking): boolean {
-    const me = this.authService.currentUser()?.id;
-    return me !== undefined && me === row.user.id;
+    const currentUserId = this.authService.currentUser()?.id;
+    return currentUserId !== undefined && currentUserId === row.user.id;
   }
 
   isFollowing(row: PublicPortfolioRanking): boolean {
@@ -92,78 +100,94 @@ export class RankingComponent implements OnInit {
     event.preventDefault();
     event.stopPropagation();
 
-    if (this.isOwnPortfolio(row) || this.isToggling(row)) return;
+    if (this.isOwnPortfolio(row) || this.isToggling(row)) {
+      return;
+    }
 
-    const following = this.isFollowing(row);
+    const wasFollowing = this.isFollowing(row);
 
-    // Marcar como en proceso
-    this.togglingIds.update(ids => new Set(ids).add(row.id));
+    // Marcamos la cartera como bloqueada mientras llega la respuesta
+    this.addTogglingId(row.id);
 
-    // Optimistic update
-    this.followingIds.update(ids => {
-      const next = new Set(ids);
-      following ? next.delete(row.id) : next.add(row.id);
-      return next;
-    });
+    // Actualizamos la UI al momento para que se note rapido
+    this.updateFollowingState(row.id, !wasFollowing);
 
-    const request$ = following
+    const request$ = wasFollowing
       ? this.portfolioService.unfollowPortfolio(row.id)
       : this.portfolioService.followPortfolio(row.id);
 
     request$.subscribe({
       next: () => {
-        this.togglingIds.update(ids => {
-          const next = new Set(ids);
-          next.delete(row.id);
-          return next;
-        });
+        this.removeTogglingId(row.id);
 
-        if (following) {
+        if (wasFollowing) {
           this.notificationsService.info(`Has dejado de seguir "${row.name}"`);
         } else {
           this.notificationsService.success(`Ahora sigues la cartera "${row.name}"`);
         }
 
-        // Invalidar caché para que favoritos recargue la próxima visita
+        // Limpiamos cache para recargar favoritos en la siguiente visita
         this.favoritesService.invalidate();
       },
       error: () => {
-        // Revertir optimistic update
-        this.followingIds.update(ids => {
-          const next = new Set(ids);
-          following ? next.add(row.id) : next.delete(row.id);
-          return next;
-        });
-        this.togglingIds.update(ids => {
-          const next = new Set(ids);
-          next.delete(row.id);
-          return next;
-        });
-        this.notificationsService.error(`No se pudo ${following ? 'dejar de seguir' : 'seguir'} la cartera`);
-      }
+        // Si falla, dejamos el estado como estaba antes
+        this.updateFollowingState(row.id, wasFollowing);
+        this.removeTogglingId(row.id);
+        this.notificationsService.error(`No se pudo ${wasFollowing ? 'dejar de seguir' : 'seguir'} la cartera`);
+      },
     });
   }
 
-  private load() {
+  format(value: number): string {
+    return this.preferencesService.formatCurrency(value);
+  }
+
+  private load(): void {
     this.isLoading.set(true);
     this.errorMsg.set(null);
 
-    this.portfolioService
-      .getPublicRanking(this.sort(), this.order(), this.searchInput.trim() || undefined)
-      .subscribe({
-        next: (data) => {
-          this.rows.set(data as PublicPortfolioRanking[]);
-          this.isLoading.set(false);
-        },
-        error: (err) => {
-          console.error(err);
-          this.errorMsg.set('No se pudo cargar el ranking.');
-          this.isLoading.set(false);
-        }
-      });
+    const search = this.searchInput.trim() || undefined;
+
+    this.portfolioService.getPublicRanking(this.sort(), this.order(), search).subscribe({
+      next: (data) => {
+        this.rows.set(data as PublicPortfolioRanking[]);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error(err);
+        this.errorMsg.set('No se pudo cargar el ranking.');
+        this.isLoading.set(false);
+      },
+    });
   }
 
-  format(value: number) {
-    return this.preferencesService.formatCurrency(value);
+  private addTogglingId(id: number): void {
+    this.togglingIds.update((ids) => {
+      const nextIds = new Set(ids);
+      nextIds.add(id);
+      return nextIds;
+    });
+  }
+
+  private removeTogglingId(id: number): void {
+    this.togglingIds.update((ids) => {
+      const nextIds = new Set(ids);
+      nextIds.delete(id);
+      return nextIds;
+    });
+  }
+
+  private updateFollowingState(id: number, shouldFollow: boolean): void {
+    this.followingIds.update((ids) => {
+      const nextIds = new Set(ids);
+
+      if (shouldFollow) {
+        nextIds.add(id);
+      } else {
+        nextIds.delete(id);
+      }
+
+      return nextIds;
+    });
   }
 }

@@ -30,6 +30,7 @@ export class InitialDataService {
           this.preferencesService.theme.set(data.preferences.theme ?? 'dark');
           this.preferencesService.cookies.set(data.preferences.cookies ?? null);
           this.preferencesService.applyColor(data.preferences.color_theme ?? 'orange');
+          this.preferencesService.applyTheme(data.preferences.theme ?? 'dark');
 
           if (data.preferences.cookies === true) {
             localStorage.setItem('portiq_color_theme', data.preferences.color_theme ?? 'orange');

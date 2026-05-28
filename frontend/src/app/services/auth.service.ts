@@ -132,38 +132,28 @@ export class AuthService {
         sessionStorage.setItem('portiq_new_user', '1');
         this.cookiesService.isNewUser.set(true);
       }
-
-      this.initialDataService.run().subscribe({
-        next: () => {
-          if (this.suscription_type() === 'premium') {
-            this.http.post(`${this.apiUrl}/subscription/checkout`, {}).subscribe({
-              next: (checkout: any) => {
-                this.isLoading.set(false);
-                window.location.href = checkout.url;
-                this.notificationsService.info('Bienvenido a PortIQ')
-                this.currentStep.set(1)
-              },
-              error: () => {
-                this.isLoading.set(false);
-                this.router.navigate(['/app/dashboard']);
-                this.notificationsService.info('Bienvenido a PortIQ')
-                this.currentStep.set(1)
-              }
-            });
-          } else {
+      
+      if (this.suscription_type() === 'premium') {
+        this.http.post(`${this.apiUrl}/subscription/checkout`, {}).subscribe({
+          next: (checkout: any) => {
+            this.isLoading.set(false);
+            window.location.href = checkout.url;
+            this.notificationsService.info('Bienvenido a PortIQ')
+            this.currentStep.set(1)
+          },
+          error: () => {
             this.isLoading.set(false);
             this.router.navigate(['/app/dashboard']);
             this.notificationsService.info('Bienvenido a PortIQ')
             this.currentStep.set(1)
           }
-        },
-        error: () => {
-          this.isLoading.set(false);
-          this.router.navigate(['/app/dashboard']);
-          this.notificationsService.info('Bienvenido a PortIQ')
-          this.currentStep.set(1)
-        }
-      });
+        });
+      } else {
+        this.isLoading.set(false);
+        this.router.navigate(['/app/dashboard']);
+        this.notificationsService.info('Bienvenido a PortIQ')
+        this.currentStep.set(1)
+      }
     },
     error: (err) => {
       // console.error(err.message);

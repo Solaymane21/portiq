@@ -46,4 +46,4 @@ npm start
 
 ## Equipo
 
-Proyecto final del CFGS en Desarrollo de Aplicaciones Web (INS Provençana, 2026), desarrollado por Solaymane Roukdi, [COMPAÑERO 2] y [COMPAÑERO 3].
+Proyecto final del CFGS en Desarrollo de Aplicaciones Web (INS Provençana, 2026), desarrollado en un equipo de tres personas.

@@ -76,6 +76,35 @@ def search(query: str):
 Buscar varios precios
 """
 
+"""
+Precio actual de un ticker. ticker.info suele estar bloqueado por Yahoo desde
+IPs de servidores en la nube, así que si falla se usa fast_info (API de charts)
+"""
+def get_quote(ticker):
+    try:
+        info = ticker.info
+        price = info.get("currentPrice") or info.get("regularMarketPrice")
+        if price is not None:
+            return {
+                "name":     info.get("longName", ""),
+                "price":    price,
+                "currency": info.get("currency", "USD"),
+                "change":   info.get("regularMarketChangePercent"),
+            }
+    except Exception:
+        pass
+
+    fast = ticker.fast_info
+    price = fast.last_price
+    prev = fast.previous_close
+    return {
+        "name":     "",
+        "price":    price,
+        "currency": fast.currency or "USD",
+        "change":   (price - prev) / prev * 100 if price and prev else None,
+    }
+
+
 @app.get("/prices")
 def getPrices(symbols: str, asset_types: str = ""):
     symbol_list = [s.strip() for s in symbols.split(",") if s.strip()]
@@ -100,16 +129,11 @@ def getPrices(symbols: str, asset_types: str = ""):
         yf_symbol = f"{symbol.upper()}-USD" if asset_type == "crypto" else symbol.upper()
 
         try:
-            ticker = yf.Ticker(yf_symbol)
-            info = ticker.info
-            price = info.get("currentPrice") or info.get("regularMarketPrice")
+            quote = get_quote(yf.Ticker(yf_symbol))
 
             results.append({
                 "symbol": symbol.upper(),  # devolver símbolo limpio sin -USD
-                "name": info.get("longName", ""),
-                "price": price,
-                "currency": info.get("currency", "USD"),
-                "change": info.get("regularMarketChangePercent"),
+                **quote,
             })
 
         except Exception:
@@ -154,9 +178,8 @@ def portfolio_value(positions: str):
             continue
 
         try:
-            ticker= yf.Ticker(symbol.upper())
-            info = ticker.info
-            price = info.get("currentPrice") or info.get("regularMarketPrice")
+            quote = get_quote(yf.Ticker(symbol.upper()))
+            price = quote["price"]
 
             if price is None:
                 results.append({"symbol": symbol.upper(), "error": "Sin precio disponible"})
@@ -167,11 +190,11 @@ def portfolio_value(positions: str):
 
             results.append({
                 "symbol": symbol.upper(),
-                "name":            info.get("longName", ""),
+                "name":            quote["name"],
                 "price":           price,
                 "quantity":        quantity,
                 "position_value":  position_value,
-                "change":          info.get("regularMarketChangePercent"),
+                "change":          quote["change"],
             })
 
         except Exception:

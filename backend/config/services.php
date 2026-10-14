@@ -41,7 +41,8 @@ return [
     ],
 
     'ml' => [
-    'url' => env('ML_SERVICE_URL', 'http://localhost:8001'),
+        'url' => env('ML_SERVICE_URL', env('PYTHON_API_URL', 'http://localhost:8001')),
+    ],
 
     'stripe' => [
         'model'   => App\Models\User::class,
@@ -50,6 +51,9 @@ return [
         'webhook' => ['secret' => env('STRIPE_WEBHOOK_SECRET')],
         'price_pro' => env('STRIPE_PRICE_PRO'),
     ],
-],
+
+    'frontend' => [
+        'url' => env('FRONTEND_URL', 'http://localhost:4200'),
+    ],
 
 ];

@@ -127,7 +127,7 @@ class AuthController extends Controller
         $userData = base64_encode(json_encode($this->formatUser($user, $isNewUser)));
 
         // redirege al frontend y envia por parametros el token y informacion de usuario para guardarla en el localstorage
-        $frontend = env('FRONTEND_URL');
+        $frontend = config('services.frontend.url');
         return redirect("{$frontend}/auth/callback#token={$token}&user={$userData}");
     }
 

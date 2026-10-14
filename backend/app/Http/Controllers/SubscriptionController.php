@@ -13,14 +13,14 @@ class SubscriptionController extends Controller
     {
         $user = $request->user();
 
-        $priceId = env('STRIPE_PRICE_PRO');
+        $priceId = config('services.stripe.price_pro');
 
         $checkout = $user
             ->newSubscription('default', $priceId)
             ->allowPromotionCodes()
             ->checkout([
-                'success_url' => env('FRONTEND_URL') . '/app/dashboard?subscribed=1',
-                'cancel_url'  => env('FRONTEND_URL') . '/app/dashboard',
+                'success_url' => config('services.frontend.url') . '/app/dashboard?subscribed=1',
+                'cancel_url'  => config('services.frontend.url') . '/app/dashboard',
             ]);
 
         return response()->json(['url' => $checkout->url]);

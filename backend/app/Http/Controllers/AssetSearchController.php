@@ -195,7 +195,7 @@ class AssetSearchController extends Controller
             'convert_to_eur' => 'nullable|boolean',
         ]);
 
-        $pythonApi = env('PYTHON_API_URL');
+        $pythonApi = config('services.ml.url');
         $convertToEur = $request->boolean('convert_to_eur');
 
         try {

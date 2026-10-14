@@ -413,7 +413,7 @@ class InvestmentController extends Controller
     private function getCurrentPriceFromPythonAPI(string $identifier, string $assetType): ?float
     {
         // Leemos la URL base de la API externa
-        $pythonApi = env('PYTHON_API_URL');
+        $pythonApi = config('services.ml.url');
 
         // Usamos la fecha de hoy para pedir el precio actual
         $today = now()->format('Y-m-d');

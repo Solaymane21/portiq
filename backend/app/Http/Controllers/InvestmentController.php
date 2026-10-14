@@ -424,7 +424,7 @@ class InvestmentController extends Controller
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($pythonApi, $identifier, $assetType, $today) {
             try {
                 // Llamamos a FastAPI con timeout para no colgar la app
-                $response = Http::timeout(10)->get("{$pythonApi}/historical-price/{$identifier}", [
+                $response = Http::timeout(config('services.ml.timeout'))->get("{$pythonApi}/historical-price/{$identifier}", [
                     'date' => $today,
                     'asset_type' => $assetType,
                     'convert_to_eur' => 'false',

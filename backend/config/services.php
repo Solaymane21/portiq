@@ -42,6 +42,8 @@ return [
 
     'ml' => [
         'url' => env('ML_SERVICE_URL', env('PYTHON_API_URL', 'http://localhost:8001')),
+        // en el plan gratis de Render el servicio tarda ~35s en despertar
+        'timeout' => (int) env('ML_SERVICE_TIMEOUT', 60),
     ],
 
     'stripe' => [

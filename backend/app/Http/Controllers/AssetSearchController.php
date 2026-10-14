@@ -199,7 +199,7 @@ class AssetSearchController extends Controller
         $convertToEur = $request->boolean('convert_to_eur');
 
         try {
-            $response = Http::timeout(10)->get("{$pythonApi}/historical-price/{$request->api_id}", [
+            $response = Http::timeout(config('services.ml.timeout'))->get("{$pythonApi}/historical-price/{$request->api_id}", [
                 'date' => $request->date,
                 'asset_type' => $request->asset_type,
                 'convert_to_eur' => $convertToEur ? 'true' : 'false',

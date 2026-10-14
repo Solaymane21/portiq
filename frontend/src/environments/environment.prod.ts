@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://portiq-backend-qg38.onrender.com/api'
+  apiUrl: 'https://portiq-backend-qg38.onrender.com/api',
+  mlUrl: 'https://portiq-ml.onrender.com'
 };

@@ -16,7 +16,7 @@ class MLService
     // Buscar un símbolo
     public function search(string $symbol): array
     {
-        $response = Http::get("{$this->baseUrl}/search/{$symbol}");
+        $response = Http::timeout(config('services.ml.timeout'))->get("{$this->baseUrl}/search/{$symbol}");
 
         if ($response->failed()) {
             return ['error' => 'Ticker no encontrado'];
@@ -28,7 +28,7 @@ class MLService
     // Precios de varios símbolos
     public function getPrices(array $symbols, array $assetTypes = []): array
     {
-        $response = Http::get("{$this->baseUrl}/prices", [
+        $response = Http::timeout(config('services.ml.timeout'))->get("{$this->baseUrl}/prices", [
             'symbols' => implode(',', $symbols),
             'asset_types' => implode(',', $assetTypes)
         ]);
@@ -43,7 +43,7 @@ class MLService
             ->map(fn($p) => "{$p['symbol']}:{$p['quantity']}")
             ->join(',');
 
-        $response = Http::get("{$this->baseUrl}/portfolio/value", [
+        $response = Http::timeout(config('services.ml.timeout'))->get("{$this->baseUrl}/portfolio/value", [
             'positions' => $positionsStr
         ]);
 
@@ -53,7 +53,7 @@ class MLService
     //Historial para los precios de la grafica
     public function getHistory(string $symbol, string $period = '1D', string $assetType = 'stock'): array{
         
-        $response = Http::get("{$this->baseUrl}/history/{$symbol}", [
+        $response = Http::timeout(config('services.ml.timeout'))->get("{$this->baseUrl}/history/{$symbol}", [
             'period' => $period,
             'asset_type' => $assetType,
         ]);
@@ -65,7 +65,7 @@ class MLService
     }
 
     public function getPortfolioHistory(string $symbols, string $quantities, string $assetTypes, ?string $fromDate){
-        $response = Http::get("{$this->baseUrl}/portfolio-history", [
+        $response = Http::timeout(config('services.ml.timeout'))->get("{$this->baseUrl}/portfolio-history", [
             'symbols' => $symbols,
             'quantities' => $quantities,
             'asset_types' => $assetTypes,

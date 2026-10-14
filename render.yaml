@@ -16,7 +16,7 @@ services:
       - key: APP_KEY
         sync: false
       - key: APP_URL
-        value: https://portiq-backend.onrender.com
+        value: https://portiq-backend-qg38.onrender.com
       - key: FRONTEND_URL
         sync: false
       - key: ML_SERVICE_URL
@@ -62,7 +62,7 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         sync: false
       - key: GOOGLE_REDIRECT_URI
-        value: https://portiq-backend.onrender.com/api/auth/google/callback
+        value: https://portiq-backend-qg38.onrender.com/api/auth/google/callback
       - key: STRIPE_KEY
         sync: false
       - key: STRIPE_SECRET

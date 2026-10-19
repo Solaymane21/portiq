@@ -126,6 +126,12 @@
 
   <div class="flex-1 flex flex-col gap-4">
 
+    @if (authService.currentUser()?.is_demo && activeSection() !== 'preferencias') {
+      <div class="rounded-md p-3 border bg-orange-100 border-orange-500 text-orange-800 text-sm">
+        En la demo no se pueden modificar los datos de la cuenta ni la suscripción. Sí puedes probar las preferencias de tema y color.
+      </div>
+    }
+
     @if (activeSection() === 'perfil') {
       <div class="bg-zinc-50 dark:bg-neutral-950 border border-zinc-400 dark:border-neutral-600 rounded-2xl p-6">
         <h2 class="font-ibm text-xl mb-5 text-zinc-900 dark:text-white">Perfil</h2>

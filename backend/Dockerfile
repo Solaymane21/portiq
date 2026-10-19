@@ -30,4 +30,5 @@ EXPOSE 10000
 CMD php artisan config:cache \
     && php artisan route:cache \
     && php artisan migrate --force \
+    && php artisan demo:seed \
     && apache2-foreground

@@ -13,6 +13,7 @@ export interface User {
   created_at?: string;
   updated_at?: string;
   is_new_user?: boolean;
+  is_demo?: boolean;
 }
 
 export interface AdminUsersResponse {

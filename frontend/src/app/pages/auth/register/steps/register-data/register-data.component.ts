@@ -3,10 +3,11 @@ import { FormControl, ReactiveFormsModule, Validators, FormGroup } from '@angula
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../../../services/auth.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { DemoButtonComponent } from '../../../../../components/demo-button/demo-button.component';
 
 @Component({
   selector: 'app-register-data',
-  imports: [ReactiveFormsModule, RouterLink, MatProgressSpinnerModule],
+  imports: [ReactiveFormsModule, RouterLink, MatProgressSpinnerModule, DemoButtonComponent],
   templateUrl: './register-data.component.html',
   styleUrl: './register-data.component.css'
 })

@@ -18,6 +18,8 @@ export class AuthService {
   // signals de estado
   currentStep = signal<number>(1);
   isLoading = signal<boolean>(false);
+  isDemoLoading = signal<boolean>(false);
+  demoError = signal<string>('');
   isForgotPassword = signal<boolean>(false);
   msgError = signal<string>('');
   redirectMsg = signal<RedirectMsg>({ msg: '', type: 'info' });
@@ -198,6 +200,30 @@ export class AuthService {
       error: (err) => {
         this.isLoading.set(false)
         this.msgError.set(err.error?.message || 'Credenciales incorrectas')
+      }
+    });
+  }
+
+  // inicia sesion en la cuenta demo publica (solo lectura) sin necesidad de registrarse
+  onDemo() {
+    this.isDemoLoading.set(true);
+    this.demoError.set('');
+
+    this.http.post(`${this.apiUrl}/auth/demo`, {}).subscribe({
+      next: (res: any) => {
+        this.saveUserData(res);
+
+        const goToDashboard = () => {
+          this.router.navigate(['/app/dashboard']);
+          this.notificationsService.info('Estás viendo la demo de PortIQ');
+          this.isDemoLoading.set(false);
+        };
+
+        this.initialDataService.run().subscribe({ next: goToDashboard, error: goToDashboard });
+      },
+      error: () => {
+        this.isDemoLoading.set(false);
+        this.demoError.set('La demo no está disponible ahora mismo. Inténtalo de nuevo en unos segundos.');
       }
     });
   }

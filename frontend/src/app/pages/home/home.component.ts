@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MarketService } from '../../services/market.service';
 import { Router, RouterLink } from '@angular/router';
+import { DemoButtonComponent } from '../../components/demo-button/demo-button.component';
 
 // Un elemento del ticker que se mueve en la parte superior
 interface TickerItem {
@@ -30,7 +31,7 @@ export interface Feature {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, DemoButtonComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })

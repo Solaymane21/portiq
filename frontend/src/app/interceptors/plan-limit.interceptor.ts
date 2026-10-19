@@ -16,6 +16,10 @@ export const planLimitInterceptor: HttpInterceptorFn = (req, next) => {
         );
       }
 
+      if (error.status === 403 && error.error?.code === 'DEMO_READ_ONLY') {
+        notifications.warning(error.error.message, 4000);
+      }
+
       if (error.status === 403 && error.error?.code === 'PREMIUM_REQUIRED') {
         notifications.warning('Esta función requiere el Plan Premium.');
         router.navigate(['/app/subscription']);

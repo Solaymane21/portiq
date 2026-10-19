@@ -38,6 +38,28 @@ class AuthController extends Controller
         ]);
     }
 
+    // inicia sesion en la cuenta demo publica (creada con php artisan demo:seed)
+    public function demo()
+    {
+        $user = User::where('is_demo', true)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'La demo no esta disponible en este momento.'], 503);
+        }
+
+        // limpiamos tokens antiguos de la demo para que no se acumulen
+        $user->tokens()->where('created_at', '<', now()->subDay())->delete();
+
+        $token = $user->createToken('demo')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Login demo correcto',
+            'token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $this->formatUser($user)
+        ]);
+    }
+
     // registra un nuevo usuario y crea sus preferencias por defecto
     public function register(Request $request)
     {
@@ -171,7 +193,8 @@ class AuthController extends Controller
             'avatar' => $user->avatar,
             'suscription_type' => $user->suscription_type,
             'is_admin' => $user->email === 'portiqinfo@gmail.com',
-            'is_new_user' => $isNewUser
+            'is_new_user' => $isNewUser,
+            'is_demo' => (bool) $user->is_demo
         ];
     }
 

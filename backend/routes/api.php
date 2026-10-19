@@ -26,6 +26,7 @@ Route::prefix('auth')->group(function() {
     Route::post('/resend-code', [EmailController::class, 'resendCode']);
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/demo', [AuthController::class, 'demo'])->middleware('throttle:20,1');
     Route::get('/google/redirect', [AuthController::class, 'googleRedirect']);
     Route::get('/google/callback', [AuthController::class, 'googleCallback']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
@@ -36,9 +37,10 @@ Route::get('/assets/search', [AssetSearchController::class, 'search']);
 Route::get('/assets/history', [AssetSearchController::class, 'history']);
 
 // rutas protegidas con sanctum
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'demo.readonly'])->group(function () {
     // General
     Route::get('/auth/validate-token', [AuthController::class, 'validateToken']);
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'me']);
     Route::get('/initial-data', [InitialDataController::class, 'index']);
 

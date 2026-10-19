@@ -31,7 +31,8 @@ class User extends Authenticatable
         'suscription_type',
         'subscription_cancelled',
         'stripe_id',
-        'last_login_at'
+        'last_login_at',
+        'is_demo'
     ];
 
     /**
@@ -54,6 +55,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_demo' => 'boolean',
         ];
     }
 
@@ -90,6 +92,11 @@ class User extends Authenticatable
     public function isPremium(): bool
     {
         return $this->suscription_type === 'premium';
+    }
+
+    public function isDemo(): bool
+    {
+        return (bool) $this->is_demo;
     }
 
     public function favorites(): HasMany

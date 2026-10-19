@@ -1,6 +1,12 @@
 <div class="flex h-screen bg-zinc-200 dark:bg-neutral-800 text-zinc-900 dark:text-white">
   <app-sidebar class="h-full"></app-sidebar>
   <div class="flex flex-col overflow-hidden flex-1">
+  @if (authService.currentUser()?.is_demo) {
+    <div class="flex flex-wrap items-center justify-center gap-x-2 px-4 py-1.5 text-sm text-center bg-orange-500 text-white">
+      <span>Estás viendo una demo con datos de ejemplo (solo lectura).</span>
+      <button type="button" (click)="leaveDemo()" class="font-semibold underline hover:opacity-80">Crear cuenta gratis</button>
+    </div>
+  }
   <app-topbar></app-topbar>
     <main class="relative flex-1 overflow-y-auto my-5 px-6 md:px-12 lg:px-14">
       <router-outlet />

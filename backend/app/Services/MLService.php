@@ -33,7 +33,7 @@ class MLService
             'asset_types' => implode(',', $assetTypes)
         ]);
 
-        return $response->json();
+        return $response->json() ?? [];
     }
 
     // Valor total de la cartera
@@ -72,6 +72,18 @@ class MLService
             'from_date' => $fromDate
         ]);
         return $response->json();
+    }
+
+    // Valor intradia (1D) de toda una cartera en una sola llamada
+    public function getPortfolioIntraday(string $symbols, string $quantities, string $assetTypes): array
+    {
+        $response = Http::timeout(config('services.ml.timeout'))->get("{$this->baseUrl}/portfolio-intraday", [
+            'symbols' => $symbols,
+            'quantities' => $quantities,
+            'asset_types' => $assetTypes,
+        ]);
+
+        return $response->json() ?? ['data' => []];
     }
 
 }

@@ -373,56 +373,26 @@ export class DashboardComponent implements OnInit {
       return; 
     }
 
-    // PERÍODO 1D: datos cada 5 minutos desde /history
+    // PERÍODO 1D: datos cada 5 minutos de toda la cartera en una sola petición
+    // (el backend ya suma precio * cantidad de cada activo por minuto)
     if (period === '1D') {
-      // Para cada activo, pide su histórico intraday
-      const promises = investments.map((inv: any) => {
-        const symbol = inv.symbol;
-        const assetType = inv.asset_type || 'stock';
-        const quantity = parseFloat(inv.quantity);
-        
-        return this.marketService.getHistory(symbol, '1D', assetType).toPromise()
-          .then((response: any) => {
-            if (response?.data && response.data.length > 0) {
-              // Multiplica precio por cantidad para obtener el valor total de esa posición
-              return response.data.map((point: any) => ({
-                x: point.x,
-                y: point.y * quantity
-              }));
-            }
-            return [];
-          })
-          .catch(() => {
-            return [];
-          });
-      });
-
-      // Espera a que lleguen todos los históricos
-      Promise.all(promises).then((results: any[]) => {
-        // Combina todos los activos sumando valores en el mismo timestamp
-        const dataMap = new Map<number, number>();
-        
-        results.forEach(assetData => {
-          assetData.forEach((point: { x: number; y: number }) => {
-            const roundedX = Math.round(point.x / 60000) * 60000;
-            const current = dataMap.get(point.x) || 0;
-            dataMap.set(roundedX, current + point.y);
-          });
-        });
-        
-        const combinedData = Array.from(dataMap.entries())
-          .map(([x, y]) => ({ x, y: Number(y.toFixed(2)) }))
-          .sort((a, b) => a.x - b.x);
-        
-        if (combinedData.length > 0) {
-          this.buildAreaChart(combinedData, period);
-        } else {
+      this.marketService.getPortfolioIntraday(
+        investments.map((inv: any) => inv.symbol),
+        investments.map((inv: any) => parseFloat(inv.quantity)),
+        investments.map((inv: any) => inv.asset_type || 'stock')
+      ).subscribe({
+        next: (response) => {
+          if (response?.data && response.data.length > 0) {
+            this.buildAreaChart(response.data, period);
+          } else {
+            this.loadDailyHistory(period);
+          }
+          this.isLoading = false;
+        },
+        error: () => {
+          this.isLoading = false;
           this.loadDailyHistory(period);
         }
-        this.isLoading = false;
-      }).catch((error) => {
-        this.isLoading = false;
-        this.loadDailyHistory(period);
       });
       return;
     }

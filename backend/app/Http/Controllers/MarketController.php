@@ -51,5 +51,19 @@ class MarketController extends Controller
         );
     }
 
+    // Grafica 1D de toda la cartera en una sola llamada
+    public function portfolioIntraday(Request $request)
+    {
+        $request->validate([
+            'symbols' => 'required|string|max:1000',
+            'quantities' => 'required|string|max:1000',
+            'asset_types' => 'nullable|string|max:1000',
+        ]);
+
+        return response()->json(
+            $this->ml->getPortfolioIntraday($request->query('symbols'), $request->query('quantities'), $request->query('asset_types', ''))
+        );
+    }
+
     
 }

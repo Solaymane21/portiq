@@ -6,6 +6,7 @@ use App\Models\Portfolio;
 use App\Services\PlanLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class PortfolioController extends Controller
@@ -163,6 +164,9 @@ class PortfolioController extends Controller
         ]);
 
         $portfolio->load('investments');
+
+        // El nombre va dentro de la respuesta cacheada de la cartera
+        Cache::forget(InvestmentController::getPortfolioCacheKey($portfolio->id));
 
         return response()->json([
             'message' => 'Cartera actualizada.',

@@ -24,6 +24,17 @@ export class MarketService {
     });
   }
 
+  // Grafica 1D de toda la cartera en una sola peticion (antes era una por activo)
+  getPortfolioIntraday(symbols: string[], quantities: number[], assetTypes: string[]) {
+    return this.http.get<{ data: { x: number; y: number }[] }>(`${this.apiUrl}/portfolio-intraday`, {
+      params: {
+        symbols: symbols.join(','),
+        quantities: quantities.join(','),
+        asset_types: assetTypes.join(',')
+      }
+    });
+  }
+
   // Busca activos por nombre o símbolo
   search(query: string): Observable<SearchResult[]> {
     return this.http.get<SearchResult[]>(`${this.apiUrl}/assets/search`, {

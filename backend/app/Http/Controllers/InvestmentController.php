@@ -6,6 +6,7 @@ use App\Models\Investment;
 use App\Models\Portfolio;
 use App\Models\Symbol;
 use App\Models\Trade;
+use App\Services\MLService;
 use App\Services\PlanLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -17,23 +18,13 @@ use Illuminate\Support\Facades\Log;
 class InvestmentController extends Controller
 {
     // Tiempo de cache en segundos
-    private const CACHE_TTL = 60;
+    private const CACHE_TTL = 120;
 
     // Devuelve el portfolio completo con precios actualizados
     public function index(Request $request, $portfolioId): \Illuminate\Http\JsonResponse
     {
-        // Cargamos portfolio, usuario, simbolos y compras iniciales
-        $portfolio = Portfolio::with([
-                'investments.symbol',
-                'investments.trades' => function ($query) {
-                    $query->where('type', 'compra')
-                        ->orWhere('type', 'nuevaPosicion')
-                        ->orderBy('operated_at', 'asc');
-                },
-                'user',
-            ])
-            ->where('id', $portfolioId)
-            ->firstOrFail();
+        // Consulta ligera solo para comprobar permisos
+        $portfolio = Portfolio::with('user:id,name')->where('id', $portfolioId)->firstOrFail();
 
         // Comprobamos si el usuario puede ver este portfolio
         $this->authorizePortfolioAccess($portfolio, $request->user());
@@ -41,43 +32,42 @@ class InvestmentController extends Controller
         // Marcamos si el portfolio se esta viendo en modo solo lectura
         $readOnly = $portfolio->user_id !== $request->user()->id;
 
-        // Generamos la clave de cache para este portfolio
-        $cacheKey = $this->getPortfolioCacheKey($portfolioId);
+        // Los datos de la cartera son iguales para cualquiera que la vea, asi que se
+        // cachean (se invalida en cada compra, venta, alta, borrado o importacion)
+        $data = Cache::remember($this->getPortfolioCacheKey($portfolioId), self::CACHE_TTL, function () use ($portfolio) {
+            // Cargamos simbolos y compras iniciales
+            $portfolio->load([
+                'investments.symbol',
+                'investments.trades' => function ($query) {
+                    $query->where('type', 'compra')
+                        ->orWhere('type', 'nuevaPosicion')
+                        ->orderBy('operated_at', 'asc');
+                },
+            ]);
 
-        // Si es solo lectura intentamos responder desde cache
-        if ($readOnly) {
-            $cached = Cache::get($cacheKey);
+            // Montamos las inversiones con precio actual
+            $investmentsData = $this->buildInvestmentsWithRealPrices($portfolio);
 
-            // Si ya estaba en cache devolvemos la respuesta al momento
-            if ($cached) {
-                return response()->json($cached);
+            // Sumamos el valor total del portfolio
+            $totalValue = $this->calculateTotalValue($investmentsData);
+
+            // Calculamos el peso de cada activo si el total es valido
+            if ($totalValue > 0) {
+                $this->calculateWeights($investmentsData, $totalValue);
             }
-        }
 
-        // Montamos las inversiones con precio actual
-        $investmentsData = $this->buildInvestmentsWithRealPrices($portfolio);
+            return [
+                'portfolio_name' => $portfolio->name,
+                'total_value' => round($totalValue, 2),
+                'investments' => $investmentsData,
+            ];
+        });
 
-        // Sumamos el valor total del portfolio
-        $totalValue = $this->calculateTotalValue($investmentsData);
-
-        // Calculamos el peso de cada activo si el total es valido
-        if ($totalValue > 0) {
-            $this->calculateWeights($investmentsData, $totalValue);
-        }
-
-        // Preparamos la respuesta final
-        $response = [
-            'portfolio_name' => $portfolio->name,
-            'total_value' => round($totalValue, 2),
-            'investments' => $investmentsData,
+        return response()->json([
+            ...$data,
             'read_only' => $readOnly,
             'owner_name' => $readOnly ? $portfolio->user?->name : null,
-        ];
-
-        // Guardamos la respuesta en cache
-        Cache::put($cacheKey, $response, self::CACHE_TTL);
-
-        return response()->json($response);
+        ]);
     }
 
     // Crea una nueva posicion o suma a una existente
@@ -296,8 +286,11 @@ class InvestmentController extends Controller
     // Monta el array final de inversiones con precio real
     private function buildInvestmentsWithRealPrices(Portfolio $portfolio): array
     {
+        // Pedimos todos los precios de la cartera en una sola llamada
+        $batchPrices = $this->fetchBatchPrices($portfolio->investments);
+
         return $portfolio->investments
-            ->map(function ($investment) {
+            ->map(function ($investment) use ($batchPrices) {
                 // Si falta el simbolo no podemos procesar esta fila
                 if (!$investment->symbol) {
                     return null;
@@ -309,8 +302,9 @@ class InvestmentController extends Controller
                 $apiId = $symbolData->api_id;
                 $symbol = $symbolData->symbol;
 
-                // Intentamos resolver el precio actual
-                $currentPrice = $this->resolveCurrentPrice($investment, $symbol, $apiId, $assetType);
+                // Usamos el precio del lote y, si no vino, lo resolvemos uno a uno como antes
+                $currentPrice = $batchPrices[$this->priceTicker($symbolData)]
+                    ?? $this->resolveCurrentPrice($investment, $symbol, $apiId, $assetType);
 
                 // Nos aseguramos de no trabajar con cero absoluto
                 $currentPrice = max((float) $currentPrice, 0.00000001);
@@ -347,6 +341,43 @@ class InvestmentController extends Controller
             ->filter()
             ->values()
             ->toArray();
+    }
+
+    // Ticker que se envia a /prices (el market-service ya añade -USD a las crypto)
+    private function priceTicker(Symbol $symbol): string
+    {
+        if ($symbol->asset_type === 'stock' && !empty($symbol->api_id)) {
+            return strtoupper($symbol->api_id);
+        }
+
+        return strtoupper($symbol->symbol);
+    }
+
+    // Precios actuales de todas las inversiones con una llamada a /prices (max 20 por llamada)
+    private function fetchBatchPrices($investments): array
+    {
+        $assets = $investments
+            ->filter(fn($investment) => $investment->symbol)
+            ->mapWithKeys(fn($investment) => [$this->priceTicker($investment->symbol) => $investment->symbol->asset_type]);
+
+        $prices = [];
+
+        foreach ($assets->chunk(20) as $chunk) {
+            try {
+                $response = app(MLService::class)->getPrices($chunk->keys()->all(), $chunk->values()->all());
+            } catch (\Exception $e) {
+                Log::warning('Error pidiendo precios en lote: ' . $e->getMessage());
+                continue;
+            }
+
+            foreach ($response['results'] ?? [] as $result) {
+                if (empty($result['error']) && is_numeric($result['price'] ?? null)) {
+                    $prices[strtoupper($result['symbol'])] = (float) $result['price'];
+                }
+            }
+        }
+
+        return $prices;
     }
 
     // Saca el precio actual y si falla usa el precio medio
@@ -628,8 +659,8 @@ class InvestmentController extends Controller
         return $date ? Carbon::parse($date) : now();
     }
 
-    // Genera la clave de cache del portfolio
-    private function getPortfolioCacheKey($portfolioId): string
+    // Genera la clave de cache del portfolio (publica para invalidarla desde PortfolioController)
+    public static function getPortfolioCacheKey($portfolioId): string
     {
         return "portfolio_{$portfolioId}_investments";
     }

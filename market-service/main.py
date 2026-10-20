@@ -4,10 +4,38 @@ import re
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor
+import threading
+import time
 import pandas as pd
-    
+
 
 app = FastAPI()
+
+
+# Cache en memoria con caducidad. Yahoo es lento (0.5-2s por llamada), asi que
+# guardamos las respuestas un tiempo para no repetir la misma descarga en cada pagina
+_cache = {}
+_cache_lock = threading.Lock()
+
+
+def cached(key, ttl, fn):
+    now = time.time()
+    with _cache_lock:
+        hit = _cache.get(key)
+        if hit and hit[0] > now:
+            return hit[1]
+
+    value = fn()
+
+    # Si Yahoo devuelve vacio (p. ej. porque nos limita) no lo guardamos,
+    # asi en la siguiente visita se vuelve a intentar
+    if getattr(value, "empty", False):
+        return value
+
+    with _cache_lock:
+        _cache[key] = (now + ttl, value)
+    return value
 
 app.add_middleware(
     CORSMiddleware,
@@ -81,28 +109,29 @@ Precio actual de un ticker. ticker.info suele estar bloqueado por Yahoo desde
 IPs de servidores en la nube, así que si falla se usa fast_info (API de charts)
 """
 def get_quote(ticker):
-    try:
-        info = ticker.info
-        price = info.get("currentPrice") or info.get("regularMarketPrice")
-        if price is not None:
-            return {
-                "name":     info.get("longName", ""),
-                "price":    price,
-                "currency": info.get("currency", "USD"),
-                "change":   info.get("regularMarketChangePercent"),
-            }
-    except Exception:
-        pass
+    # El precio sale de fast_info (rapido y no lo bloquea Yahoo). El nombre solo
+    # esta en ticker.info, que es lento, asi que se cachea un dia aunque falle
+    def fetch():
+        fast = ticker.fast_info
+        price = fast.last_price
+        prev = fast.previous_close
+        if price is None:
+            raise ValueError("Sin precio")
+        return {
+            "price":    price,
+            "currency": fast.currency or "USD",
+            "change":   (price - prev) / prev * 100 if price and prev else None,
+        }
 
-    fast = ticker.fast_info
-    price = fast.last_price
-    prev = fast.previous_close
-    return {
-        "name":     "",
-        "price":    price,
-        "currency": fast.currency or "USD",
-        "change":   (price - prev) / prev * 100 if price and prev else None,
-    }
+    def fetch_name():
+        try:
+            return ticker.info.get("longName", "") or ""
+        except Exception:
+            return ""
+
+    quote = cached(f"quote:{ticker.ticker}", 60, fetch)
+    name = cached(f"name:{ticker.ticker}", 86400, fetch_name)
+    return {"name": name, **quote}
 
 
 @app.get("/prices")
@@ -116,31 +145,32 @@ def getPrices(symbols: str, asset_types: str = ""):
     if len(symbol_list) > 20:
         raise HTTPException(status_code=400, detail="Máximo 20 símbolos por consulta")
 
-    results = []
-
-    for i, symbol in enumerate(symbol_list):
+    def fetch_one(i, symbol):
         if not re.match(r'^[A-Za-z0-9.\-]{1,10}$', symbol):
-            results.append({"symbol": symbol, "error": "Símbolo inválido"})
-            continue
+            return {"symbol": symbol, "error": "Símbolo inválido"}
 
         asset_type = type_list[i] if i < len(type_list) else "stock"
-        
+
         # Añadir sufijo -USD para crypto
         yf_symbol = f"{symbol.upper()}-USD" if asset_type == "crypto" else symbol.upper()
 
         try:
             quote = get_quote(yf.Ticker(yf_symbol))
 
-            results.append({
+            return {
                 "symbol": symbol.upper(),  # devolver símbolo limpio sin -USD
                 **quote,
-            })
+            }
 
         except Exception:
-            results.append({
+            return {
                 "symbol": symbol.upper(),
                 "error": "No se pudo obtener el precio"
-            })
+            }
+
+    # Cada simbolo es una llamada a Yahoo, asi que las hacemos en paralelo
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        results = list(pool.map(fetch_one, range(len(symbol_list)), symbol_list))
 
     return {
         "total": len(results),
@@ -230,18 +260,22 @@ def get_history(symbol: str, period: str = "1D", asset_type: str = "stock"):
 
     yf_period, yf_interval = period_map.get(period, ("5d", "5m"))
 
+    # Cuanto mas largo el periodo, menos cambia la grafica y mas tiempo se puede cachear
+    ttl = {"1D": 300, "1W": 1800}.get(period, 6 * 3600)
+
     try:
-        df = yf.download(
-            yf_symbol,
-            period=yf_period,
-            interval=yf_interval,
-            progress=False
+        # Ticker.history en vez de yf.download porque es seguro con peticiones en paralelo
+        df = cached(
+            f"history:{yf_symbol}:{yf_period}:{yf_interval}",
+            ttl,
+            lambda: yf.Ticker(yf_symbol).history(period=yf_period, interval=yf_interval)
         )
 
         if df.empty:
             raise HTTPException(status_code=404, detail="Sin datos históricos")
 
-        df.columns = df.columns.get_level_values(0)
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
 
         if period == "1D":
             last_day = df.index[-1].date()
@@ -269,6 +303,48 @@ def get_history(symbol: str, period: str = "1D", asset_type: str = "stock"):
         raise HTTPException(status_code=500, detail=str(e))
 
 """
+Valor intradia (1D, cada 5 min) de toda una cartera en una sola llamada.
+Sustituye a pedir /history/{symbol}?period=1D una vez por activo desde el front
+"""
+@app.get("/portfolio-intraday")
+def portfolio_intraday(symbols: str, quantities: str, asset_types: str = ""):
+    symbol_list = [s.strip() for s in symbols.split(",") if s.strip()]
+    quantity_list = [float(q) for q in quantities.split(",") if q.strip()]
+    type_list = [t.strip() for t in asset_types.split(",") if t.strip()]
+
+    if not symbol_list or len(symbol_list) != len(quantity_list) or len(symbol_list) > 50:
+        raise HTTPException(status_code=422, detail="Parametros invalidos")
+
+    def fetch_one(i):
+        try:
+            asset_type = type_list[i] if i < len(type_list) else "stock"
+            history = get_history(symbol_list[i], "1D", asset_type)
+            return [(p["x"], p["y"] * quantity_list[i]) for p in history["data"]]
+        except Exception:
+            return []
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        series = list(pool.map(fetch_one, range(len(symbol_list))))
+
+    # Alineamos todos los activos por minuto. Cuando un activo no cotiza (p. ej. la
+    # bolsa cerro pero la crypto sigue) arrastramos su ultimo valor para que el
+    # total no se desplome de golpe en la grafica
+    by_minute = [{round(x / 60000) * 60000: y for x, y in points} for points in series]
+    timeline = sorted(set().union(*by_minute)) if by_minute else []
+
+    totals = []
+    # Antes de su primer dato, cada activo cuenta con su primer valor conocido
+    last = [points[min(points)] if points else None for points in by_minute]
+    for minute in timeline:
+        for i, points in enumerate(by_minute):
+            if minute in points:
+                last[i] = points[minute]
+        totals.append({"x": minute, "y": round(sum(v for v in last if v is not None), 2)})
+
+    return {"data": totals}
+
+
+"""
 Historial de valor total de cartera (multiactivo)
 """
 @app.get("/portfolio-history")
@@ -289,12 +365,7 @@ def portfolio_history(
 
     if not symbol_list or not quantity_list:
         return {"data": []}
-    
-    print(f"=== Portfolio History ===")
-    print(f"Symbols: {symbol_list}")
-    print(f"Purchase dates: {date_list}")
-    print(f"From date: {from_date}")
-    
+
     yf_symbols = []
     for i, sym in enumerate(symbol_list):
         atype = type_list[i] if i < len(type_list) else "stock"
@@ -321,16 +392,19 @@ def portfolio_history(
         start_date = min_date - timedelta(days=5)
     else:
         start_date = datetime.today() - timedelta(days=30)
-    
-    print(f"Start date: {start_date.date()}, End date: {end_date.date()}")
+
+    start_str = start_date.strftime("%Y-%m-%d")
+    end_str = end_date.strftime("%Y-%m-%d")
 
     try:
-        portfolio = Tickers(" ".join(yf_symbols))
-        data = portfolio.history(start=start_date.strftime("%Y-%m-%d"), 
-                                  end=end_date.strftime("%Y-%m-%d"))
-        
+        # Cacheamos solo la descarga (no depende de las cantidades) durante 30 min
+        data = cached(
+            f"portfolio-history:{','.join(sorted(set(yf_symbols)))}:{start_str}:{end_str}",
+            1800,
+            lambda: Tickers(" ".join(sorted(set(yf_symbols)))).history(start=start_str, end=end_str, progress=False)
+        )
+
         if data.empty:
-            print("Data is empty")
             return {"data": []}
         
         closes = data['Close']
@@ -342,7 +416,6 @@ def portfolio_history(
         
         for i, (sym, qty) in enumerate(zip(yf_symbols, quantity_list)):
             if sym not in closes.columns:
-                print(f"Symbol {sym} not found in columns: {list(closes.columns)}")
                 continue
 
             col = closes[sym].copy()
@@ -354,22 +427,16 @@ def portfolio_history(
                         import pytz
                         purchase_dt = pytz.utc.localize(purchase_dt)
                     col = col[col.index >= purchase_dt]
-                    print(f"  {sym}: purchase_date = {date_list[i]}, qty = {qty}, puntos = {len(col)}")
-                except Exception as e:
-                    print(f"  {sym}: error en purchase_date: {e}")
+                except Exception:
+                    pass
 
             portfolio_values = portfolio_values.add(col * qty, fill_value=0)
         
         portfolio_values = portfolio_values[portfolio_values > 0]
         
         if portfolio_values.empty:
-            print("Portfolio values empty")
             return {"data": []}
-        
-        print(f"Portfolio values: {len(portfolio_values)} points")
-        print(f"First value: {portfolio_values.iloc[0]:.2f} on {portfolio_values.index[0].date()}")
-        print(f"Last value: {portfolio_values.iloc[-1]:.2f}")
-        
+
         result = [
             {"x": int(date.timestamp() * 1000), "y": round(float(val), 2)}
             for date, val in portfolio_values.items()

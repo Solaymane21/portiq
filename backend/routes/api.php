@@ -113,6 +113,7 @@ Route::get('/prices', [MarketController::class, 'prices']);
 Route::get('/portfolio/value', [MarketController::class, 'portfolioValue']);
 Route::get('/history/{symbol}', [MarketController::class, 'history']);
 Route::get('/portfolio-history', [MarketController::class, 'portfolioHistory']);
+Route::get('/portfolio-intraday', [MarketController::class, 'portfolioIntraday']);
 
 //Admin
 Route::prefix('admin')->middleware('auth:sanctum')->group(function() {
